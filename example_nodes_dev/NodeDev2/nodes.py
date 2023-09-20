@@ -55,7 +55,7 @@ class ReadImage(NodeBase):
             return
 
         try:
-            self.set_output_val(0, CVImage(cv2.imread(self.image_filepath)))
+            self.set_output_val(0, CVImage(cv2.imread(self.image_filepath, cv2.IMREAD_UNCHANGED)))
         except Exception as e:
             print(e)
 

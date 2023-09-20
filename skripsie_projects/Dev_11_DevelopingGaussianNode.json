@@ -1,0 +1,477 @@
+{
+    "general info": {
+        "type": "Ryven project file",
+        "ryven version": "v3.1"
+    },
+    "required packages": [
+        {
+            "name": "std",
+            "dir": "C:/Users/dell/OneDrive/Documents/Em/2023/Skripsie/Development/venvs/sk_env2/Lib/site-packages/ryven/example_nodes_dev/std"
+        },
+        {
+            "name": "NodeDev2",
+            "dir": "C:/Users/dell/OneDrive/Documents/Em/2023/Skripsie/Development/venvs/sk_env2/Lib/site-packages/ryven/example_nodes_dev/NodeDev2"
+        }
+    ],
+    "scripts": [
+        {
+            "title": "hello world",
+            "variables": {},
+            "flow": {
+                "algorithm mode": "data",
+                "nodes": [
+                    {
+                        "identifier": "NodeDev2.ReadImage",
+                        "version": null,
+                        "state data": "gASVIwAAAAAAAAB9lIwPaW1hZ2UgZmlsZSBwYXRolIwKY2VsbDMuamZpZpRzLg==",
+                        "additional data": {
+                            "special actions": {},
+                            "display title": "Read Image"
+                        },
+                        "inputs": [
+                            {
+                                "type": "data",
+                                "label": "f_path",
+                                "GID": 8,
+                                "val": "gAROLg==",
+                                "has widget": true,
+                                "widget name": "choose file IW",
+                                "widget pos": "besides",
+                                "widget data": "gAR9lC4="
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "type": "data",
+                                "label": "img",
+                                "GID": 9
+                            }
+                        ],
+                        "GID": 7,
+                        "pos x": 231.7795798178674,
+                        "pos y": 638.8177290769005,
+                        "unconnected ports hidden": false,
+                        "collapsed": false
+                    },
+                    {
+                        "identifier": "NodeDev2.DisplayImg",
+                        "version": null,
+                        "state data": "gAR9lC4=",
+                        "additional data": {
+                            "special actions": {},
+                            "display title": "Display Image"
+                        },
+                        "inputs": [
+                            {
+                                "type": "data",
+                                "label": "img",
+                                "GID": 11,
+                                "has widget": false
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "type": "data",
+                                "label": "",
+                                "GID": 12
+                            }
+                        ],
+                        "GID": 10,
+                        "pos x": 271.8096279861735,
+                        "pos y": 887.3429919112779,
+                        "main widget data": "gAR9lC4=",
+                        "unconnected ports hidden": false,
+                        "collapsed": false
+                    },
+                    {
+                        "identifier": "std.Print_Node",
+                        "version": "v0.1",
+                        "state data": "gASVDgAAAAAAAAB9lIwGYWN0aXZllIhzLg==",
+                        "additional data": {
+                            "special actions": {
+                                "make passive": {
+                                    "method": "make_passive"
+                                }
+                            },
+                            "display title": "Print"
+                        },
+                        "inputs": [
+                            {
+                                "type": "exec",
+                                "label": "",
+                                "GID": 14,
+                                "val": "gAROLg=="
+                            },
+                            {
+                                "type": "data",
+                                "label": "",
+                                "GID": 15,
+                                "val": "gASVHwAAAAAAAACMG3RoZW4gb25seSBkaXNwbCBpbWcgdXBkYXRlc5Qu",
+                                "dtype": "DType.Data",
+                                "dtype state": "gASVUgAAAAAAAAB9lCiMB2RlZmF1bHSUTowDdmFslIwbdGhlbiBvbmx5IGRpc3BsIGltZyB1cGRhdGVzlIwDZG9jlIwAlIwGYm91bmRzlE6MBHNpemWUjAFtlHUu",
+                                "has widget": true,
+                                "widget data": "gASVKQAAAAAAAAB9lIwEdGV4dJSMG3RoZW4gb25seSBkaXNwbCBpbWcgdXBkYXRlc5RzLg=="
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "type": "exec",
+                                "label": "",
+                                "GID": 16
+                            }
+                        ],
+                        "GID": 13,
+                        "pos x": 1126.361286843371,
+                        "pos y": 875.2121423584292,
+                        "unconnected ports hidden": false,
+                        "collapsed": false
+                    },
+                    {
+                        "identifier": "NodeDev2.DisplayImg",
+                        "version": null,
+                        "state data": "gAR9lC4=",
+                        "additional data": {
+                            "special actions": {},
+                            "display title": "Display Image"
+                        },
+                        "inputs": [
+                            {
+                                "type": "data",
+                                "label": "img",
+                                "GID": 18,
+                                "has widget": false
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "type": "data",
+                                "label": "",
+                                "GID": 19
+                            }
+                        ],
+                        "GID": 17,
+                        "pos x": 1734.619956516082,
+                        "pos y": 923.7584461470739,
+                        "main widget data": "gAR9lC4=",
+                        "unconnected ports hidden": false,
+                        "collapsed": false
+                    },
+                    {
+                        "identifier": "std.Slider_Gaus_Tick_v7",
+                        "version": "v0.1",
+                        "state data": "gASVDQAAAAAAAAB9lIwEa3ZhbJRLAHMu",
+                        "additional data": {
+                            "special actions": {},
+                            "display title": "slider_Gaus_Tick_v7"
+                        },
+                        "inputs": [
+                            {
+                                "type": "data",
+                                "label": "img",
+                                "GID": 21,
+                                "has widget": false
+                            },
+                            {
+                                "type": "data",
+                                "label": "ksize",
+                                "GID": 22,
+                                "val": "gARLCi4=",
+                                "dtype": "DType.Integer",
+                                "dtype state": "gASVLAAAAAAAAAB9lCiMB2RlZmF1bHSUSwOMA3ZhbJRLCowDZG9jlIwAlIwGYm91bmRzlE51Lg==",
+                                "has widget": true,
+                                "widget data": "gASVDAAAAAAAAAB9lIwDdmFslEsKcy4="
+                            },
+                            {
+                                "type": "data",
+                                "label": "SigmaX",
+                                "GID": 23,
+                                "val": "gAROLg==",
+                                "dtype": "DType.Integer",
+                                "dtype state": "gASVLAAAAAAAAAB9lCiMB2RlZmF1bHSUSwWMA3ZhbJRLBYwDZG9jlIwAlIwGYm91bmRzlE51Lg==",
+                                "has widget": true,
+                                "widget data": "gASVDAAAAAAAAAB9lIwDdmFslEsFcy4="
+                            },
+                            {
+                                "type": "data",
+                                "label": "Preview",
+                                "GID": 24,
+                                "val": "gASILg==",
+                                "dtype": "DType.Boolean",
+                                "dtype state": "gASVKgAAAAAAAAB9lCiMB2RlZmF1bHSUiYwDdmFslIiMA2RvY5SMAJSMBmJvdW5kc5ROdS4=",
+                                "has widget": true,
+                                "widget data": "gASVDwAAAAAAAAB9lIwHY2hlY2tlZJSIcy4="
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "type": "data",
+                                "label": "",
+                                "GID": 25
+                            },
+                            {
+                                "type": "data",
+                                "label": "",
+                                "GID": 26
+                            },
+                            {
+                                "type": "data",
+                                "label": "",
+                                "GID": 27
+                            }
+                        ],
+                        "GID": 20,
+                        "pos x": 1393.6846441368384,
+                        "pos y": 770.9434332534522,
+                        "main widget data": "gASVDAAAAAAAAAB9lIwDdmFslEsAcy4=",
+                        "unconnected ports hidden": false,
+                        "collapsed": false
+                    },
+                    {
+                        "identifier": "std.Print_Node",
+                        "version": "v0.1",
+                        "state data": "gASVDgAAAAAAAAB9lIwGYWN0aXZllIhzLg==",
+                        "additional data": {
+                            "special actions": {
+                                "make passive": {
+                                    "method": "make_passive"
+                                }
+                            },
+                            "display title": "Print"
+                        },
+                        "inputs": [
+                            {
+                                "type": "exec",
+                                "label": "",
+                                "GID": 29,
+                                "val": "gAROLg=="
+                            },
+                            {
+                                "type": "data",
+                                "label": "",
+                                "GID": 30,
+                                "dtype": "DType.Data",
+                                "dtype state": "gASVNgAAAAAAAAB9lCiMB2RlZmF1bHSUTowDdmFslEsGjANkb2OUjACUjAZib3VuZHOUTowEc2l6ZZSMAW2UdS4=",
+                                "has widget": true,
+                                "widget data": "gASVEgAAAAAAAAB9lIwEdGV4dJSMBE5vbmWUcy4="
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "type": "exec",
+                                "label": "",
+                                "GID": 31
+                            }
+                        ],
+                        "GID": 28,
+                        "pos x": 1659.512543929566,
+                        "pos y": 573.7813031035222,
+                        "unconnected ports hidden": false,
+                        "collapsed": false
+                    },
+                    {
+                        "identifier": "std.Print_Node",
+                        "version": "v0.1",
+                        "state data": "gASVDgAAAAAAAAB9lIwGYWN0aXZllIhzLg==",
+                        "additional data": {
+                            "special actions": {
+                                "make passive": {
+                                    "method": "make_passive"
+                                }
+                            },
+                            "display title": "Print"
+                        },
+                        "inputs": [
+                            {
+                                "type": "exec",
+                                "label": "",
+                                "GID": 33,
+                                "val": "gAROLg=="
+                            },
+                            {
+                                "type": "data",
+                                "label": "",
+                                "GID": 34,
+                                "dtype": "DType.Data",
+                                "dtype state": "gASVNgAAAAAAAAB9lCiMB2RlZmF1bHSUTowDdmFslEsGjANkb2OUjACUjAZib3VuZHOUTowEc2l6ZZSMAW2UdS4=",
+                                "has widget": true,
+                                "widget data": "gASVEgAAAAAAAAB9lIwEdGV4dJSMBE5vbmWUcy4="
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "type": "exec",
+                                "label": "",
+                                "GID": 35
+                            }
+                        ],
+                        "GID": 32,
+                        "pos x": 1649.150846193066,
+                        "pos y": 680.7594816888769,
+                        "unconnected ports hidden": false,
+                        "collapsed": false
+                    },
+                    {
+                        "identifier": "std.Slider_Gaus_Tick_v7",
+                        "version": "v0.1",
+                        "state data": "gASVDQAAAAAAAAB9lIwEa3ZhbJRLAHMu",
+                        "additional data": {
+                            "special actions": {},
+                            "display title": "slider_Gaus_Tick_v7"
+                        },
+                        "inputs": [
+                            {
+                                "type": "data",
+                                "label": "img",
+                                "GID": 37,
+                                "has widget": false
+                            },
+                            {
+                                "type": "data",
+                                "label": "ksize",
+                                "GID": 38,
+                                "val": "gARLCy4=",
+                                "dtype": "DType.Integer",
+                                "dtype state": "gASVLAAAAAAAAAB9lCiMB2RlZmF1bHSUSwOMA3ZhbJRLC4wDZG9jlIwAlIwGYm91bmRzlE51Lg==",
+                                "has widget": true,
+                                "widget data": "gASVDAAAAAAAAAB9lIwDdmFslEsLcy4="
+                            },
+                            {
+                                "type": "data",
+                                "label": "SigmaX",
+                                "GID": 39,
+                                "val": "gARLBy4=",
+                                "dtype": "DType.Integer",
+                                "dtype state": "gASVLAAAAAAAAAB9lCiMB2RlZmF1bHSUSwWMA3ZhbJRLB4wDZG9jlIwAlIwGYm91bmRzlE51Lg==",
+                                "has widget": true,
+                                "widget data": "gASVDAAAAAAAAAB9lIwDdmFslEsHcy4="
+                            },
+                            {
+                                "type": "data",
+                                "label": "Preview",
+                                "GID": 40,
+                                "val": "gASILg==",
+                                "dtype": "DType.Boolean",
+                                "dtype state": "gASVKgAAAAAAAAB9lCiMB2RlZmF1bHSUiYwDdmFslIiMA2RvY5SMAJSMBmJvdW5kc5ROdS4=",
+                                "has widget": true,
+                                "widget data": "gASVDwAAAAAAAAB9lIwHY2hlY2tlZJSIcy4="
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "type": "data",
+                                "label": "",
+                                "GID": 41
+                            },
+                            {
+                                "type": "data",
+                                "label": "",
+                                "GID": 42
+                            },
+                            {
+                                "type": "data",
+                                "label": "",
+                                "GID": 43
+                            }
+                        ],
+                        "GID": 36,
+                        "pos x": 659.7102863863921,
+                        "pos y": 1098.9881595184863,
+                        "main widget data": "gASVDAAAAAAAAAB9lIwDdmFslEsKcy4=",
+                        "unconnected ports hidden": false,
+                        "collapsed": false
+                    },
+                    {
+                        "identifier": "std.Slider_Gaus_Tick_v8",
+                        "version": "v0.1",
+                        "state data": "gAR9lC4=",
+                        "additional data": {
+                            "special actions": {},
+                            "display title": "slider_Gaus_Tick_v8"
+                        },
+                        "inputs": [
+                            {
+                                "type": "data",
+                                "label": "img",
+                                "GID": 51,
+                                "has widget": false
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "type": "data",
+                                "label": "",
+                                "GID": 52
+                            }
+                        ],
+                        "GID": 50,
+                        "pos x": 714.4917173584702,
+                        "pos y": 397.7332174663541,
+                        "main widget data": "gASVDAAAAAAAAAB9lIwDdmFslEsDcy4=",
+                        "unconnected ports hidden": false,
+                        "collapsed": false
+                    }
+                ],
+                "connections": [
+                    {
+                        "GID": 44,
+                        "parent node index": 0,
+                        "output port index": 0,
+                        "connected node": 1,
+                        "connected input port index": 0
+                    },
+                    {
+                        "GID": 45,
+                        "parent node index": 0,
+                        "output port index": 0,
+                        "connected node": 4,
+                        "connected input port index": 0
+                    },
+                    {
+                        "GID": 46,
+                        "parent node index": 0,
+                        "output port index": 0,
+                        "connected node": 7,
+                        "connected input port index": 0
+                    },
+                    {
+                        "GID": 53,
+                        "parent node index": 0,
+                        "output port index": 0,
+                        "connected node": 8,
+                        "connected input port index": 0
+                    },
+                    {
+                        "GID": 47,
+                        "parent node index": 4,
+                        "output port index": 0,
+                        "connected node": 5,
+                        "connected input port index": 1
+                    },
+                    {
+                        "GID": 48,
+                        "parent node index": 4,
+                        "output port index": 1,
+                        "connected node": 3,
+                        "connected input port index": 0
+                    },
+                    {
+                        "GID": 49,
+                        "parent node index": 4,
+                        "output port index": 2,
+                        "connected node": 6,
+                        "connected input port index": 1
+                    }
+                ],
+                "GID": 6,
+                "flow view": {
+                    "drawings": [],
+                    "view size": [
+                        6400.0,
+                        4800.0
+                    ]
+                }
+            },
+            "GID": 1
+        }
+    ]
+}

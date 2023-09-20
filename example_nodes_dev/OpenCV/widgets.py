@@ -1,7 +1,7 @@
 from ryven.NWENV import *
 from qtpy.QtWidgets import QLabel, QPushButton, QFileDialog, QVBoxLayout, QWidget, QTextEdit
 from qtpy.QtGui import QImage, QPixmap, QFont
-from qtpy.QtCore import Signal, QSize, QTimer
+from qtpy.QtCore import Signal, QSize, QTimer, Qt
 
 import cv2
 import os
@@ -12,10 +12,7 @@ class OpenCVNode_MainWidget(MWB, QLabel):
         MWB.__init__(self, params)
         QLabel.__init__(self)
 
-        self.resize(200, 200)
-
     def show_image(self, img):
-        self.resize(200, 200)
 
         try:
             rgb_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -23,15 +20,44 @@ class OpenCVNode_MainWidget(MWB, QLabel):
             return
 
         h, w, ch = rgb_image.shape
-        bytes_per_line = ch * w
-        qt_image = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format_RGB888)
-        img_w = qt_image.width()
-        img_h = qt_image.height()
-        proportion = img_w / img_h
-        self.resize(self.width() * proportion, self.height())
-        qt_image = qt_image.scaled(self.width(), self.height())
-        self.setPixmap(QPixmap(qt_image))
+        aspect_ratio = w / h  # Calculate the aspect ratio of the image
+
+        # Calculate the new dimensions for the widget based on the aspect ratio
+        new_widget_width = 300  # You can set the width to a desired value
+        new_widget_height = int(new_widget_width / aspect_ratio)
+
+        self.resize(new_widget_width, new_widget_height)
+
+        qt_image = QImage(rgb_image.data, w, h, ch * w, QImage.Format_RGB888)
+        qt_image = qt_image.scaled(new_widget_width, new_widget_height, Qt.KeepAspectRatio)
+        self.setPixmap(QPixmap.fromImage(qt_image))
+
         self.node.update_shape()
+
+    # def __init__(self, params):
+    #     MWB.__init__(self, params)
+    #     QLabel.__init__(self)
+
+    #     # self.resize(200, 200)
+
+    # def show_image(self, img):
+    #     # self.resize(200, 200)
+
+    #     try:
+    #         rgb_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    #     except cv2.error:
+    #         return
+
+    #     h, w, ch = rgb_image.shape
+    #     bytes_per_line = ch * w
+    #     qt_image = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format_RGB888)
+    #     # img_w = qt_image.width()
+    #     # img_h = qt_image.height()
+    #     # proportion = img_w / img_h
+    #     # self.resize(self.width() * proportion, self.height())
+    #     # qt_image = qt_image.scaled(self.width(), self.height())
+    #     self.setPixmap(QPixmap(qt_image))
+    #     self.node.update_shape()
 
 
 class ChooseFileInputWidget(IWB, QPushButton):
