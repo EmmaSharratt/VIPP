@@ -1163,7 +1163,7 @@ class ChooseFileInputWidgetBASE3(MWB, Widget_Base):
         MWB.__init__(self, params)
         QWidget.__init__(self)
 
-        default = 0
+        default = 1
         default_range = 5
 
         self.shape_label = QLabel()
@@ -1177,7 +1177,7 @@ class ChooseFileInputWidgetBASE3(MWB, Widget_Base):
 
         #timeseries slider
         self.slider_label1 = QSlider(Qt.Horizontal)
-        self.slider_label1.setRange(0, default_range)    
+        self.slider_label1.setRange(1, default_range)    
         self.slider_label1.setSingleStep(1)
         self.slider_label1.setValue(default)
 
@@ -1191,8 +1191,8 @@ class ChooseFileInputWidgetBASE3(MWB, Widget_Base):
 
         #zstack slider
         self.slider_label2 = QSlider(Qt.Horizontal)   #MAKE VERTICLAL
-        self.slider_label2.setRange(0, default_range)    
-        self.slider_label2.setSingleStep(2)
+        self.slider_label2.setRange(1, default_range)    
+        # self.slider_label2.setSingleStep(2)
         self.slider_label2.setValue(default)
 
         #image
@@ -1216,7 +1216,7 @@ class ChooseFileInputWidgetBASE3(MWB, Widget_Base):
         self.layout1.addWidget(self.image_label)        
 
         self.setLayout(self.layout1)
-        self.reset_widg(0)
+        self.reset_widg(1)
         
 
         # Signals -------------------------------------------------
@@ -1256,7 +1256,7 @@ class ChooseFileInputWidgetBASE3(MWB, Widget_Base):
         
         if dim[0] == 5:
             message = f"Z-Slices: {num_z}\n"
-            messae += f"Frames (time): {num_time}\n"
+            message += f"Frames (time): {num_time}\n"
             message += f"Image Width: {width}\n"
             message += f"Image Height: {height}\n"
             message += f"Colour channels: {chan}"
