@@ -541,104 +541,104 @@ class Eval_Node(NodeBase):
         self.expression_code = data['expression code']
 
 
-class Interpreter_Node(NodeBase):
-    """Provides a python interpreter via a basic console with access to the
-    node's properties."""
-    title = 'interpreter'
-    version = 'v0.1'
-    init_inputs = []
-    init_outputs = []
-    main_widget_class = widgets.InterpreterConsole
+# class Interpreter_Node(NodeBase):
+#     """Provides a python interpreter via a basic console with access to the
+#     node's properties."""
+#     title = 'interpreter'
+#     version = 'v0.1'
+#     init_inputs = []
+#     init_outputs = []
+#     main_widget_class = widgets.InterpreterConsole
 
-    # DEFAULT COMMANDS
+#     # DEFAULT COMMANDS
 
-    def clear(self):
-        self.hist.clear()
-        self._hist_updated()
+#     def clear(self):
+#         self.hist.clear()
+#         self._hist_updated()
 
-    def reset(self):
-        self.interp = code.InteractiveInterpreter(locals=locals())
+#     def reset(self):
+#         self.interp = code.InteractiveInterpreter(locals=locals())
 
-    COMMANDS = {
-        'clear': clear,
-        'reset': reset,
-    }
+#     COMMANDS = {
+#         'clear': clear,
+#         'reset': reset,
+#     }
 
-    def __init__(self, params):
-        super().__init__(params)
+#     def __init__(self, params):
+#         super().__init__(params)
 
-        self.interp = None
-        self.hist: [str] = []
-        self.buffer: [str] = []
+#         self.interp = None
+#         self.hist: [str] = []
+#         self.buffer: [str] = []
 
-        self.reset()
+#         self.reset()
 
-    def _hist_updated(self):
-        if self.session.gui:
-            self.main_widget().interp_updated()
+#     def _hist_updated(self):
+#         if self.session.gui:
+#             self.main_widget().interp_updated()
 
-    def process_input(self, cmds: str):
-        m = self.COMMANDS.get(cmds)
-        if m is not None:
-            m()
-        else:
-            for l in cmds.splitlines():
-                self.write(l)  # print input
-                self.buffer.append(l)
-            src = '\n'.join(self.buffer)
+#     def process_input(self, cmds: str):
+#         m = self.COMMANDS.get(cmds)
+#         if m is not None:
+#             m()
+#         else:
+#             for l in cmds.splitlines():
+#                 self.write(l)  # print input
+#                 self.buffer.append(l)
+#             src = '\n'.join(self.buffer)
 
-            def run_src():
-                more_inp_required = self.interp.runsource(src, '<console>')
-                if not more_inp_required:
-                    self.buffer.clear()
+#             def run_src():
+#                 more_inp_required = self.interp.runsource(src, '<console>')
+#                 if not more_inp_required:
+#                     self.buffer.clear()
 
-            if self.session.gui:
-                with redirect_stdout(self), redirect_stderr(self):
-                    run_src()
-            else:
-                run_src()
+#             if self.session.gui:
+#                 with redirect_stdout(self), redirect_stderr(self):
+#                     run_src()
+#             else:
+#                 run_src()
 
-    def write(self, line: str):
-        self.hist.append(line)
-        self._hist_updated()
+#     def write(self, line: str):
+#         self.hist.append(line)
+#         self._hist_updated()
 
 
-class Storage_Node(NodeBase):
-    """Sequentially stores all the data provided at the input in an array.
-    A COPY of the storage array is provided at the output"""
+# class Storage_Node(NodeBase):
+#     """Sequentially stores all the data provided at the input in an array.
+#     A COPY of the storage array is provided at the output"""
 
-    title = 'store'
-    version = 'v0.1'
-    init_inputs = [
-        NodeInputBP(),
-    ]
-    init_outputs = [
-        NodeOutputBP(),
-    ]
-    color = '#aadd55'
+#     title = 'store'
+#     version = 'v0.1'
+#     init_inputs = [
+#         NodeInputBP(),
+#     ]
+#     init_outputs = [
+#         NodeOutputBP(),
+#     ]
+#     color = '#aadd55'
 
-    def __init__(self, params):
-        super().__init__(params)
+#     def __init__(self, params):
+#         super().__init__(params)
 
-        self.storage = []
+#         self.storage = []
 
-        self.actions['clear'] = {'method': self.clear}
+#         self.actions['clear'] = {'method': self.clear}
 
-    def clear(self):
-        self.storage.clear()
-        self.set_output_val(0, [])
+#     def clear(self):
+#         self.storage.clear()
+#         self.set_output_val(0, [])
 
-    def update_event(self, inp=-1):
-        self.storage.append(self.input(0))
-        self.set_output_val(0, self.storage.copy())
+#     def update_event(self, inp=-1):
+#         self.storage.append(self.input(0))
+#         self.set_output_val(0, self.storage.copy())
 
-    def get_state(self) -> dict:
-        return {
-            'data': self.storage,
-        }
+#     def get_state(self) -> dict:
+#         return {
+#             'data': self.storage,
+#         }
 
-    def set_state(self, data: dict, version):
-        self.storage = data['data']
+#     def set_state(self, data: dict, version):
+#         self.storage = data['data']
 
 
 import uuid
