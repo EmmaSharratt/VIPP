@@ -564,7 +564,7 @@ class Slider_Node(NodeBase):
         NodeInputBP(dtype=dtypes.Boolean(default=False), label='round'),
     ]
     init_outputs = [
-        NodeOutputBP(),
+        NodeOutputBP()
     ]
     main_widget_class = widgets.SliderNode_MainWidget
     main_widget_pos = 'below ports'
@@ -3111,7 +3111,7 @@ class Crop(NodeBase0):        #Nodebase just a different colour
 #Split Channels --------------------------------------------------------------------------------------------------------------
         
 
-class SplitImg(NodeBase0):
+class Split_Img(NodeBase0):
     title = 'Split Channels (RGB)'
     version = 'v0.1'
     init_inputs = [
@@ -3321,6 +3321,116 @@ class SplitImg(NodeBase0):
     #     # return split
     #     b, g, r = cv2.split(img)
     #     return np.stack([b, g, r], axis=-1)
+    
+    # def get_state(self) -> dict:
+    #     return {
+    #         'val1': self.value_1,
+    #         'val2': self.value_2,
+    #     }
+
+    # def set_state(self, data: dict, version):
+    #     self.value_1 = data['val1']
+    #     self.value_2 = data['val2']
+
+class Merge_Img(Node):
+    title = 'Merge Channels (RGB)'
+    version = 'v0.1'
+    init_inputs = [
+        
+        NodeInputBP('red channel'),
+        NodeInputBP('green channel'),
+        NodeInputBP('blue channel'),
+         
+    ]
+    init_outputs = [
+        NodeOutputBP('output img'), #img
+    ]
+    main_widget_class = widgets.Split_Img
+    main_widget_pos = 'below ports'
+
+    def __init__(self, params):
+        super().__init__(params)
+
+        if self.session.gui:
+            from qtpy.QtCore import QObject, Signal
+            class Signals(QObject):
+                #Signals used for preview
+                new_img = Signal(object)    #original
+                clr_img = Signal(object)    #added      
+        
+            # to send images to main_widget in gui mode
+            self.SIGNALS = Signals()
+
+        self.prev = True
+        # default1 = 3
+        # default2 = 1
+        # self.value_1 = default1  #threshold
+        # self.value_2 = default2
+
+    def place_event(self):  
+        self.update()
+
+    def view_place_event(self):
+        self.SIGNALS.new_img.connect(self.main_widget().show_image)
+        self.SIGNALS.clr_img.connect(self.main_widget().clear_img)
+        self.main_widget().previewState.connect(self.preview)
+        # self.main_widget().Value1Changed.connect(self.ValueChanged1)
+        # self.main_widget().Value1Changed.connect(self.proc_stack_parallel)
+        # self.main_widget().Value2Changed.connect(self.ValueChanged2)
+        # self.main_widget().Value2Changed.connect(self.proc_stack_parallel)
+        
+        # try:
+        #     #  self.new_img_wrp = CVImage(self.sliced)
+        #     #  self.SIGNALS.new_img.emit(self.new_img_wrp.img)
+        #     #  self.set_output_val(0, self.new_img_wrp)
+        # except:  # there might not be an image ready yet
+        #     pass
+        # when running in gui mode, the value might come from the input widget
+        # check
+        self.update()
+
+    #called when img connected - send output
+    def update_event(self, inp=-1):  #called when an input is changed
+        self.handle_stack()
+        self.proc_technique()
+        self.new_img_wrp = CVImage(self.sliced)
+        if self.prev == True:
+            if self.session.gui:
+                self.SIGNALS.new_img.emit(self.new_img_wrp.img)
+        print("SPLIT!")
+        
+        # self.set_output_val(0, (self.reshaped_proc_data, self.frame, self.z_sclice))
+    
+    def preview(self, state):
+        if state ==  True:
+            self.prev = True
+            #Bring image back immediately 
+            self.SIGNALS.new_img.emit(self.new_img_wrp.img)
+               
+        else:
+              self.prev = False 
+              self.SIGNALS.clr_img.emit(self.new_img_wrp.img) 
+
+    def handle_stack(self):
+        self.red_stack = self.input(0)[0]
+        self.gr_stack = self.input(1)[0]
+        self.blue_stack = self.input(2)[0]
+        self.frame = self.input(0)[1] #dont actually need this anymore, but keep incase. Good to know wich time step
+        self.z_sclice = self.input(0)[2]
+        # self.squeeze = np.squeeze(self.image_stack)
+        self.z_size = self.red_stack.shape[0]
+        print(f"z_size {self.z_size}")
+        # self.sliced = self.image_stack[self.z_sclice, :, :, :] #Z, H, W, C
+              
+    def proc_technique(self):
+        self.rgb_image = np.concatenate((self.red_stack, self.gr_stack, self.blue_stack), axis=-1)
+        self.sliced = self.rgb_image[self.z_sclice, :, :, :] #Z, H, W, C
+        self.set_output_val(0, (self.rgb_image, self.frame, self.z_sclice))
+        
+        
+        # print(f"shape split: {red_stack.shape}")
+        # self.set_output_val(1, (green_stack, self.frame, self.z_sclice))
+        # self.set_output_val(2, (blue_stack, self.frame, self.z_sclice))
     
     # def get_state(self) -> dict:
     #     return {
@@ -6352,7 +6462,8 @@ nodes = [
     Crop,
     # Dimension_Management,
     # Filtering 
-    SplitImg,
+    Split_Img,
+    Merge_Img,
     Blur_Averaging,
     Median_Blur,
     Gaussian_Blur,
