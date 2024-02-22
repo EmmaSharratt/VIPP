@@ -39,10 +39,19 @@ from qtpy.QtWidgets import (QPushButton,
                             QDoubleSpinBox,
                             QSpinBox,    
                             QAbstractSpinBox,  
-                            QMainWindow,                                     
+                            QMainWindow, 
+                            QTableWidgetItem,
+                            QTableWidget,    
+                            QApplication, 
+                            QMainWindow,    
+                            QDialog,
+                            QScrollArea,                            
                             )
 import cv2
 import os
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+
 # C:\Users\dell\OneDrive\Documents\Em\2023\Skripsie\Development\venvs\sk_env2\Lib\site-packages\ryven\example_nodes_dev\std\widgets.py
 # C:\Users\dell\OneDrive\Documents\Em\2023\Skripsie\Development\venvs\sk_env2\Lib\site-packages\ryvencore_qt\src\flows\nodes\PortItemInputWidgets.py"
 #-----------------DEVELOPED-----------------------
@@ -61,13 +70,13 @@ class OpenCVNodeSliderDev_MainWidget(MWB, QLabel, QSlider):
         self.resize(500, 500)
 
         try:
-            rgb_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         except cv2.error:
             return
 
-        h, w, ch = rgb_image.shape
+        h, w, ch = img.shape
         bytes_per_line = ch * w
-        qt_image = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format_RGB888)
+        qt_image = QImage(img.data, w, h, bytes_per_line, QImage.Format_RGB888)
         img_w = qt_image.width()
         img_h = qt_image.height()
         proportion = img_w / img_h
@@ -114,10 +123,10 @@ class OpenCVNode_MainWidget(MWB, QLabel):
                 # print("came here")
             else:
                 # RGB image
-                rgb_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                h, w, ch = rgb_image.shape
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                h, w, ch = img.shape
                 bytes_per_line = ch * w
-                qt_image = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format_RGB888)
+                qt_image = QImage(img.data, w, h, bytes_per_line, QImage.Format_RGB888)
             
             # Calculate the target size for scaling
             scale_factor = 0.8  # Increase the scaling factor for clarity
@@ -133,11 +142,11 @@ class OpenCVNode_MainWidget(MWB, QLabel):
             print("Error:", e)
 
         # try:
-        #     rgb_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        #     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         # except cv2.error:
         #     return
 
-        # h, w, ch = rgb_image.shape
+        # h, w, ch = img.shape
         # aspect_ratio = w / h  # Calculate the aspect ratio of the image
 
         # # Calculate the new dimensions for the widget based on the aspect ratio
@@ -146,7 +155,7 @@ class OpenCVNode_MainWidget(MWB, QLabel):
 
         # self.resize(new_widget_width, new_widget_height)
 
-        # qt_image = QImage(rgb_image.data, w, h, ch * w, QImage.Format_RGB888)
+        # qt_image = QImage(img.data, w, h, ch * w, QImage.Format_RGB888)
         # qt_image = qt_image.scaled(new_widget_width, new_widget_height, Qt.KeepAspectRatio)
         # self.setPixmap(QPixmap.fromImage(qt_image))
 
@@ -175,13 +184,13 @@ class OpenCVNode_MainWidget(MWB, QLabel):
 #         self.resize(500, 500)
 
 #         try:
-#             rgb_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+#             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 #         except cv2.error:
 #             return
 
-#         h, w, ch = rgb_image.shape
+#         h, w, ch = img.shape
 #         bytes_per_line = ch * w
-#         qt_image = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format_RGB888)
+#         qt_image = QImage(img.data, w, h, bytes_per_line, QImage.Format_RGB888)
 #         img_w = qt_image.width()
 #         img_h = qt_image.height()
 #         proportion = img_w / img_h
@@ -231,22 +240,22 @@ class OpenCVNode_MainWidget(MWB, QLabel):
 #         # self.resize(800,800)
 
 #         try:
-#             rgb_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+#             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 #         except cv2.error:
 #             return
         
-#         # qt_image = QImage(rgb_image.data, rgb_image.shape[1], rgb_image.shape[0], QImage.Format_RGB888)
-#         h, w, ch = rgb_image.shape
+#         # qt_image = QImage(img.data, img.shape[1], img.shape[0], QImage.Format_RGB888)
+#         h, w, ch = img.shape
 #         bytes_per_line = ch * w
-#         qt_image = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format_RGB888)
+#         qt_image = QImage(img.data, w, h, bytes_per_line, QImage.Format_RGB888)
 #         qt_image = qt_image.scaled(self.image_label.size(), Qt.AspectRatioMode.KeepAspectRatio)
 #         self.image_label.setPixmap(QPixmap(qt_image))
 #         self.image_label.setFixedSize(qt_image.size())
 
 
-#         # h, w, ch = rgb_image.shape
+#         # h, w, ch = img.shape
 #         # bytes_per_line = ch * w
-#         # qt_image = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format_RGB888)
+#         # qt_image = QImage(img.data, w, h, bytes_per_line, QImage.Format_RGB888)
 #         # img_w = qt_image.width()
 #         # img_h = qt_image.height()
 #         # proportion = img_w / img_h
@@ -296,14 +305,14 @@ class QvBoxDev_MainWidget(MWB, QWidget):
         # self.resize(800,800)
 
         try:
-            rgb_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         except cv2.error:
             return
         
-        # qt_image = QImage(rgb_image.data, rgb_image.shape[1], rgb_image.shape[0], QImage.Format_RGB888)
-        h, w, ch = rgb_image.shape
+        # qt_image = QImage(img.data, img.shape[1], img.shape[0], QImage.Format_RGB888)
+        h, w, ch = img.shape
         bytes_per_line = ch * w
-        qt_image = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format_RGB888)
+        qt_image = QImage(img.data, w, h, bytes_per_line, QImage.Format_RGB888)
         qt_image = qt_image.scaled(300, 300, Qt.KeepAspectRatio) #AspectRatioMode
         self.image_label.setPixmap(QPixmap(qt_image))
         
@@ -319,9 +328,9 @@ class QvBoxDev_MainWidget(MWB, QWidget):
     
     
 
-        # h, w, ch = rgb_image.shape
+        # h, w, ch = img.shape
         # bytes_per_line = ch * w
-        # qt_image = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format_RGB888)
+        # qt_image = QImage(img.data, w, h, bytes_per_line, QImage.Format_RGB888)
         # img_w = qt_image.width()
         # img_h = qt_image.height()
         # proportion = img_w / img_h
@@ -371,14 +380,14 @@ class V2QvBoxDev_MainWidget(MWB, QWidget):
         # self.resize(800,800)
 
         try:
-            rgb_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         except cv2.error:
             return
         
-        # qt_image = QImage(rgb_image.data, rgb_image.shape[1], rgb_image.shape[0], QImage.Format_RGB888)
-        h, w, ch = rgb_image.shape
+        # qt_image = QImage(img.data, img.shape[1], img.shape[0], QImage.Format_RGB888)
+        h, w, ch = img.shape
         bytes_per_line = ch * w
-        qt_image = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format_RGB888)
+        qt_image = QImage(img.data, w, h, bytes_per_line, QImage.Format_RGB888)
         # Calculate the target size for scaling
         scale_factor = 0.4  # Adjust the scaling factor as needed
         target_width = int(w * scale_factor)
@@ -814,13 +823,14 @@ class ChooseFileInputWidget(IWB, QPushButton):
         self.clicked.connect(self.button_clicked)
 
     def button_clicked(self):
-        file_path = QFileDialog.getOpenFileName(self, 'Select image')[0]
+        self.file_path = QFileDialog.getOpenFileName(self, 'Select image')[0]
         try:
-            file_path = os.path.relpath(file_path)
+            self.file_path = os.path.relpath(self.file_path)
         except ValueError:
             return
-        
-        self.path_chosen.emit(file_path)
+
+        self.path_chosen.emit(self.file_path)
+    
 
 class Widget_Base(QWidget):
     # update image ---------------------------------------------
@@ -850,6 +860,50 @@ class Widget_Base(QWidget):
             
             # Resize the widget to match the pixmap size
             self.resize(scaled_pixmap.width(), scaled_pixmap.height())
+            
+            # Ensure that any necessary updates are performed
+            self.node.update_shape()
+            
+        except Exception as e:
+            print("Error:", e)
+
+class Widget_Base8(QWidget):
+    # update image ---------------------------------------------
+    def show_image(self, img):
+        # self.resize(800,800)
+        # print(f"DIMENSION WIDGET {img.shape[-1]}")
+        try:
+            if img.shape[-1] == 1:
+                # Grayscale image
+                # print(f"shape[2]/[-1] == 1")
+                qt_image = QImage(img.data, img.shape[1], img.shape[0], img.shape[1], QImage.Format_Grayscale8)
+                # print("came here for Sliderwidget")
+            elif img.shape[-1] == 3:
+                # print(f"shape[2]/[-1] == 1")
+                h, w, ch = img.shape
+                bytes_per_line = ch * w
+                qt_image = QImage(img.data, w, h, bytes_per_line, QImage.Format_RGB888) #Format_RGB888
+            elif img.shape[-1] == 4:
+                h, w, ch = img.shape
+                print(f"ch: {ch}")
+                bytes_per_line = ch * 4
+                qt_image = QImage(img.data, w, h, QImage.Format_RGBA8888) #Format_RGB888
+            if qt_image is not None:
+                # Calculate the target size for scaling
+                scale_factor = 0.7  # Increase the scaling factor for clarity
+                if qt_image.width() < 400:
+                    scale_factor = 1.2
+                if qt_image.width() > 900:
+                    scale_factor = 0.5
+                target_width = int(qt_image.width() * scale_factor)
+                # Use scaledToWidth to reduce the size while maintaining aspect ratio
+                scaled_pixmap = QPixmap.fromImage(qt_image).scaledToWidth(target_width)
+                
+                # Set the scaled pixmap
+                self.image_label.setPixmap(scaled_pixmap)
+                
+                # Resize the widget to match the pixmap size
+                self.resize(scaled_pixmap.width(), scaled_pixmap.height())
             
             # Ensure that any necessary updates are performed
             self.node.update_shape()
@@ -924,13 +978,13 @@ class ChooseFileInputWidgetBASE(MWB, Widget_Base):
         
 
     def remove_widgets(self):
-        print("REMOVE")
+        #print("REMOVE")
         # Remove and delete all widgets from the layout
         for i in reversed(range(self.layout1.count())):
             widget = self.layout1.itemAt(i).widget()
             if widget is not None:
                 widget.deleteLater()
-                print("removed")
+                #print("removed")
 
             # Remove the widget from the layout
             self.layout1.takeAt(i)
@@ -944,7 +998,7 @@ class ChooseFileInputWidgetBASE(MWB, Widget_Base):
         
         if dim[0] == 5:
             #shape message
-            print("ADDED")
+            #print("ADDED")
             self.layout1.addWidget(self.shape_label)
             # z-stack
             self.layout1.addWidget(self.input_label2)
@@ -1049,8 +1103,8 @@ class ChooseFileInputWidgetBASE(MWB, Widget_Base):
             message += f"Image Width: {width}"
             self.slider_label1.setRange(0, num_time-1)  
             self.slider_label2.setRange(0, num_z-1) 
-            print(f"numtime{num_time}")
-            print(f"numz{num_z}")
+            #print(f"numtime{num_time}")
+            #print(f"numz{num_z}")
 
         if len(shape) == 3:
             num_z = shape[0]  # 10
@@ -1062,7 +1116,7 @@ class ChooseFileInputWidgetBASE(MWB, Widget_Base):
             message += f"Image Width: {width}"
             
             self.slider_label1.setRange(0, num_z-1) 
-            print(num_z)
+            #print(num_z)
         
         # Set the text in self.shape_label
         self.shape_label.setText(message)
@@ -1154,17 +1208,21 @@ class ChooseFileInputWidgetBASE(MWB, Widget_Base):
         
     #     self.path_chosen.emit(file_path)
 
-class ChooseFileInputWidgetBASE3(MWB, Widget_Base):
+class ChooseFileInputWidgetBASE3(MWB, QWidget):
 
     ValueChanged1 = Signal(int)  #time instance
     ValueChanged2 = Signal(int)  #z-slice (depth)
+    released1 = Signal(int)
+    released2 = Signal(int)
 
     def __init__(self, params):
         MWB.__init__(self, params)
         QWidget.__init__(self)
 
-        default = 1
-        default_range = 5
+        default = 5
+        default_range = 6
+        self.val1 = default
+        self.val2 = 3
 
         self.shape_label = QLabel()
         self.shape_label.setStyleSheet('background-color: #1E242A; color: white; font-size: 14px;')
@@ -1216,7 +1274,7 @@ class ChooseFileInputWidgetBASE3(MWB, Widget_Base):
         self.layout1.addWidget(self.image_label)        
 
         self.setLayout(self.layout1)
-        self.reset_widg(1)
+        # self.reset_widg(1)
         
 
         # Signals -------------------------------------------------
@@ -1226,43 +1284,80 @@ class ChooseFileInputWidgetBASE3(MWB, Widget_Base):
         # Slider triggers
         self.slider_label1.sliderMoved.connect(self.the_slider1_was_changed)
         self.slider_label2.sliderMoved.connect(self.the_slider2_was_changed)
+        self.slider_label1.sliderReleased.connect(self.slider1_released)
+        # self.slider_label2.sliderReleased.connect(self.slider2_released)
 
     #new image -> reset sliders and inputs
     def reset_widg(self, val):
-        self.input1.setValue(val) #val = 0
-        self.input2.setValue(val)
-        self.slider_label1.setValue(val)
-        self.slider_label2.setValue(val)
+        # self.input1.setValue(1) #val = midpoint
+        # self.input2.setValue(1)
+
+        # self.slider_label1.setValue(1)
+        # # self.slider_label1.setRange(1, val[0])
+
+        # self.slider_label2.setValue(1)
+        # self.slider_label2.setRange(1, val[1])
+        if val[0]==1 and val[1]==1:
+            t = 1
+            z = 1
+            self.input1.setValue(t) #val = midpoint
+            self.input2.setValue(z)
+
+            self.slider_label1.setValue(t)
+
+            self.slider_label2.setValue(z)
+        else:
+            t = 1
+            z = round((val[1])/2)
+            self.input1.setValue(t) #val = midpoint
+            self.input2.setValue(z)
+
+            self.slider_label1.setValue(t)
+            self.slider_label1.setRange(1, val[0])
+
+            self.slider_label2.setValue(z)
+            self.slider_label2.setRange(1, val[1])
         
 
     def remove_widgets(self):
-        print("REMOVE")
+        #print("REMOVE")
         # Remove and delete all widgets from the layout
         for i in reversed(range(self.layout1.count())):
             widget = self.layout1.itemAt(i).widget()
             if widget is not None:
                 widget.deleteLater()
-                print("removed")
+                #print("removed")
 
             # Remove the widget from the layout
             self.layout1.takeAt(i)
             
     def update_widgets(self, dim):
+        self.dimens = dim
+        # self.dimens = dim
         num_z = dim[1]  # 10
-        num_time = dim[2]  # 21
+        num_time = dim[0]  # 21
         width = dim[3]  # 512
-        height = dim[4]  # 512
-        chan = dim[5]
+        height = dim[2]  # 512
+        chan = dim[-1]
         
-        if dim[0] == 5:
+        if (dim[0] != 1) & (dim[1] != 1):
             message = f"Z-Slices: {num_z}\n"
             message += f"Frames (time): {num_time}\n"
             message += f"Image Width: {width}\n"
             message += f"Image Height: {height}\n"
             message += f"Colour channels: {chan}"
-            self.slider_label1.setRange(1, num_time)  
-            self.slider_label2.setRange(1, num_z) 
-        elif dim[0] == 3:
+            # self.slider_label1.setRange(1, num_time)  
+            # self.slider_label2.setRange(1, num_z) 
+        elif dim[0] != 1:
+            message = f"Z-Slices: {num_z}"
+            message += f" (single slice)\n"
+            message += f"Frames (time): {num_time}\n"
+            message += f"Image Width: {width}\n"
+            message += f"Image Height: {height}\n"
+            message += f"Colour channels: {chan}"
+            # self.slider_label1.setRange(1, num_time)
+            # self.slider_label2.setRange(1, 1) 
+        elif dim[1] != 1:
             message = f"Z-Slices: {num_z}\n"
             message += f"Frames (time): {num_time}"
             message += f" (single frame)\n"
@@ -1270,26 +1365,10 @@ class ChooseFileInputWidgetBASE3(MWB, Widget_Base):
             message += f"Image Height: {height}\n"
             message += f"Colour channels: {chan}"
             #zslider
-            self.slider_label2.setRange(1, num_z) 
+            # self.slider_label2.setRange(1, num_z) 
             #time slider (one frame)
-            self.slider_label1.setRange(1, 1) 
-        elif dim[0] == 2:
-            #shape message
-            self.layout1.addWidget(self.shape_label)
-            # time
-            self.layout1.addWidget(self.input_label1)
-            self.layout1.addWidget(self.input1)
-            self.layout1.addWidget(self.slider_label1)
-            # Image
-            self.layout1.addWidget(self.image_label)
-            message = f"Z-Slices: {num_z}"
-            message += f" (single slice)\n"
-            message += f"Frames (time): {num_time}\n"
-            message += f"Image Width: {width}\n"
-            message += f"Image Height: {height}\n"
-            message += f"Colour channels: {chan}"
-            self.slider_label2.setRange(0, num_time-1)
-        elif dim[0] == 0:
+            # self.slider_label1.setRange(1, 1) 
+        elif (dim[0] == 1) & (dim[1] == 1):
             message = f"2D image\n"
             message += f"Z-Slices: {num_z}"
             message += f" (single slice)\n"
@@ -1299,9 +1378,9 @@ class ChooseFileInputWidgetBASE3(MWB, Widget_Base):
             message += f"Image Height: {height}\n"
             message += f"Colour channels: {chan}"
             #zslice
-            self.slider_label2.setRange(1, 1) 
+            # self.slider_label2.setRange(1, 1) 
             #time slider (one frame)
-            self.slider_label1.setRange(1, 1) 
+            # self.slider_label1.setRange(1, 1) 
         
         # Set the text in self.shape_label
         self.shape_label.setText(message)
@@ -1313,11 +1392,15 @@ class ChooseFileInputWidgetBASE3(MWB, Widget_Base):
              
         self.slider_label1.setValue(self.val1)
         self.ValueChanged1.emit(self.val1)
+        self.released1.emit(self.val1)
     
     def the_slider1_was_changed(self, v):    # v: value emitted by a slider signal 
         self.val1 = v
         self.input1.setValue(self.val1)
         self.ValueChanged1.emit(self.val1)
+    
+    def slider1_released(self):
+        self.released1.emit(self.slider_label1.value())
 
     # value 2: z-stack --------------------------------------------------
     def the_spinbox2_was_changed(self): 
@@ -1326,30 +1409,100 @@ class ChooseFileInputWidgetBASE3(MWB, Widget_Base):
              
         self.slider_label2.setValue(self.val2)
         self.ValueChanged2.emit(self.val2)
+        self.released2.emit(self.val2)
     
     def the_slider2_was_changed(self, v):    # v: value emitted by a slider signal 
         self.val2 = v
         self.input2.setValue(self.val2)
         self.ValueChanged2.emit(self.val2)
-       
+    
+    # def slider2_released(self):
+    #     self.released2.emit(self.slider_label2.value())
+    
+    def show_image(self, img):
+        # self.resize(800,800)
+
+        try:
+            if img.shape[-1] == 1:
+                # Grayscale image
+                qt_image = QImage(img.data, img.shape[1], img.shape[0], img.shape[1], QImage.Format_Grayscale8)
+                # #print("came here for Sliderwidget")
+            elif img.shape[-1] == 3:
+                h, w, ch = img.shape
+                bytes_per_line = ch * w
+                qt_image = QImage(img.data, w, h, bytes_per_line, QImage.Format_RGB888) #Format_RGB888
+            elif img.shape[-1] == 4:
+                h, w, ch = img.shape
+                #print(f"ch: {ch}")
+                bytes_per_line = ch * 4
+                qt_image = QImage(img.data, w, h, QImage.Format_RGBA8888) #Format_RGB888
+            if qt_image is not None:
+                # Calculate the target size for scaling
+                scale_factor = 0.7  # Increase the scaling factor for clarity
+                if qt_image.width() < 400:
+                    scale_factor = 1
+                if qt_image.width() > 900:
+                    scale_factor = 0.5
+                target_width = int(qt_image.width() * scale_factor)
+                # Use scaledToWidth to reduce the size while maintaining aspect ratio
+                scaled_pixmap = QPixmap.fromImage(qt_image).scaledToWidth(target_width)
+                
+                # Set the scaled pixmap
+                self.image_label.setPixmap(scaled_pixmap)
+                
+                # Resize the widget to match the pixmap size
+                self.resize(scaled_pixmap.width(), scaled_pixmap.height())
+                
+                # Ensure that any necessary updates are performed
+                self.node.update_shape()
+            
+        except Exception as e:
+            print("Error:", e)
     
     def get_state(self) -> dict:
         return {
-            'val1': self.val1, 
-            'val2': self.val2,
-        }
+            'dimension': self.dimens,
+            'val1': self.val1, #t
+            'val2': self.val2
+            }
 
     def set_state(self, data: dict):
-        #val1
-        self.input1.setValue(data['val1'])
-        self.slider_label1.setValue(data['val1'])
-        self.slider_label1.setRange(1, data['val1']*2)
-        self.val1 = data['val1']
+        self.update_widgets(data['dimension'])
 
-        self.input2.setValue(data['val2'])
+        self.slider_label1.setValue(data['val1'])
+        self.slider_label1.setRange(1, (data['dimension'])[0])
+        self.input1.setValue(data['val1'])
+        self.input1.setMaximum((data['dimension'])[0])
+
         self.slider_label2.setValue(data['val2'])
-        self.slider_label2.setRange(1, data['val2']*2)
-        self.val2 = data['val2']
+        self.slider_label2.setRange(1, (data['dimension'])[1])
+        self.input2.setValue(data['val2'])
+        self.input2.setMaximum((data['dimension'])[1])
+        
+        
+        self.node.update_shape()
+    
+
+
+    
+    
+    # def get_state(self) -> dict:
+    #     return {
+    #         'dimension': self.val1, 
+    #         'val2': self.val2,
+    #     }
+
+    # def set_state(self, data: dict):
+    #     #val1
+    #     self.input1.setValue(data['val1'])
+    #     self.slider_label1.setValue(data['val1'])
+    #     self.slider_label1.setRange(1, data['val1']*2)
+    #     self.val1 = data['val1']
+
+    #     self.input2.setValue(data['val2'])
+    #     self.slider_label2.setValue(data['val2'])
+    #     self.slider_label2.setRange(1, data['val2']*2)
+    #     self.val2 = data['val2']
         
 
     #     self.clicked.connect(self.button_clicked)
@@ -1430,6 +1583,543 @@ class ChooseFileInputWidgetBASE2(MWB, QMainWindow):
         # Resize the Ryven node based on the widget's size (you should implement this)
         # For example:
         self.node.setGeometry(0, 0, width, height)
+
+# class PathInputx(IWB, QWidget):
+#     path_chosen = Signal(str)
+
+#     def __init__(self, params):
+#         IWB.__init__(self, params)
+#         QWidget.__init__(self)
+
+#         self.path = ''
+#         path_chosen = ''
+
+#         # setup UI
+#         l = QVBoxLayout()
+#         button = QPushButton('choose')
+#         button.clicked.connect(self.choose_button_clicked)
+#         l.addWidget(button)
+#         self.path_label = QLabel('path')
+#         l.addWidget(self.path_label)
+#         self.setLayout(l)
+    
+#     def choose_button_clicked(self):
+#         abs_f_path = QFileDialog.getSaveFileName(self, 'Save')[0]
+#         self.path = os.path.relpath(abs_f_path)
+
+#         self.path_label.setText(self.path)
+#         self.adjustSize()  # important! otherwise the widget won't shrink
+
+#         self.path_chosen.emit(self.path)
+
+#         self.node.update_shape()
+
+#     def get_state(self):
+#         return {'path': self.path}
+    
+#     def set_state(self, data):
+#         self.path = data['path']
+#         self.path_label.setText(self.path)
+        # self.node.update_shape()
+
+class PathInput(MWB, QWidget):
+    path_chosen = Signal(str)
+
+    def __init__(self, params):
+        MWB.__init__(self, params)
+        QWidget.__init__(self)
+
+        self.path = ''
+        # path_chosen = ''
+
+        # setup UI
+        l = QVBoxLayout()
+        button = QPushButton('save processed image')
+        button.clicked.connect(self.choose_button_clicked)
+        l.addWidget(button)
+        self.path_label = QLabel('(save output: select file path)') ##print(f"Image saved to {file_path}")
+        self.path_label.setStyleSheet('font-size: 14px;')
+        l.addWidget(self.path_label)
+        self.setLayout(l)
+    
+    def choose_button_clicked(self):
+        self.abs_f_path = QFileDialog.getSaveFileName(self, 'Save stack',filter='TIFF Files (*.tif *.tiff)')[0] #filter='TIFF Files (*.tif *.tiff)
+        self.path = os.path.relpath(self.abs_f_path)
+
+        self.path_label.setText(f"output saved to\n {self.abs_f_path}")
+        #print(f"setText {self.path}")
+        #print(f"abs_f_path {self.abs_f_path}")
+        self.adjustSize()  # important! otherwise the widget won't shrink
+
+        self.path_chosen.emit(self.path)
+
+        self.node.update_shape()
+    
+    def reset_w(self, int):
+        # #print("reset received")
+        self.path_label.setText('  (save output: select file path)')
+
+    def get_state(self):
+        return {'path': self.path,
+                'abs': self.abs_f_path}
+    
+    def set_state(self, data):
+        self.path = data['path']
+        self.abs_f_path = data['abs']
+        self.path_label.setText(self.abs_f_path)
+        self.node.update_shape()
+
+# Crop
+class Crop_MainWidget(MWB, QWidget):
+           #define Signal
+    kValueChanged = Signal(int)
+    bValueChanged = Signal(int)
+    lValueChanged = Signal(int)
+    rValueChanged = Signal(int)
+    previewState = Signal(bool)
+
+    def __init__(self, params):
+        MWB.__init__(self, params)
+        QWidget.__init__(self)
+
+        self.resize(300, 300)
+        default = 1
+        default_range = 10
+                
+        #Added Widget -----------------------------------------------
+        # top------------
+        self.top_label = QLabel('crop from the top:')
+        self.top_label.setStyleSheet('font-size: 14px;')
+        self.top_input = QSpinBox()
+        self.top_input.setValue(default)
+        self.top_input.setKeyboardTracking(False)
+        self.top_input.setButtonSymbols(QAbstractSpinBox.NoButtons)
+
+        # top slider
+        self.top_slider_label = QSlider(Qt.Horizontal)
+        self.top_slider_label.setRange(1, default_range)    
+        self.top_slider_label.setValue(default)
+
+        # bottom
+        self.bot_label = QLabel('crop from the bottom:')
+        self.bot_label.setStyleSheet('font-size: 14px;')
+        self.bot_input = QSpinBox()
+        self.bot_input.setValue(default)
+        self.bot_input.setKeyboardTracking(False)
+        self.bot_input.setButtonSymbols(QAbstractSpinBox.NoButtons)
+
+        # slider
+        self.bot_slider_label = QSlider(Qt.Horizontal)
+        self.bot_slider_label.setRange(1, default_range)    
+        self.bot_slider_label.setValue(default)
+
+        # Left
+        self.left_label = QLabel('crop from the left:')
+        self.left_label.setStyleSheet('font-size: 14px;')
+        self.left_input = QSpinBox()
+        self.left_input.setValue(default)
+        self.left_input.setKeyboardTracking(False)
+        self.left_input.setButtonSymbols(QAbstractSpinBox.NoButtons)
+
+        # left slider
+        self.left_slider_label = QSlider(Qt.Horizontal)
+        self.left_slider_label.setRange(1, default_range)    
+        self.left_slider_label.setValue(default)
+
+        # Right
+        self.right_label = QLabel('crop from the right:')
+        self.right_label.setStyleSheet('font-size: 14px;')
+        self.right_input = QSpinBox()
+        self.right_input.setValue(default)
+        self.right_input.setKeyboardTracking(False)
+        self.right_input.setButtonSymbols(QAbstractSpinBox.NoButtons)
+
+        # right slider
+        self.right_slider_label = QSlider(Qt.Horizontal)
+        self.right_slider_label.setRange(1, default_range)    
+        self.right_slider_label.setValue(default)
+
+        
+        #sigmaX ------------
+        # self.sigmaX_label = QLabel('sigmaX:')
+        # self.sigmaX_label.setStyleSheet('font-size: 14px;')
+        # self.sigmaX_size_input = QDoubleSpinBox()
+        # #Xslider
+        # self.sliderX_label = QSlider(Qt.Horizontal)
+        # self.sliderX_label.setRange(0, 1000)
+        #preview
+        self.preview_label = QLabel('Preview:')
+        self.preview_checkbox = QCheckBox()
+        self.preview_checkbox.setText('Preview')
+        self.preview_checkbox.setStyleSheet('font-size: 14px;')
+        self.preview_checkbox.setCheckState(Qt.Checked)
+        #image
+        self.image_label = QLabel()
+               #self.image_label.resize(800, 800)
+        
+        self.layout1 = QVBoxLayout()
+        self.layout1.addWidget(self.top_label)
+        self.layout1.addWidget(self.top_input)
+        self.layout1.addWidget(self.top_slider_label)
+
+        self.layout1.addWidget(self.left_label)
+        self.layout1.addWidget(self.left_input)
+        self.layout1.addWidget(self.left_slider_label)
+        
+        self.layout1.addWidget(self.bot_label)
+        self.layout1.addWidget(self.bot_input)
+        self.layout1.addWidget(self.bot_slider_label)
+        
+        self.layout1.addWidget(self.right_label)
+        self.layout1.addWidget(self.right_input)
+        self.layout1.addWidget(self.right_slider_label)
+
+        self.layout1.addWidget(self.preview_checkbox)
+        self.layout1.addWidget(self.image_label)
+        #self.layout1.setSpacing(0) 
+        self.setLayout(self.layout1)
+        
+        #Signals 
+        # Spinbox triggers
+        self.top_input.editingFinished.connect(self.the_spinbox_was_changed)  #USER ONLY
+        # Slider triggers
+        self.top_slider_label.sliderMoved.connect(self.the_slider_was_changed)
+
+        # bot
+        # Spinbox triggers
+        self.bot_input.editingFinished.connect(self.the_spinbox_was_changed2)  #USER ONLY
+        # Slider triggers
+        self.bot_slider_label.sliderMoved.connect(self.the_slider_was_changed2)
+
+        # left
+        # Spinbox triggers
+        self.left_input.editingFinished.connect(self.the_spinbox_was_changed3)  #USER ONLY
+        # Slider triggers
+        self.left_slider_label.sliderMoved.connect(self.the_slider_was_changed3)
+
+        # right
+        # Spinbox triggers
+        self.right_input.editingFinished.connect(self.the_spinbox_was_changed4)  #USER ONLY
+        # Slider triggers
+        self.right_slider_label.sliderMoved.connect(self.the_slider_was_changed4)
+
+        # Check box
+        self.preview_checkbox.stateChanged.connect(self.the_checkbox_was_changed)
+
+    def the_checkbox_was_changed(self, state):
+        self.previewState.emit(state)
+          
+    #slot functions
+    def the_spinbox_was_changed(self):    # v: value emitted by a signal.
+        self.top_slider_label.setRange(1, self.top_input.value()*2)  
+        self.top_slider_label.setValue(self.top_input.value())  
+        self.k = self.top_input.value()
+        self.kValueChanged.emit(self.k)
+        #debug
+        # #print(f'slider:{self.top_slider_label.value()}')
+
+    def the_slider_was_changed(self, v):    # v: value emitted by a signal -> slider value (0-1000)
+        self.top_input.setValue(v)
+        self.k = int(v)
+        self.kValueChanged.emit(self.k)
+    
+    # bot
+    def the_spinbox_was_changed2(self):    # v: value emitted by a signal.
+        self.bot_slider_label.setRange(1, self.bot_input.value()*2)  
+        self.bot_slider_label.setValue(self.bot_input.value())  
+        self.b = self.bot_input.value()
+        self.bValueChanged.emit(self.b)
+        #debug
+        # #print(f'slider:{self.bot_slider_label.value()}')
+
+    def the_slider_was_changed2(self, v):    # v: value emitted by a signal -> slider value (0-1000)
+        self.bot_input.setValue(v)
+        self.b = int(v)
+        self.bValueChanged.emit(self.b)
+
+    # left
+    def the_spinbox_was_changed3(self):    # v: value emitted by a signal.
+        self.left_slider_label.setRange(1, self.left_input.value()*2)  
+        self.left_slider_label.setValue(self.left_input.value())  
+        self.l = self.left_input.value()
+        self.lValueChanged.emit(self.l)
+        #debug
+        # #print(f'slider:{self.left_slider_label.value()}')
+
+    def the_slider_was_changed3(self, v):    # v: value emitted by a signal -> slider value (0-1000)
+        self.left_input.setValue(v)
+        self.l = int(v)
+        self.lValueChanged.emit(self.l)
+    
+    # right
+    def the_spinbox_was_changed4(self):    # v: value emitted by a signal.
+        self.right_slider_label.setRange(1, self.right_input.value()*2)  
+        self.right_slider_label.setValue(self.right_input.value())  
+        self.r = self.right_input.value()
+        self.rValueChanged.emit(self.r)
+        #debug
+        # #print(f'slider:{self.right_slider_label.value()}')
+
+    def the_slider_was_changed4(self, v):    # v: value emitted by a signal -> slider value (0-1000)
+        self.right_input.setValue(v)
+        self.r = int(v)
+        self.rValueChanged.emit(self.r)
+    
+    def dimensions(self, dim):
+        self.target_h = dim[0]
+        self.target_w = dim[1]
+        #print(f'dim.height{self.target_h}')
+        self.top_input.setMaximum(self.target_w-1)
+        self.top_slider_label.setRange(1,self.target_w-1)
+
+        self.bot_input.setMaximum(self.target_w-1)
+        self.bot_slider_label.setRange(1,self.target_w-1)
+
+        self.left_input.setMaximum(self.target_h-1)
+        self.left_slider_label.setRange(1,self.target_h-1)
+
+        self.right_input.setMaximum(self.target_h-1)
+        self.right_slider_label.setRange(1,self.target_h-1)  
+    
+    def show_image(self, img):
+        # self.resize(800,800)
+        # #print(f"DIMENSION WIDGET {img.shape[-1]}")
+        try:
+            if img.shape[-1] == 1:
+                # Grayscale image
+                # #print(f"shape[2]/[-1] == 1")
+                qt_image = QImage(img.data, img.shape[1], img.shape[0], img.shape[1], QImage.Format_Grayscale8)
+                # #print("came here for Sliderwidget")
+            elif img.shape[-1] == 3:
+                # #print(f"shape[2]/[-1] == 1")
+                h, w, ch = img.shape
+                bytes_per_line = ch * w
+                qt_image = QImage(img.data, w, h, bytes_per_line, QImage.Format_RGB888) #Format_RGB888
+            elif img.shape[-1] == 4:
+                h, w, ch = img.shape
+                #print(f"ch: {ch}")
+                bytes_per_line = ch * 4
+                qt_image = QImage(img.data, w, h, QImage.Format_RGBA8888) #Format_RGB888
+            if qt_image is not None:
+                # Calculate the target size for scaling
+                scale_factor = 0.7  # Increase the scaling factor for clarity
+                # Check if the image is smaller than (400, 400)
+                if qt_image.width() < 400:
+                    scale_factor = 1.2
+                if qt_image.width() > 900:
+                    scale_factor = 0.5
+                target_width = int(qt_image.width() * scale_factor)
+                scaled_pixmap = QPixmap.fromImage(qt_image).scaledToWidth(target_width)
+                # #print(f'target height{self.target_h}')
+                # #print(f'qt_image.height{qt_image.height()}')
+                # if qt_image.width() < self.target_w: #and qt_image.height() < 400:
+                #     scale_factor = 0.7  # Change the scaling factor to 1.5 for small images
+                #     # #print(f'scale factor.height{scale_factor}')
+                #     # target_width = int(qt_image.width() * scale_factor)
+                #     target_hieght = int(self.target_h * scale_factor)
+                #     scaled_pixmap = QPixmap.fromImage(qt_image).scaledToHeight(target_hieght)
+                #     # target_width = int(self.target_w * scale_factor)
+                #     # scaled_pixmap = QPixmap.fromImage(qt_image).scaledToWidth(target_width)
+                # else: 
+                #     target_width = int(qt_image.width() * scale_factor)
+                #     scaled_pixmap = QPixmap.fromImage(qt_image).scaledToWidth(target_width)
+
+                # if qt_image.height() < self.target_h: #and qt_image.height() < 400:
+                #     scale_factor = 0.7
+                #     # target_hieght = int(self.target_h * scale_factor)
+                #     # scaled_pixmap = QPixmap.fromImage(qt_image).scaledToHeight(target_hieght)
+                #     target_width = int(self.target_w * scale_factor)
+                #     scaled_pixmap = QPixmap.fromImage(qt_image).scaledToWidth(target_width)                
+                # else: 
+                #     target_width = int(qt_image.width() * scale_factor)
+                #     scaled_pixmap = QPixmap.fromImage(qt_image).scaledToWidth(target_width)
+                # #print(f'target_width{qt_image.width()}')
+                # # Use scaledToWidth to reduce the size while maintaining aspect ratio
+                
+                
+                # Set the scaled pixmap
+                self.image_label.setPixmap(scaled_pixmap)
+                
+                # Resize the widget to match the pixmap size
+                self.resize(scaled_pixmap.width(), scaled_pixmap.height())
+                # self.scaledToWidth(self.target_w)
+            
+            # Ensure that any necessary updates are performed
+            self.node.update_shape()
+            
+        except Exception as e:
+            print("Error:", e)
+        
+        
+    def clear_img(self):
+         # Create a black image of size 1x1
+        clr_img = QImage(1, 1, QImage.Format_RGB888)
+        clr_img.setPixelColor(0, 0, QColor(Qt.black))
+        self.image_label.setPixmap(QPixmap(clr_img))
+        #print(self.width(), self.height())
+        self.resize(200,50)
+        self.node.update_shape() #works the best. But doesnt minimize shape immediately
+        # #print(self.top_input.value())
+    
+    def get_state(self) -> dict:
+        return {
+            'val1': self.k,
+            'val2': self.b,
+            'val3': self.l,
+            'val4': self.r,
+            'val5': self.target_h,
+            'val6': self.target_w,
+        }
+
+    def set_state(self, data: dict):
+        #top
+        self.top_input.setValue(data['val1'])
+        self.top_slider_label.setValue(data['val1'])
+        self.top_input.setMaximum(data['val5'])
+        self.top_slider_label.setValue(data['val5'])
+        self.k = data['val1']
+
+        #bot
+        self.bot_input.setValue(data['val2'])
+        self.bot_slider_label.setValue(data['val2'])
+        self.bot_input.setMaximum(data['val5'])
+        self.bot_slider_label.setValue(data['val5'])
+        self.b = data['val2']
+
+        #left
+        self.left_input.setValue(data['val3'])
+        self.left_slider_label.setValue(data['val3'])
+        self.left_input.setMaximum(data['val6'])
+        self.left_slider_label.setValue(data['val6'])
+        self.l = data['val3']
+
+        #right
+        self.right_input.setValue(data['val4'])
+        self.right_slider_label.setValue(data['val4'])
+        self.right_input.setMaximum(data['val6'])
+        self.right_slider_label.setValue(data['val6'])
+        self.r = data['val4']
+
+
+# Output Node
+class OutputMetadataWidg(MWB, QWidget):
+    new_data = Signal(bool)
+
+    def __init__(self, params):
+        MWB.__init__(self, params)
+        QWidget.__init__(self)
+        self.label = QLabel('When finished tuning parameters, press\nthe button to display the properties:')
+        self.label.setStyleSheet('font-size: 14px;')
+        self.pleaseWait = QLabel('Once pressed...please wait...')
+        self.pleaseWait.setStyleSheet('font-size: 14px;')
+        self.button = QPushButton('load properties')
+        # self.table = QTableWidget()
+        self.summaryProperties = QLabel(" ")
+        self.summaryProperties.setFixedHeight(250)
+        self.summaryProperties.setAlignment(Qt.AlignTop)
+        self.summaryProperties.setStyleSheet('font-size: 14px;')
+        self.summarylabel = QLabel(' ')
+        self.summarylabel.setStyleSheet('font-size: 4px;')
+        # self.summarylabel.setFixedHeight(150)
+        self.fullTable = QTableWidget()
+        self.label2 = QLabel('Once the the properties have been loaded,\n - view properties for each label\n - save properties as a .csv:')
+        self.label2.setStyleSheet('font-size: 14px;')
+        self.button2 = QPushButton('view all properties')
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        # self.scroll_area.viewport().setMinimumHeight(500)
+        # self.scroll_area.viewport().setMaximumHeight(600)
+        self.scroll_area.setWidget(self.summaryProperties)
+        self.button3 = QPushButton('save properties')
+        self.path_label=QLabel(' \n')
+        self.summaryProperties.setStyleSheet('font-size: 14px;')
+
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.label)
+        self.layout.addWidget(self.pleaseWait)
+        self.layout.addWidget(self.button)
+        self.layout.addWidget(self.summarylabel)
+        self.layout.addWidget(self.scroll_area)
+        # self.layout.addWidget(self.summaryProperties)
+        self.layout.addWidget(self.label2)
+        self.layout.addWidget(self.button2)
+        self.layout.addWidget(self.button3)
+        self.layout.addWidget(self.path_label)
+        
+
+        self.setLayout(self.layout)
+
+        self.button.clicked.connect(self.button_clicked)
+        self.button2.clicked.connect(self.open_new_window)
+        self.button3.clicked.connect(self.save_properties)
+        # self.resize(400,400)
+        
+
+    def button_clicked(self):
+        self.pleaseWait.setText('Please wait ...')
+        # QCoreApplication.processEvents()
+        self.new_data.emit(True)
+    #     self.emitthis()
+
+    # def emitthis(self):
+               
+    
+    def show_data(self, df, summary):
+        #print(df)
+        print(summary)
+        self.df = df
+        self.summarylabel.setStyleSheet('font-size: 13px; color: #468DF5; font-weight: bold;')
+        self.summarylabel.setText("PROPERTIES SUMMARY")
+
+        self.summaryProperties.setText(summary)
+        self.summaryProperties.adjustSize()
+        # self.scroll_area.setWidget(self.summaryProperties)
+        self.pleaseWait.setText('Finished!')
+    
+    def open_new_window(self):
+        new_window = QDialog() #self, Qt.WindowStaysOnTopHint
+        new_window.setWindowTitle("Properties of All Labels")
+        new_window.resize(500,500)
+        new_layout = QVBoxLayout()
+
+        self.fullTable.setRowCount(self.df.shape[0])
+        self.fullTable.setColumnCount(self.df.shape[1])
+        self.fullTable.setHorizontalHeaderLabels(self.df.columns)
+
+        for row in range(self.df.shape[0]):
+            for col in range(self.df.shape[1]):
+                item = QTableWidgetItem(str(self.df.iat[row, col])) #str
+                self.fullTable.setItem(row, col, item)
+
+        self.fullTable.verticalHeader().setVisible(False)
+
+        new_layout.addWidget(self.fullTable)
+        new_window.setLayout(new_layout)
+        new_window.exec_()
+
+    def save_properties(self):
+        self.abs_f_path = QFileDialog.getSaveFileName(self, 'Save properties', filter = 'CSV Files (*.csv)')[0] #filter='TIFF Files (*.tif *.tiff)
+        self.path = os.path.relpath(self.abs_f_path)
+
+        self.path_label.setText(f"output saved to\n {self.abs_f_path}")
+        self.path_label.setStyleSheet('font-size: 14px;')
+        #print(f"setText {self.path}")
+        #print(f"abs_f_path {self.abs_f_path}")
+        self.adjustSize()  # important! otherwise the widget won't shrink
+        self.df.to_csv(self.path, index=False)
+
+
+
+    # def get_state(self):
+    #     return {'path': self.path,
+    #             'abs': self.abs_f_path}
+    
+    # def set_state(self, data):
+    #     self.path = data['path']
+    #     self.abs_f_path = data['abs']
+    #     self.path_label.setText(self.abs_f_path)
+    #     self.node.update_shape()
+# class TableDialog(QDialog):
 
 class TestWidget1(QWidget):
     widgetResized = Signal(int, int)
@@ -1583,10 +2273,10 @@ class Slider_widget(MWB, Widget_Base):
     #             # Grayscale image
     #             img = (img*255).astype('uint8')
     #             qt_image = QImage(img.data, img.shape[1], img.shape[0], img.shape[1], QImage.Format_Grayscale8)
-    #             print("came here for Sliderwidget")
+    #             #print("came here for Sliderwidget")
     #         else:
     #             # RGB image
-    #             rgb_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    #             #rgb_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     #             h, w, ch = rgb_image.shape
     #             bytes_per_line = ch * w
     #             qt_image = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format_RGB888)
@@ -1602,7 +2292,7 @@ class Slider_widget(MWB, Widget_Base):
     #         self.resize(target_width, target_height)
     #         self.node.update_shape()
     #     except Exception as e:
-    #         print("Error:", e)
+    #         #print("Error:", e)
 
 
     # hide image ---------------------------------------------   
@@ -1612,7 +2302,7 @@ class Slider_widget(MWB, Widget_Base):
         clr_img.setPixelColor(0, 0, QColor(Qt.black))
 
         self.image_label.setPixmap(QPixmap(clr_img))
-        print(self.width(), self.height())
+        #print(self.width(), self.height())
         self.resize(200,50)
         self.node.update_shape() #works the best. But doesnt minimize shape immediately
     
@@ -1634,8 +2324,153 @@ class Slider_widget(MWB, Widget_Base):
         self.slider_label2.setRange(1, data['val2']*2)
         self.val2 = data['val2']
 
+class Split_Img(MWB, Widget_Base8):
 
-class Blur_Averaging_MainWidget(MWB, Widget_Base):
+    #define Signal
+    previewState = Signal(bool)
+    # Value1Changed = Signal(float)  #kernel
+    # Value2Changed = Signal(float)  #itt
+
+    def __init__(self, params):
+        MWB.__init__(self, params)
+        QWidget.__init__(self)
+
+        self.resize(300, 300)
+        # default1 = 3
+        # default_range1 = default1*2
+        # default2 = 1
+        # default_range2 = 5
+        # self.t = default1
+        # self.t2 = default2
+                
+        #Added Widget -----------------------------------------------
+        #alpha size------------
+        # self.label_1 = QLabel('alpha:')
+        # self.label_1.setStyleSheet('font-size: 14px;')
+        # self.input_1 = QDoubleSpinBox()
+        # # self.input_1.setMaximum(255)
+        # self.input_1.setValue(default1)
+        # self.input_1.setKeyboardTracking(False)
+        # self.input_1.setButtonSymbols(QAbstractSpinBox.NoButtons)
+
+        #a slider
+        # self.slider_label_1 = QSlider(Qt.Horizontal)
+        # self.slider_label_1.setRange(1, default_range1*100)    
+        # self.slider_label_1.setValue(default1*100)
+
+        # #beta size------------
+        # self.label_2 = QLabel('beta:')
+        # self.label_2.setStyleSheet('font-size: 14px;')
+        # self.input_2 = QDoubleSpinBox()
+        # # self.input_2.setMaximum(5)
+        # self.input_2.setValue(default2)
+        # self.input_2.setKeyboardTracking(False)
+        # self.input_2.setButtonSymbols(QAbstractSpinBox.NoButtons)
+
+        # #b slider
+        # self.slider_label_2 = QSlider(Qt.Horizontal)
+        # self.slider_label_2.setRange(1, default_range2*100)    
+        # self.slider_label_2.setValue(default2)
+       
+        #preview
+        self.preview_label = QLabel('Preview:')
+        self.preview_label.setStyleSheet('font-size: 14px;')
+        self.preview_checkbox = QCheckBox()
+        self.preview_checkbox.setText('Preview')
+        self.preview_checkbox.setCheckState(Qt.Checked)
+        #image
+        self.image_label = QLabel()
+               #self.image_label.resize(800, 800)
+        # Layout ----------------------------------------------------
+        self.layout1 = QVBoxLayout()
+        # kernel
+        # self.layout1.addWidget(self.label_1)
+        # self.layout1.addWidget(self.input_1)
+        # self.layout1.addWidget(self.slider_label_1)
+        # # itt
+        # self.layout1.addWidget(self.label_2)
+        # self.layout1.addWidget(self.input_2)
+        # self.layout1.addWidget(self.slider_label_2)
+        # Preview
+        self.layout1.addWidget(self.preview_checkbox)
+        self.layout1.addWidget(self.image_label)
+        #self.layout1.setSpacing(0) 
+        self.setLayout(self.layout1)
+
+        #Signals -------------------------------------------------
+        # Spinbox triggers
+        # self.input_1.editingFinished.connect(self.spinbox_1_changed)  #USER ONLY
+        # self.input_2.editingFinished.connect(self.spinbox_2_changed)
+        # # Slider triggers
+        # self.slider_label_1.sliderMoved.connect(self.slider_1_changed)
+        # self.slider_label_2.sliderMoved.connect(self.slider_2_changed)
+        # Check box
+        self.preview_checkbox.stateChanged.connect(self.prev_checkbox_changed)
+
+    # Slot Functions -------------------------------------------
+    # checkbox -------------------------------------------------
+    def prev_checkbox_changed(self, state):
+        self.previewState.emit(state)
+          
+    # thresh ----------------------------------------------------
+    # def spinbox_1_changed(self):    
+    #     self.t = self.input_1.value()
+    #     v = self.t*100
+    #     self.slider_label_1.setRange(1, v*2) 
+    #     self.slider_label_1.setValue(v)
+    #     # self.input_1.setValue(self.t)
+    #     self.Value1Changed.emit(self.t)
+    
+    # def slider_1_changed(self, v):    # v: value emitted by a slider signal
+    #     self.t = v/100
+    #         #  #print('odd')
+    #     self.input_1.setValue(self.t)
+    #     self.Value1Changed.emit(self.t)
+    # #itt
+    # def spinbox_2_changed(self):    
+    #     self.t2 = self.input_2.value()
+    #     v = self.input_2.value()*100
+    #     self.slider_label_2.setRange(1, v*2)
+    #     self.slider_label_2.setValue(v)
+    #     # self.input_2.setValue(self.t2)
+    #     self.Value2Changed.emit(self.t2)
+    
+    # def slider_2_changed(self, v):    # v: value emitted by a slider signal
+    #     self.t2 = v/100
+    #         #  #print('odd')
+    #     self.input_2.setValue(self.t2)
+    #     self.Value2Changed.emit(self.t2)    
+       
+    # hide image ---------------------------------------------   
+    def clear_img(self):
+         # Create a black image of size 1x1
+        clr_img = QImage(1, 1, QImage.Format_RGB888)
+        clr_img.setPixelColor(0, 0, QColor(Qt.black))
+
+        self.image_label.setPixmap(QPixmap(clr_img))
+        #print(self.width(), self.height())
+        self.resize(200,50)
+        self.node.update_shape() #works the best. But doesnt minimize shape immediately
+    
+    # def get_state(self) -> dict:
+    #     return {
+    #         'val1': self.t,
+    #         'val2': self.t2,
+    #     }
+
+    # def set_state(self, data: dict):
+    #     #ksize
+    #     self.input_1.setValue(data['val1'])
+    #     self.slider_label_1.setValue(data['val1']*100)
+    #     self.slider_label_1.setRange(1, data['val1']*200)
+    #     self.t = data['val1']
+
+    #     self.input_2.setValue(data['val2'])
+    #     self.slider_label_2.setValue(data['val2']*100)
+    #     self.slider_label_2.setRange(1, data['val2']*200)
+    #     self.t2 = data['val2']
+            
+class Blur_Averaging_MainWidget(MWB, Widget_Base8):
            #define Signal
     kValueChanged = Signal(int)
     previewState = Signal(bool)
@@ -1651,6 +2486,7 @@ class Blur_Averaging_MainWidget(MWB, Widget_Base):
         #Added Widget -----------------------------------------------
         #ksize------------
         self.ksize_label = QLabel('ksize:')
+        self.ksize_label.setStyleSheet('font-size: 14px;')
         self.k_size_input = QSpinBox()
         self.k_size_input.setValue(default)
         self.k_size_input.setKeyboardTracking(False)
@@ -1662,6 +2498,7 @@ class Blur_Averaging_MainWidget(MWB, Widget_Base):
         self.slider_label.setValue(default)
         #sigmaX ------------
         self.sigmaX_label = QLabel('sigmaX:')
+        self.sigmaX_label.setStyleSheet('font-size: 14px;')
         self.sigmaX_size_input = QDoubleSpinBox()
         #Xslider
         self.sliderX_label = QSlider(Qt.Horizontal)
@@ -1670,6 +2507,7 @@ class Blur_Averaging_MainWidget(MWB, Widget_Base):
         self.preview_label = QLabel('Preview:')
         self.preview_checkbox = QCheckBox()
         self.preview_checkbox.setText('Preview')
+        self.preview_checkbox.setStyleSheet('font-size: 14px;')
         self.preview_checkbox.setCheckState(Qt.Checked)
         #image
         self.image_label = QLabel()
@@ -1702,7 +2540,7 @@ class Blur_Averaging_MainWidget(MWB, Widget_Base):
         self.k = self.k_size_input.value()
         self.kValueChanged.emit(self.k)
         #debug
-        # print(f'slider:{self.slider_label.value()}')
+        # #print(f'slider:{self.slider_label.value()}')
 
     def the_slider_was_changed(self, v):    # v: value emitted by a signal -> slider value (0-1000)
         self.k_size_input.setValue(v)
@@ -1713,7 +2551,7 @@ class Blur_Averaging_MainWidget(MWB, Widget_Base):
     #     # self.resize(800,800)
 
     #     try:
-    #         rgb_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    #         #rgb_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     #     except cv2.error:
     #         return
         
@@ -1726,11 +2564,11 @@ class Blur_Averaging_MainWidget(MWB, Widget_Base):
     #     target_width = int(w * scale_factor)
     #     target_height = int(h * scale_factor)
     #     qt_image = qt_image.scaled(target_width, target_height, Qt.KeepAspectRatio)
-    #     # print("H:", target_height, "W:", target_width)
+    #     # #print("H:", target_height, "W:", target_width)
     #     self.image_label.setPixmap(QPixmap(qt_image))
     #     self.resize(100, 100)
     #     self.node.update_shape()
-    #     # print('Update Shape:',  print(self.width(), self.height()))
+    #     # #print('Update Shape:',  #print(self.width(), self.height()))
         
         
     def clear_img(self):
@@ -1738,25 +2576,31 @@ class Blur_Averaging_MainWidget(MWB, Widget_Base):
         clr_img = QImage(1, 1, QImage.Format_RGB888)
         clr_img.setPixelColor(0, 0, QColor(Qt.black))
         self.image_label.setPixmap(QPixmap(clr_img))
-        print(self.width(), self.height())
+        #print(self.width(), self.height())
         self.resize(200,50)
         self.node.update_shape() #works the best. But doesnt minimize shape immediately
-        print(self.k_size_input.value())
+        #print(self.k_size_input.value())
     
-    # def get_state(self) -> dict:
-    #     return {
-    #         'val': self.value(),
-    #     }
+    def get_state(self) -> dict:
+        return {
+            'val1': self.k,
+        }
 
-    # def set_state(self, data: dict):
-    #     self.setValue(data['val'])
+    def set_state(self, data: dict):
+        #ksize
+        self.k_size_input.setValue(data['val1'])
+        self.slider_label.setValue(data['val1'])
+        self.slider_label.setRange(1, data['val1']*2)
+        self.k = data['val1']
 
 
 
-class Blur_Median_MainWidget(MWB, Widget_Base):
+class Blur_Median_MainWidget(MWB, Widget_Base8):
            #define Signal
     kValueChanged = Signal(int)
+    kReleased = Signal(int)
     previewState = Signal(bool)
+    
 
     def __init__(self, params):
         MWB.__init__(self, params)
@@ -1769,6 +2613,7 @@ class Blur_Median_MainWidget(MWB, Widget_Base):
         #Added Widget -----------------------------------------------
         #ksize------------
         self.ksize_label = QLabel('ksize:')
+        self.ksize_label.setStyleSheet('font-size: 14px;')
         self.k_size_input = QSpinBox()
         self.k_size_input.setValue(default)
         self.k_size_input.setKeyboardTracking(False)
@@ -1780,12 +2625,14 @@ class Blur_Median_MainWidget(MWB, Widget_Base):
         self.slider_label.setValue(default)
         #sigmaX ------------
         self.sigmaX_label = QLabel('sigmaX:')
+        self.sigmaX_label.setStyleSheet('font-size: 14px;')
         self.sigmaX_size_input = QDoubleSpinBox()
         #Xslider
         self.sliderX_label = QSlider(Qt.Horizontal)
         # self.sliderX_label.setRange(0, 1000)
         #preview
         self.preview_label = QLabel('Preview:')
+        self.preview_label.setStyleSheet('font-size: 14px;')
         self.preview_checkbox = QCheckBox()
         self.preview_checkbox.setText('Preview')
         self.preview_checkbox.setCheckState(Qt.Checked)
@@ -1807,6 +2654,7 @@ class Blur_Median_MainWidget(MWB, Widget_Base):
         self.k_size_input.editingFinished.connect(self.the_spinbox_was_changed)  #USER ONLY
         # Slider triggers
         self.slider_label.sliderMoved.connect(self.the_slider_was_changed)
+        self.slider_label.sliderReleased.connect(self.releasedK)
         # Check box
         self.preview_checkbox.stateChanged.connect(self.the_checkbox_was_changed)
 
@@ -1828,18 +2676,21 @@ class Blur_Median_MainWidget(MWB, Widget_Base):
     def the_slider_was_changed(self, v):    # v: value emitted by a slider signal 
         if (v % 2) == 0:
             self.k = v+1 
-            # print('even')
+            # #print('even')
         else:
             self.k = v
-            #  print('odd')
+            #  #print('odd')
         self.k_size_input.setValue(self.k)
         self.kValueChanged.emit(self.k)
+    
+    def releasedK(self):
+        self.kReleased.emit(self.k)
         
     # def show_image(self, img):
     #     # self.resize(800,800)
 
     #     try:
-    #         rgb_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    #         #rgb_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     #     except cv2.error:
     #         return
         
@@ -1852,11 +2703,11 @@ class Blur_Median_MainWidget(MWB, Widget_Base):
     #     target_width = int(w * scale_factor)
     #     target_height = int(h * scale_factor)
     #     qt_image = qt_image.scaled(target_width, target_height, Qt.KeepAspectRatio)
-    #     # print("H:", target_height, "W:", target_width)
+    #     # #print("H:", target_height, "W:", target_width)
     #     self.image_label.setPixmap(QPixmap(qt_image))
     #     self.resize(100, 100)
     #     self.node.update_shape()
-    #     # print('Update Shape:',  print(self.width(), self.height()))
+    #     # #print('Update Shape:',  #print(self.width(), self.height()))
         
         
     def clear_img(self):
@@ -1864,27 +2715,562 @@ class Blur_Median_MainWidget(MWB, Widget_Base):
         clr_img = QImage(1, 1, QImage.Format_RGB888)
         clr_img.setPixelColor(0, 0, QColor(Qt.black))
         self.image_label.setPixmap(QPixmap(clr_img))
-        print(self.width(), self.height())
+        #print(self.width(), self.height())
         self.resize(200,50)
         self.node.update_shape() #works the best. But doesnt minimize shape immediately
-        print(self.k_size_input.value())
+        #print(self.k_size_input.value())
     
-    # def get_state(self) -> dict:
-    #     return {
-    #         'val': self.value(),
-    #     }
+    def get_state(self) -> dict:
+        return {
+            'val1': self.k,
+        }
 
-    # def set_state(self, data: dict):
-    #     self.setValue(data['val'])
+    def set_state(self, data: dict):
+        #ksize
+        self.k_size_input.setValue(data['val1'])
+        self.slider_label.setValue(data['val1'])
+        self.slider_label.setRange(1, data['val1']*2)
+        self.k = data['val1']
 
-
-
-class Gaus_Blur_MainWidget(MWB, QWidget):
+class Gaus_Blur_MainWidget(MWB, Widget_Base8):
            #define Signal
     
     previewState = Signal(bool)
     linkState = Signal(bool)
     kValueChanged = Signal(int)
+    XValueChanged = Signal(float)
+    YValueChanged = Signal(float)
+    sigValueChanged = Signal(float)
+
+    def __init__(self, params):
+        MWB.__init__(self, params)
+        QWidget.__init__(self)
+
+        # self.resize(300, 300)
+        default = 5
+        default_range = default*2
+                
+        #Added Widget -----------------------------------------------
+        #ksize------------
+        self.ksize_label = QLabel('ksize:')
+        self.ksize_label.setStyleSheet('font-size: 14px;')
+        self.k_size_input = QSpinBox()
+        self.k_size_input.setValue(default)
+        self.k_size_input.setKeyboardTracking(False)
+        self.k_size_input.setButtonSymbols(QAbstractSpinBox.NoButtons)
+
+        #ksize slider
+        self.slider_label = QSlider(Qt.Horizontal)
+        self.slider_label.setRange(1, default_range)    
+        self.slider_label.setSingleStep(2)
+        self.slider_label.setValue(default)
+        
+        #sigmaX ------------
+        self.sigmaX_label = QLabel('sigmaX:')
+        self.sigmaX_label.setStyleSheet('font-size: 14px;')
+        self.sigmaX_size_input = QDoubleSpinBox()
+        self.sigmaX_size_input.setValue(default)
+        self.sigmaX_size_input.setKeyboardTracking(False)
+        self.sigmaX_size_input.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        #Xslider
+        self.Xslider_label = QSlider(Qt.Horizontal)
+        self.Xslider_label.setRange(1, default_range*100)
+        self.Xslider_label.setValue(default*100)
+        #sigmaY ------------
+        self.sigmaY_label = QLabel('sigmaY:')
+        self.sigmaY_label.setStyleSheet('font-size: 14px;')
+        self.sigmaY_size_input = QDoubleSpinBox()
+        self.sigmaY_size_input.setValue(default)
+        self.sigmaY_size_input.setKeyboardTracking(False)
+        self.sigmaY_size_input.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        #Yslider
+        self.Yslider_label = QSlider(Qt.Horizontal)
+        self.Yslider_label.setRange(1, default_range*100)    
+        self.Yslider_label.setValue(default*100)
+        #link
+        self.link_checkbox = QCheckBox()
+        self.link_checkbox.setText('Link Sigma Y with Sigma X')
+        self.link_checkbox.setStyleSheet('font-size: 14px;')
+        self.sigma_label = QLabel('      (use sigma X slider)') #to adjust both sigmas
+        self.sigma_label.setStyleSheet('font-size: 14px;')
+        self.link_checkbox.setCheckState(Qt.Checked)
+        #preview
+        self.preview_label = QLabel('Preview:')
+        self.preview_checkbox = QCheckBox()
+        self.preview_checkbox.setText('Preview')
+        self.preview_checkbox.setStyleSheet('font-size: 14px;')
+        self.preview_checkbox.setCheckState(Qt.Checked)
+        #image
+        self.image_label = QLabel()
+               #self.image_label.resize(800, 800)
+        # Layout ----------------------------------------------------
+        self.layout1 = QVBoxLayout()
+        # ksize
+        self.layout1.addWidget(self.ksize_label)
+        self.layout1.addWidget(self.k_size_input)
+        self.layout1.addWidget(self.slider_label)
+        # Link
+        self.layout1.addWidget(self.link_checkbox)
+        self.layout1.addWidget(self.sigma_label)
+        # Sigma X
+        self.layout1.addWidget(self.sigmaX_label)
+        self.layout1.addWidget(self.sigmaX_size_input)
+        self.layout1.addWidget(self.Xslider_label)
+        # Sigma Y
+        self.layout1.addWidget(self.sigmaY_label)
+        self.layout1.addWidget(self.sigmaY_size_input)
+        self.layout1.addWidget(self.Yslider_label)
+        # Preview
+        self.layout1.addWidget(self.preview_checkbox)
+        # Image
+        self.layout1.addWidget(self.image_label)
+        #self.layout1.setSpacing(0) 
+        self.setLayout(self.layout1)
+
+        #Signals -------------------------------------------------
+        # Spinbox triggers
+        self.k_size_input.editingFinished.connect(self.the_spinbox_was_changed)  #USER ONLY
+        self.sigmaX_size_input.editingFinished.connect(self.the_Xspinbox_was_changed)
+        self.sigmaY_size_input.editingFinished.connect(self.the_Yspinbox_was_changed)
+        # Slider triggers
+        self.slider_label.sliderMoved.connect(self.the_slider_was_changed)
+        self.Xslider_label.sliderMoved.connect(self.the_Xslider_was_changed)
+        self.Yslider_label.sliderMoved.connect(self.the_Yslider_was_changed)
+        # Check box
+        self.preview_checkbox.stateChanged.connect(self.the_checkbox_was_changed)
+        self.link_checkbox.stateChanged.connect(self.link_checkbox_checked)
+
+    # Slot Functions -------------------------------------------
+    # checkbox -------------------------------------------------
+    def the_checkbox_was_changed(self, state):
+        self.previewState.emit(state)
+        
+    # link
+    def link_checkbox_checked(self, state):
+        self.linkState.emit(state)
+        if  state == Qt.Checked:
+            self.sigValueChanged.emit(self.X)
+            self.Y = self.X
+            self.Yslider_label.setRange(1, self.Y*200)
+            self.Xslider_label.setRange(1, self.X*200)
+            self.Yslider_label.setValue(self.Y*100)
+            self.sigmaY_size_input.setValue(self.Y)
+
+        #self.linkState is a signal object, not a boolean value: if  self.linkState == True: will not work
+              
+    # kernell ----------------------------------------------------
+    def the_spinbox_was_changed(self):    
+        self.slider_label.setRange(1, (self.k_size_input.value()*2 + 1))  
+        if (self.k_size_input.value() % 2) == 0:
+            self.k = self.k_size_input.value()+1 
+        else:
+             self.k = self.k_size_input.value()
+             
+        self.slider_label.setValue(self.k)
+        self.k_size_input.setValue(self.k) #updates even number in spinbox to odd
+        self.kValueChanged.emit(self.k)
+    
+    def the_slider_was_changed(self, v):    # v: value emitted by a slider signal 
+        if (v % 2) == 0:
+            self.k = v+1 
+            # #print('even')
+        else:
+            self.k = v
+            #  #print('odd')
+        self.k_size_input.setValue(self.k)
+        self.kValueChanged.emit(self.k)
+    # sigmaX --------------------------------------------------
+    def the_Xspinbox_was_changed(self): 
+        v = self.sigmaX_size_input.value()*100   
+        self.Xslider_label.setRange(1, v*2)  
+        self.Xslider_label.setValue(v)  
+        self.X = self.sigmaX_size_input.value()
+        
+        if self.link_checkbox.isChecked():
+            self.sigValueChanged.emit(self.X)
+            # update Y spinbox
+            self.Y = v/100
+            self.sigmaY_size_input.setValue(self.Y)
+
+            # update Y slider
+            self.Yslider_label.setRange(1, v*2)  
+            self.Yslider_label.setValue(v)  
+            self.Y = self.sigmaX_size_input.value()
+        else: 
+            self.XValueChanged.emit(self.X)
+            
+           
+    def the_Xslider_was_changed(self, v):    
+        self.X = v/100
+        #print(f"X emitted {self.X}")
+        # #print(self.link_checkbox)
+        self.sigmaX_size_input.setValue(self.X)
+        
+        if self.link_checkbox.isChecked():
+            self.sigValueChanged.emit(self.X)
+            # update Y spinbox
+            self.sigmaY_size_input.setValue(self.X)
+            self.Yslider_label.setValue(v) 
+
+            # update Y slider
+            # #print(self.X, self.Y)
+            # self.Yslider_label.setRange(1, v*2)  
+                      
+        else:
+            self.XValueChanged.emit(self.X)
+
+    # sigma Y -------------------------------------------------
+    def the_Yspinbox_was_changed(self): 
+        if self.link_checkbox.isChecked():
+            self.sigmaY_size_input.setValue(self.X)
+        else:
+            v = self.sigmaY_size_input.value()*100   
+            self.Yslider_label.setRange(1, v*2)  
+            self.Yslider_label.setValue(v)  
+            self.Y = self.sigmaY_size_input.value()
+            self.YValueChanged.emit(self.Y)
+
+    def the_Yslider_was_changed(self, v):    
+        if self.link_checkbox.isChecked():
+            self.Yslider_label.setValue(self.X*100)  
+        else:
+            self.Y = v/100
+            #print(f"Y emitted {self.Y}")
+            self.sigmaY_size_input.setValue(self.Y)
+            self.YValueChanged.emit(self.Y)
+
+    # update image ---------------------------------------------
+    #show image in widget8
+
+    # hide image ---------------------------------------------   
+    def clear_img(self):
+         # Create a black image of size 1x1
+        clr_img = QImage(1, 1, QImage.Format_RGB888)
+        clr_img.setPixelColor(0, 0, QColor(Qt.black))
+
+        self.image_label.setPixmap(QPixmap(clr_img))
+        #print(self.width(), self.height())
+        self.resize(200,50)
+        self.node.update_shape() #works the best. But doesnt minimize shape immediately
+    
+    def get_state(self) -> dict:
+        return {
+            'ksize': self.k,
+            'sigmaX': self.X,
+            # 'sigmaY': self.Y
+        }
+
+    def set_state(self, data: dict):
+        #ksize
+        self.k_size_input.setValue(data['ksize'])
+        self.slider_label.setValue(data['ksize'])
+        self.slider_label.setRange(1, data['ksize']*2)
+        self.k = data['ksize']
+
+        self.sigmaX_size_input.setValue(data['sigmaX'])
+        self.Xslider_label.setValue(data['sigmaX']*100)
+        self.Xslider_label.setRange(1, data['sigmaX']*200)
+        self.X = data['sigmaX']
+
+        self.sigmaY_size_input.setValue(data['sigmaX'])
+        self.Yslider_label.setValue(data['sigmaX']*100)
+        self.Yslider_label.setRange(1, data['sigmaX']*200)
+        self.Y = data['sigmaX']
+
+
+class Gaus_Blur_MainWidget3D(MWB, Widget_Base8):
+           #define Signal
+    
+    previewState = Signal(bool)
+    linkState = Signal(bool)
+    kValueChanged = Signal(float)
+    XValueChanged = Signal(float)
+    YValueChanged = Signal(float)
+    sigChanged = Signal(float)
+
+    def __init__(self, params):
+        MWB.__init__(self, params)
+        QWidget.__init__(self)
+
+        # self.resize(300, 300)
+        default = 5
+        default_range = default*2
+        self.X = default
+        self.Y = default
+        self.k = default
+
+                
+        #Added Widget -----------------------------------------------
+        #ksize------------
+        self.ksize_label = QLabel('sigmaZ:')
+        self.ksize_label.setStyleSheet('font-size: 14px;')
+        self.k_size_input = QDoubleSpinBox()
+        self.k_size_input.setValue(default)
+        self.k_size_input.setKeyboardTracking(False)
+        self.k_size_input.setButtonSymbols(QAbstractSpinBox.NoButtons)
+
+        #ksize slider
+        self.slider_label = QSlider(Qt.Horizontal)
+        self.slider_label.setRange(1, default_range*100)    
+        self.slider_label.setSingleStep(2)
+        self.slider_label.setValue(default*100)
+        
+        #sigmaX ------------
+        self.sigmaX_label = QLabel('sigmaX:')
+        self.sigmaX_label.setStyleSheet('font-size: 14px;')
+        self.sigmaX_size_input = QDoubleSpinBox()
+        self.sigmaX_size_input.setValue(default)
+        self.sigmaX_size_input.setKeyboardTracking(False)
+        self.sigmaX_size_input.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        #Xslider
+        self.Xslider_label = QSlider(Qt.Horizontal)
+        self.Xslider_label.setRange(1, default_range*100)
+        self.Xslider_label.setValue(default*100)
+        #sigmaY ------------
+        self.sigmaY_label = QLabel('sigmaY:')
+        self.sigmaY_label.setStyleSheet('font-size: 14px;')
+        self.sigmaY_size_input = QDoubleSpinBox()
+        self.sigmaY_size_input.setValue(default)
+        self.sigmaY_size_input.setKeyboardTracking(False)
+        self.sigmaY_size_input.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        #Yslider
+        self.Yslider_label = QSlider(Qt.Horizontal)
+        self.Yslider_label.setRange(1, default_range*100)    
+        self.Yslider_label.setValue(default*100)
+        #link
+        self.link_checkbox = QCheckBox()
+        self.link_checkbox.setText('Link Sigma X and Y values')
+        self.link_checkbox.setStyleSheet('font-size: 14px;')
+        self.sigma_label = QLabel('      (use sigma X slider)') #to adjust both sigmas
+        self.sigma_label.setStyleSheet('font-size: 14px;')
+        self.link_checkbox.setCheckState(Qt.Checked)
+        #preview
+        self.preview_label = QLabel('Preview:')
+        self.preview_checkbox = QCheckBox()
+        self.preview_checkbox.setText('Preview')
+        self.preview_checkbox.setStyleSheet('font-size: 14px;')
+        self.preview_checkbox.setCheckState(Qt.Checked)
+
+        self.warning_2D = QLabel('')
+        #image
+        self.image_label = QLabel()
+               #self.image_label.resize(800, 800)
+        # Layout ----------------------------------------------------
+        self.layout1 = QVBoxLayout()
+        #warning!
+        self.layout1.addWidget(self.warning_2D)
+        # Link
+        self.layout1.addWidget(self.link_checkbox)
+        self.layout1.addWidget(self.sigma_label)
+        # Sigma X
+        self.layout1.addWidget(self.sigmaX_label)
+        self.layout1.addWidget(self.sigmaX_size_input)
+        self.layout1.addWidget(self.Xslider_label)
+        # Sigma Y
+        self.layout1.addWidget(self.sigmaY_label)
+        self.layout1.addWidget(self.sigmaY_size_input)
+        self.layout1.addWidget(self.Yslider_label)
+         # ksize
+        self.layout1.addWidget(self.ksize_label)
+        self.layout1.addWidget(self.k_size_input)
+        self.layout1.addWidget(self.slider_label)
+        # Preview
+        self.layout1.addWidget(self.preview_checkbox)
+        # Image
+        self.layout1.addWidget(self.image_label)
+        #self.layout1.setSpacing(0) 
+        self.setLayout(self.layout1)
+
+        #Signals -------------------------------------------------
+        # Spinbox triggers
+        self.k_size_input.editingFinished.connect(self.the_spinbox_was_changed)  #USER ONLY
+        self.sigmaX_size_input.editingFinished.connect(self.the_Xspinbox_was_changed)
+        self.sigmaY_size_input.editingFinished.connect(self.the_Yspinbox_was_changed)
+        # Slider triggers
+        self.slider_label.sliderMoved.connect(self.the_slider_was_changed)
+        self.Xslider_label.sliderMoved.connect(self.the_Xslider_was_changed)
+        self.Yslider_label.sliderMoved.connect(self.the_Yslider_was_changed)
+        # Check box
+        self.preview_checkbox.stateChanged.connect(self.the_checkbox_was_changed)
+        self.link_checkbox.stateChanged.connect(self.link_checkbox_checked)
+
+    # Slot Functions -------------------------------------------
+    # checkbox -------------------------------------------------
+    def warning(self, warn):
+        if warn == 1:
+            self.warning_2D.setText("WARNING!\n3D Gaussian Blur cannot be performed on 2D data.\nPreprocessing has not been performed on the data.\nTo use this node, please read 3D data into the pipeline.\nOtherwise, please delete this node from your pipeline.")
+            style = """
+                background-color: #BC0000;
+                border-style: outset;
+                border-width: 2px;
+                border-radius: 10px;
+                border-color: beige;
+                font: 14px;
+                min-width: 10em;
+                padding: 6px;
+            """
+            self.warning_2D.setStyleSheet(style)
+            # self.warning_2D.setStyleSheet('font-size: 14px; color: red;')
+        elif warn == 0:
+            self.warning_2D.setText(' ')
+            self.warning_2D.setStyleSheet('font-size: 1px;')
+
+    def the_checkbox_was_changed(self, state):
+        self.previewState.emit(state)
+        
+    # link
+    def link_checkbox_checked(self, state):
+        self.linkState.emit(state)
+        if  state == Qt.Checked:
+            self.sigChanged.emit(self.X)
+            self.Y = self.X
+            self.Yslider_label.setRange(1, self.Y*200)
+            self.Xslider_label.setRange(1, self.X*200)
+            self.Yslider_label.setValue(self.Y*100)
+            self.sigmaY_size_input.setValue(self.Y)
+
+            # self.k = self.X
+            # self.slider_label.setRange(1, self.Y*200)
+            # self.slider_label.setValue(self.Y*100)
+            # self.k_size_input.setValue(self.Y)
+
+        #self.linkState is a signal object, not a boolean value: if  self.linkState == True: will not work
+              
+    # sigmaZ ----------------------------------------------------
+    def the_spinbox_was_changed(self):    
+        # if self.link_checkbox.isChecked():
+        #     self.k_size_input.setValue(self.X)
+        # else:
+        v = self.k_size_input.value()*100
+        self.slider_label.setRange(1, v*2)
+        self.slider_label.setValue(v)
+        self.k = self.k_size_input.value()
+        self.kValueChanged.emit(self.k)
+
+    
+    def the_slider_was_changed(self, v):    # v: value emitted by a slider signal 
+        # if self.link_checkbox.isChecked():
+        #     self.slider_label.setValue(self.X*100)
+        self.k = v/100
+        self.k_size_input.setValue(self.k)
+        self.kValueChanged.emit(self.k)
+
+        
+    # sigmaX --------------------------------------------------
+    def the_Xspinbox_was_changed(self): 
+        v = self.sigmaX_size_input.value()*100   
+        self.Xslider_label.setRange(1, v*2)  
+        self.Xslider_label.setValue(v)  
+        self.X = self.sigmaX_size_input.value()
+        # #print(self.link_checkbox.isChecked())
+
+        if self.link_checkbox.isChecked():
+            self.sigChanged.emit(self.X)
+            # update Y spinbox
+            self.Y = v/100
+            self.sigmaY_size_input.setValue(self.Y)
+            #update Z spinbox
+            # self.k_size_input.setValue(self.Y)
+
+            # update Y slider
+            self.Yslider_label.setRange(1, v*2)  
+            self.Yslider_label.setValue(v)  
+            self.Y = self.sigmaX_size_input.value()
+            #update Z slider
+            # self.slider_label.setRange(1, v*2)  
+            # self.slider_label.setValue(v) 
+        else:
+            self.XValueChanged.emit(self.X) 
+            
+            
+
+    def the_Xslider_was_changed(self, v):           
+        self.X = v/100
+        self.sigmaX_size_input.setValue(self.X)
+
+        if self.link_checkbox.isChecked():
+            self.sigChanged.emit(self.X)
+            # update Y spinbox
+            self.Y = v/100
+            self.sigmaY_size_input.setValue(self.Y)
+
+            # update Y slider
+            # #print(self.X, self.Y)
+            # self.Yslider_label.setRange(1, v*2)  
+            self.Yslider_label.setValue(v)  
+
+            # update Z spinbox
+            # self.k_size_input.setValue(self.Y)
+            # # self.Yslider_label.setRange(1, v*2)  
+            # self.slider_label.setValue(v)  
+        else:
+            self.XValueChanged.emit(self.X)
+            
+
+    # sigma Y -------------------------------------------------
+    def the_Yspinbox_was_changed(self): 
+        if self.link_checkbox.isChecked():
+            self.sigmaY_size_input.setValue(self.X)
+        else:
+            v = self.sigmaY_size_input.value()*100   
+            self.Yslider_label.setRange(1, v*2)  
+            self.Yslider_label.setValue(v)  
+            self.Y = self.sigmaY_size_input.value()
+            self.YValueChanged.emit(self.Y)
+
+
+    def the_Yslider_was_changed(self, v):    
+        if self.link_checkbox.isChecked():
+            self.Yslider_label.setValue(self.X*100) 
+        else:
+            self.Y = v/100
+            self.sigmaY_size_input.setValue(self.Y)
+            self.YValueChanged.emit(self.Y)
+
+
+    # hide image ---------------------------------------------   
+    def clear_img(self):
+         # Create a black image of size 1x1
+        clr_img = QImage(1, 1, QImage.Format_RGB888)
+        clr_img.setPixelColor(0, 0, QColor(Qt.black))
+
+        self.image_label.setPixmap(QPixmap(clr_img))
+        #print(self.width(), self.height())
+        self.resize(200,50)
+        self.node.update_shape() #works the best. But doesnt minimize shape immediately
+    
+    def get_state(self) -> dict:
+        return {
+            # 'ksize': self.X,
+            'sigmaX': self.X,
+            # 'sigmaY': self.X
+        }
+
+    def set_state(self, data: dict):
+        #ksize
+        self.k_size_input.setValue(data['sigmaX'])
+        self.slider_label.setValue(data['sigmaX']*100)
+        self.slider_label.setRange(1, data['sigmaX']*200)
+        self.k = data['sigmaX']
+
+        self.sigmaX_size_input.setValue(data['sigmaX'])
+        self.Xslider_label.setValue(data['sigmaX']*100)
+        self.Xslider_label.setRange(1, data['sigmaX']*200)
+        self.X = data['sigmaX']
+
+        self.sigmaY_size_input.setValue(data['sigmaX'])
+        self.Yslider_label.setValue(data['sigmaX']*100)
+        self.Yslider_label.setRange(1, data['sigmaX']*200)
+        self.Y = data['sigmaX']
+       
+#Add z slider
+class Gaus_Blur_MainWidget3D1(MWB, QWidget):
+           #define Signal
+    
+    previewState = Signal(bool)
+    linkState = Signal(bool)
+    kValueChanged = Signal(int)
+    kReleased = Signal(int)
     XValueChanged = Signal(float)
     YValueChanged = Signal(float)
 
@@ -1899,6 +3285,7 @@ class Gaus_Blur_MainWidget(MWB, QWidget):
         #Added Widget -----------------------------------------------
         #ksize------------
         self.ksize_label = QLabel('ksize:')
+        self.ksize_label.setStyleSheet('font-size: 14px;')
         self.k_size_input = QSpinBox()
         self.k_size_input.setValue(default)
         self.k_size_input.setKeyboardTracking(False)
@@ -1912,6 +3299,7 @@ class Gaus_Blur_MainWidget(MWB, QWidget):
         
         #sigmaX ------------
         self.sigmaX_label = QLabel('sigmaX:')
+        self.sigmaX_label.setStyleSheet('font-size: 14px;')
         self.sigmaX_size_input = QDoubleSpinBox()
         self.sigmaX_size_input.setValue(default)
         self.sigmaX_size_input.setKeyboardTracking(False)
@@ -1922,6 +3310,7 @@ class Gaus_Blur_MainWidget(MWB, QWidget):
         self.Xslider_label.setValue(default*100)
         #sigmaY ------------
         self.sigmaY_label = QLabel('sigmaY:')
+        self.sigmaY_label.setStyleSheet('font-size: 14px;')
         self.sigmaY_size_input = QDoubleSpinBox()
         self.sigmaY_size_input.setValue(default)
         self.sigmaY_size_input.setKeyboardTracking(False)
@@ -1933,11 +3322,13 @@ class Gaus_Blur_MainWidget(MWB, QWidget):
         #link
         self.link_checkbox = QCheckBox()
         self.link_checkbox.setText('Link')
+        self.link_checkbox.setStyleSheet('font-size: 14px;')
         self.link_checkbox.setCheckState(Qt.Checked)
         #preview
         self.preview_label = QLabel('Preview:')
         self.preview_checkbox = QCheckBox()
         self.preview_checkbox.setText('Preview')
+        self.preview_checkbox.setStyleSheet('font-size: 14px;')
         self.preview_checkbox.setCheckState(Qt.Checked)
         #image
         self.image_label = QLabel()
@@ -1954,6 +3345,282 @@ class Gaus_Blur_MainWidget(MWB, QWidget):
         self.layout1.addWidget(self.Xslider_label)
         # Link
         self.layout1.addWidget(self.link_checkbox)
+        # Sigma Y
+        self.layout1.addWidget(self.sigmaY_label)
+        self.layout1.addWidget(self.sigmaY_size_input)
+        self.layout1.addWidget(self.Yslider_label)
+        # Preview
+        self.layout1.addWidget(self.preview_checkbox)
+        # Image
+        self.layout1.addWidget(self.image_label)
+        #self.layout1.setSpacing(0) 
+        self.setLayout(self.layout1)
+
+        #Signals -------------------------------------------------
+        # Spinbox triggers
+        self.k_size_input.editingFinished.connect(self.the_spinbox_was_changed)  #USER ONLY
+        self.sigmaX_size_input.editingFinished.connect(self.the_Xspinbox_was_changed)
+        self.sigmaY_size_input.editingFinished.connect(self.the_Yspinbox_was_changed)
+        # Slider triggers
+        self.slider_label.sliderMoved.connect(self.the_slider_was_changed)
+        self.Xslider_label.sliderMoved.connect(self.the_Xslider_was_changed)
+        self.Yslider_label.sliderMoved.connect(self.the_Yslider_was_changed)
+
+        self.slider_label.sliderReleased.connect(self.releasedK)
+        # self.Xslider_label.sliderMoved.connect(self.the_Xslider_was_changed)
+        # self.Yslider_label.sliderMoved.connect(self.the_Yslider_was_changed)
+        # Check box
+        self.preview_checkbox.stateChanged.connect(self.the_checkbox_was_changed)
+        self.link_checkbox.stateChanged.connect(self.link_checkbox_checked)
+
+    # Slot Functions -------------------------------------------
+    # checkbox -------------------------------------------------
+    def the_checkbox_was_changed(self, state):
+        self.previewState.emit(state)
+        
+    # link
+    def link_checkbox_checked(self, state):
+        self.linkState.emit(state)
+        if  state == Qt.Checked:
+            self.Y = self.X
+            self.Yslider_label.setRange(1, self.Y*200)
+            self.Xslider_label.setRange(1, self.X*200)
+            self.Yslider_label.setValue(self.Y*100)
+            self.sigmaY_size_input.setValue(self.Y)
+            
+
+        #self.linkState is a signal object, not a boolean value: if  self.linkState == True: will not work
+              
+    # kernell ----------------------------------------------------
+    def the_spinbox_was_changed(self):    
+        self.slider_label.setRange(1, (self.k_size_input.value()*2 + 1))  
+        if (self.k_size_input.value() % 2) == 0:
+            self.k = self.k_size_input.value()+1 
+        else:
+             self.k = self.k_size_input.value()
+             
+        self.slider_label.setValue(self.k)
+        self.k_size_input.setValue(self.k) #updates even number in spinbox to odd
+        self.kValueChanged.emit(self.k)
+        self.kReleased.emit(self.k)
+    
+    def the_slider_was_changed(self, v):    # v: value emitted by a slider signal 
+        # self.k = v
+        # self.k_size_input.setValue(self.k)
+        # self.kValueChanged.emit(self.k)
+        if (v % 2) == 0:
+            self.k = v+1 
+            # #print('even')
+        else:
+            self.k = v
+            #  #print('odd')
+        self.k_size_input.setValue(self.k)
+        self.kValueChanged.emit(self.k)
+
+    def releasedK(self):
+        self.kReleased.emit(self.k)
+
+    # sigmaX --------------------------------------------------
+    def the_Xspinbox_was_changed(self): 
+        v = self.sigmaX_size_input.value()*100   
+        self.Xslider_label.setRange(1, v*2)  
+        self.Xslider_label.setValue(v)  
+        self.X = self.sigmaX_size_input.value()
+        self.XValueChanged.emit(self.X)
+        # #print(self.link_checkbox.isChecked())
+
+        if self.link_checkbox.isChecked():
+            # update Y spinbox
+            self.Y = v/100
+            self.sigmaY_size_input.setValue(self.Y)
+
+            # update Y slider
+            self.Yslider_label.setRange(1, v*2)  
+            self.Yslider_label.setValue(v)  
+            self.Y = self.sigmaX_size_input.value()
+            
+            self.YValueChanged.emit(self.Y)
+
+    def the_Xslider_was_changed(self, v):    
+        self.X = v/100
+        self.sigmaX_size_input.setValue(self.X)
+        self.XValueChanged.emit(self.X)
+        
+        if self.link_checkbox.isChecked():
+            # update Y spinbox
+            self.Y = v/100
+            self.sigmaY_size_input.setValue(self.Y)
+
+            # update Y slider
+            #print(self.X, self.Y)
+            # self.Yslider_label.setRange(1, v*2)  
+            self.Yslider_label.setValue(v)  
+            
+            self.YValueChanged.emit(self.Y)
+
+    # sigma Y -------------------------------------------------
+    def the_Yspinbox_was_changed(self): 
+        if not self.link_checkbox.isChecked():
+            v = self.sigmaY_size_input.value()*100   
+            self.Yslider_label.setRange(1, v*2)  
+            self.Yslider_label.setValue(v)  
+            self.Y = self.sigmaY_size_input.value()
+            self.YValueChanged.emit(self.Y)
+
+        if self.link_checkbox.isChecked():
+            self.sigmaY_size_input.setValue(self.X)
+
+    def the_Yslider_was_changed(self, v):    
+        if not self.link_checkbox.isChecked():
+            self.Y = v/100
+            self.sigmaY_size_input.setValue(self.Y)
+            self.YValueChanged.emit(self.Y)
+    # update image ---------------------------------------------
+    def show_image(self, img):
+        # self.resize(800,800)
+
+        try:
+            if len(img.shape) == 2:
+                # Grayscale image
+                qt_image = QImage(img.data, img.shape[1], img.shape[0], img.shape[1], QImage.Format_Grayscale8)
+            else:
+                # RGB image
+                #img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                h, w, ch = img.shape
+                bytes_per_line = ch * w
+                qt_image = QImage(img.data, w, h, bytes_per_line, QImage.Format_RGB888)
+            
+            # Calculate the target size for scaling
+            scale_factor = 0.4  # Increase the scaling factor for clarity
+            target_width = int(qt_image.width() * scale_factor)
+            target_height = int(qt_image.height() * scale_factor)
+            
+            qt_image = qt_image.scaled(target_width, target_height, Qt.KeepAspectRatio)
+            
+            self.image_label.setPixmap(QPixmap.fromImage(qt_image))
+            self.resize(target_width, target_height)
+            self.node.update_shape()
+        except Exception as e:
+            print("Error:", e)
+
+
+    # hide image ---------------------------------------------   
+    def clear_img(self):
+         # Create a black image of size 1x1
+        clr_img = QImage(1, 1, QImage.Format_RGB888)
+        clr_img.setPixelColor(0, 0, QColor(Qt.black))
+
+        self.image_label.setPixmap(QPixmap(clr_img))
+        #print(self.width(), self.height())
+        self.resize(200,50)
+        self.node.update_shape() #works the best. But doesnt minimize shape immediately
+    
+    def get_state(self) -> dict:
+        return {
+            'ksize': self.k,
+            'sigmaX': self.X,
+            'sigmaY': self.Y
+        }
+
+    def set_state(self, data: dict):
+        #ksize
+        self.k_size_input.setValue(data['ksize'])
+        self.slider_label.setValue(data['ksize'])
+        self.slider_label.setRange(1, data['ksize']*2)
+        self.k = data['ksize']
+
+        self.sigmaX_size_input.setValue(data['sigmaX'])
+        self.Xslider_label.setValue(data['sigmaX']*100)
+        self.Xslider_label.setRange(1, data['sigmaX']*200)
+        self.X = data['sigmaX']
+
+        self.sigmaY_size_input.setValue(data['sigmaY'])
+        self.Yslider_label.setValue(data['sigmaY']*100)
+        self.Yslider_label.setRange(1, data['sigmaY']*200)
+        self.Y = data['sigmaY']
+
+class Bilateral_MainWidget(MWB, Widget_Base8):    
+    previewState = Signal(bool)
+    linkState = Signal(bool)
+    kValueChanged = Signal(int)
+    kReleased = Signal(int)
+    XValueChanged = Signal(float)
+    YValueChanged = Signal(float)
+
+    def __init__(self, params):
+        MWB.__init__(self, params)
+        QWidget.__init__(self)
+
+        # self.resize(300, 300)
+        default = 5
+        default_range = default*2
+                
+        #Added Widget -----------------------------------------------
+        #ksize------------
+        self.ksize_label = QLabel('diameter:')
+        self.ksize_label.setStyleSheet('font-size: 14px;')
+        self.k_size_input = QSpinBox()
+        self.k_size_input.setValue(default)
+        self.k_size_input.setKeyboardTracking(False)
+        self.k_size_input.setButtonSymbols(QAbstractSpinBox.NoButtons)
+
+        #ksize slider
+        self.slider_label = QSlider(Qt.Horizontal)
+        self.slider_label.setRange(1, default_range)    
+        self.slider_label.setSingleStep(2)
+        self.slider_label.setValue(default)
+        
+        #sigmaX ------------
+        self.sigmaX_label = QLabel('sigmaColour:')
+        self.sigmaX_label.setStyleSheet('font-size: 14px;')
+        self.sigmaX_size_input = QDoubleSpinBox()
+        self.sigmaX_size_input.setValue(default)
+        self.sigmaX_size_input.setKeyboardTracking(False)
+        self.sigmaX_size_input.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        #Xslider
+        self.Xslider_label = QSlider(Qt.Horizontal)
+        self.Xslider_label.setRange(1, default_range*100)
+        self.Xslider_label.setValue(default*100)
+        #sigmaY ------------
+        self.sigmaY_label = QLabel('sigmaSpace:')
+        self.sigmaY_label.setStyleSheet('font-size: 14px;')
+        self.sigmaY_size_input = QDoubleSpinBox()
+        self.sigmaY_size_input.setValue(default)
+        self.sigmaY_size_input.setKeyboardTracking(False)
+        self.sigmaY_size_input.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        #Yslider
+        self.Yslider_label = QSlider(Qt.Horizontal)
+        self.Yslider_label.setRange(1, default_range*100)    
+        self.Yslider_label.setValue(default*100)
+        #link
+        self.link_checkbox = QCheckBox()
+        self.link_checkbox.setText('Link Sigma values')
+        self.link_checkbox.setStyleSheet('font-size: 14px;')
+        self.sigma_label = QLabel('      (use sigmaColour slider)') #to adjust both sigmas
+        self.sigma_label.setStyleSheet('font-size: 14px;')
+        self.link_checkbox.setCheckState(Qt.Checked)
+        #preview
+        self.preview_label = QLabel('Preview:')
+        self.preview_checkbox = QCheckBox()
+        self.preview_checkbox.setText('Preview')
+        self.preview_checkbox.setStyleSheet('font-size: 14px;')
+        self.preview_checkbox.setCheckState(Qt.Checked)
+        #image
+        self.image_label = QLabel()
+               #self.image_label.resize(800, 800)
+        # Layout ----------------------------------------------------
+        self.layout1 = QVBoxLayout()
+        # ksize
+        self.layout1.addWidget(self.ksize_label)
+        self.layout1.addWidget(self.k_size_input)
+        self.layout1.addWidget(self.slider_label)
+        # Sigma X
+        self.layout1.addWidget(self.sigmaX_label)
+        self.layout1.addWidget(self.sigmaX_size_input)
+        self.layout1.addWidget(self.Xslider_label)
+        # Link
+        self.layout1.addWidget(self.link_checkbox)
+        self.layout1.addWidget(self.sigma_label)
         # Sigma Y
         self.layout1.addWidget(self.sigmaY_label)
         self.layout1.addWidget(self.sigmaY_size_input)
@@ -1992,7 +3659,6 @@ class Gaus_Blur_MainWidget(MWB, QWidget):
             self.Xslider_label.setRange(1, self.X*200)
             self.Yslider_label.setValue(self.Y*100)
             self.sigmaY_size_input.setValue(self.Y)
-            
 
         #self.linkState is a signal object, not a boolean value: if  self.linkState == True: will not work
               
@@ -2014,10 +3680,10 @@ class Gaus_Blur_MainWidget(MWB, QWidget):
         # self.kValueChanged.emit(self.k)
         if (v % 2) == 0:
             self.k = v+1 
-            # print('even')
+            # #print('even')
         else:
             self.k = v
-            #  print('odd')
+            #  #print('odd')
         self.k_size_input.setValue(self.k)
         self.kValueChanged.emit(self.k)
     # sigmaX --------------------------------------------------
@@ -2027,7 +3693,7 @@ class Gaus_Blur_MainWidget(MWB, QWidget):
         self.Xslider_label.setValue(v)  
         self.X = self.sigmaX_size_input.value()
         self.XValueChanged.emit(self.X)
-        # print(self.link_checkbox.isChecked())
+        # #print(self.link_checkbox.isChecked())
 
         if self.link_checkbox.isChecked():
             # update Y spinbox
@@ -2052,7 +3718,7 @@ class Gaus_Blur_MainWidget(MWB, QWidget):
             self.sigmaY_size_input.setValue(self.Y)
 
             # update Y slider
-            print(self.X, self.Y)
+            #print(self.X, self.Y)
             # self.Yslider_label.setRange(1, v*2)  
             self.Yslider_label.setValue(v)  
             
@@ -2075,33 +3741,36 @@ class Gaus_Blur_MainWidget(MWB, QWidget):
             self.Y = v/100
             self.sigmaY_size_input.setValue(self.Y)
             self.YValueChanged.emit(self.Y)
-    # update image ---------------------------------------------
-    def show_image(self, img):
-        # self.resize(800,800)
 
-        try:
-            if len(img.shape) == 2:
-                # Grayscale image
-                qt_image = QImage(img.data, img.shape[1], img.shape[0], img.shape[1], QImage.Format_Grayscale8)
-            else:
-                # RGB image
-                rgb_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                h, w, ch = rgb_image.shape
-                bytes_per_line = ch * w
-                qt_image = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format_RGB888)
+        if self.link_checkbox.isChecked():
+            self.Yslider_label.setValue(self.X*100)   
+    # update image ---------------------------------------------
+    # def show_image(self, img):
+    #     # self.resize(800,800)
+
+    #     try:
+    #         if len(img.shape) == 2:
+    #             # Grayscale image
+    #             qt_image = QImage(img.data, img.shape[1], img.shape[0], img.shape[1], QImage.Format_Grayscale8)
+    #         else:
+    #             # RGB image
+    #             #img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    #             h, w, ch = img.shape
+    #             bytes_per_line = ch * w
+    #             qt_image = QImage(img.data, w, h, bytes_per_line, QImage.Format_RGB888)
             
-            # Calculate the target size for scaling
-            scale_factor = 0.4  # Increase the scaling factor for clarity
-            target_width = int(qt_image.width() * scale_factor)
-            target_height = int(qt_image.height() * scale_factor)
+    #         # Calculate the target size for scaling
+    #         scale_factor = 0.4  # Increase the scaling factor for clarity
+    #         target_width = int(qt_image.width() * scale_factor)
+    #         target_height = int(qt_image.height() * scale_factor)
             
-            qt_image = qt_image.scaled(target_width, target_height, Qt.KeepAspectRatio)
+    #         qt_image = qt_image.scaled(target_width, target_height, Qt.KeepAspectRatio)
             
-            self.image_label.setPixmap(QPixmap.fromImage(qt_image))
-            self.resize(target_width, target_height)
-            self.node.update_shape()
-        except Exception as e:
-            print("Error:", e)
+    #         self.image_label.setPixmap(QPixmap.fromImage(qt_image))
+    #         self.resize(target_width, target_height)
+    #         self.node.update_shape()
+    #     except Exception as e:
+    #         #print("Error:", e)
 
 
     # hide image ---------------------------------------------   
@@ -2111,7 +3780,7 @@ class Gaus_Blur_MainWidget(MWB, QWidget):
         clr_img.setPixelColor(0, 0, QColor(Qt.black))
 
         self.image_label.setPixmap(QPixmap(clr_img))
-        print(self.width(), self.height())
+        #print(self.width(), self.height())
         self.resize(200,50)
         self.node.update_shape() #works the best. But doesnt minimize shape immediately
     
@@ -2138,10 +3807,10 @@ class Gaus_Blur_MainWidget(MWB, QWidget):
         self.Yslider_label.setValue(data['sigmaY']*100)
         self.Yslider_label.setRange(1, data['sigmaY']*200)
         self.Y = data['sigmaY']
+        
 
 
-
-class Bilateral_MainWidget(MWB, Widget_Base):
+class Bilateral_MainWidget1(MWB, Widget_Base):
            #define Signal
     
     previewState = Signal(bool)
@@ -2267,7 +3936,7 @@ class Bilateral_MainWidget(MWB, Widget_Base):
     def the_slider_was_changed(self, v):    # v: value emitted by a slider signal 
         
         self.k = v
-            #  print('odd')
+            #  #print('odd')
         self.k_size_input.setValue(self.k)
         self.kValueChanged.emit(self.k)
     # sigmaX --------------------------------------------------
@@ -2277,7 +3946,7 @@ class Bilateral_MainWidget(MWB, Widget_Base):
         self.Xslider_label.setValue(v)  
         self.X = self.sigmaX_size_input.value()
         self.XValueChanged.emit(self.X)
-        # print(self.link_checkbox.isChecked())
+        # #print(self.link_checkbox.isChecked())
 
         if self.link_checkbox.isChecked():
             # update Y spinbox
@@ -2302,7 +3971,7 @@ class Bilateral_MainWidget(MWB, Widget_Base):
             self.sigmaY_size_input.setValue(self.Y)
 
             # update Y slider
-            print(self.X, self.Y)
+            #print(self.X, self.Y)
             # self.Yslider_label.setRange(1, v*2)  
             self.Yslider_label.setValue(v)  
             
@@ -2331,10 +4000,10 @@ class Bilateral_MainWidget(MWB, Widget_Base):
     #             qt_image = QImage(img.data, img.shape[1], img.shape[0], img.shape[1], QImage.Format_Grayscale8)
     #         else:
     #             # RGB image
-    #             rgb_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    #             h, w, ch = rgb_image.shape
+    #             #img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    #             h, w, ch = img.shape
     #             bytes_per_line = ch * w
-    #             qt_image = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format_RGB888)
+    #             qt_image = QImage(img.data, w, h, bytes_per_line, QImage.Format_RGB888)
             
     #         # Calculate the target size for scaling
     #         scale_factor = 0.4  # Increase the scaling factor for clarity
@@ -2347,7 +4016,7 @@ class Bilateral_MainWidget(MWB, Widget_Base):
     #         self.resize(target_width, target_height)
     #         self.node.update_shape()
     #     except Exception as e:
-    #         print("Error:", e)
+    #         #print("Error:", e)
 
 
     # hide image ---------------------------------------------   
@@ -2357,7 +4026,7 @@ class Bilateral_MainWidget(MWB, Widget_Base):
         clr_img.setPixelColor(0, 0, QColor(Qt.black))
 
         self.image_label.setPixmap(QPixmap(clr_img))
-        print(self.width(), self.height())
+        #print(self.width(), self.height())
         self.resize(200,50)
         self.node.update_shape() #works the best. But doesnt minimize shape immediately
     
@@ -2369,9 +4038,9 @@ class Bilateral_MainWidget(MWB, Widget_Base):
     # def set_state(self, data: dict):
     #     self.setValue(data['val'])
 
-
-#thresh #maxval
-class Threshold_MainWidget(MWB, QWidget):
+# Thresholding Widget Base
+# thresh #maxval
+class Threshold_Manual_MainWidget(MWB, Widget_Base8):
     #define Signal
     previewState = Signal(bool)
     threshValueChanged = Signal(int)  #threshold
@@ -2382,16 +4051,17 @@ class Threshold_MainWidget(MWB, QWidget):
         QWidget.__init__(self)
 
         self.resize(300, 300)
-        default1 = 10
+        default1 = 100
         default_range1 = default1*2
-        default2 = 100
+        default2 = 255
         default_range2 = default2*2
 
         
                 
         #Added Widget -----------------------------------------------
         #threshold------------
-        self.tsize_label = QLabel('thresh:')
+        self.tsize_label = QLabel('threshold value:')
+        self.tsize_label.setStyleSheet('font-size: 14px;')
         self.t_size_input = QSpinBox()
         self.t_size_input.setMaximum(255)
         self.t_size_input.setValue(default1)
@@ -2400,10 +4070,11 @@ class Threshold_MainWidget(MWB, QWidget):
 
         #thresh slider
         self.slider_label = QSlider(Qt.Horizontal)
-        self.slider_label.setRange(1, default_range1)    
+        self.slider_label.setRange(1, 255)    
         self.slider_label.setValue(default1)
         #maxvalue ------------
-        self.maxv_label = QLabel('maxval:')
+        self.maxv_label = QLabel('maximum value:')
+        self.maxv_label.setStyleSheet('font-size: 14px;')
         self.maxv_size_input = QSpinBox()
         self.maxv_size_input.setMaximum(255)
         self.maxv_size_input.setValue(default2)
@@ -2411,10 +4082,11 @@ class Threshold_MainWidget(MWB, QWidget):
         self.maxv_size_input.setButtonSymbols(QAbstractSpinBox.NoButtons)
         #mv slider
         self.mvslider_label = QSlider(Qt.Horizontal)
-        self.mvslider_label.setRange(1, default_range2)
+        self.mvslider_label.setRange(1, 255)
         self.mvslider_label.setValue(default2)
         #preview
         self.preview_label = QLabel('Preview:')
+        self.preview_label.setStyleSheet('font-size: 14px;')
         self.preview_checkbox = QCheckBox()
         self.preview_checkbox.setText('Preview')
         self.preview_checkbox.setCheckState(Qt.Checked)
@@ -2454,7 +4126,7 @@ class Threshold_MainWidget(MWB, QWidget):
           
     # thresh ----------------------------------------------------
     def the_spinbox_was_changed(self):    
-        self.slider_label.setRange(1, (self.t_size_input.value()*2))  
+        # self.slider_label.setRange(1, (self.t_size_input.value()*2))  
         self.t = self.t_size_input.value()
         self.slider_label.setValue(self.t)
         self.t_size_input.setValue(self.t)
@@ -2462,12 +4134,12 @@ class Threshold_MainWidget(MWB, QWidget):
     
     def the_slider_was_changed(self, v):    # v: value emitted by a slider signal
         self.t = v
-            #  print('odd')
+            #  #print('odd')
         self.t_size_input.setValue(self.t)
         self.threshValueChanged.emit(self.t)
     # maxval --------------------------------------------------
     def the_mvspinbox_was_changed(self): 
-        self.mvslider_label.setRange(1, (self.maxv_size_input.value()*2))  
+        # self.mvslider_label.setRange(1, (self.maxv_size_input.value()*2))  
         self.mv = self.maxv_size_input.value()
         self.mvslider_label.setValue(self.mv)
         self.maxv_size_input.setValue(self.mv)
@@ -2477,34 +4149,6 @@ class Threshold_MainWidget(MWB, QWidget):
         self.mv = v
         self.maxv_size_input.setValue(self.mv)
         self.mvValueChanged.emit(self.mv)
-    # update image ---------------------------------------------
-    def show_image(self, img):
-        # self.resize(800,800)
-
-        try:
-            if len(img.shape) == 2:
-                # Grayscale image
-                qt_image = QImage(img.data, img.shape[1], img.shape[0], img.shape[1], QImage.Format_Grayscale8)
-            else:
-                # RGB image
-                rgb_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                h, w, ch = rgb_image.shape
-                bytes_per_line = ch * w
-                qt_image = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format_RGB888)
-            
-            # Calculate the target size for scaling
-            scale_factor = 0.4  # Increase the scaling factor for clarity
-            target_width = int(qt_image.width() * scale_factor)
-            target_height = int(qt_image.height() * scale_factor)
-            
-            qt_image = qt_image.scaled(target_width, target_height, Qt.KeepAspectRatio)
-            
-            self.image_label.setPixmap(QPixmap.fromImage(qt_image))
-            self.resize(target_width, target_height)
-            self.node.update_shape()
-        except Exception as e:
-            print("Error:", e)
-
         
     # hide image ---------------------------------------------   
     def clear_img(self):
@@ -2513,20 +4157,245 @@ class Threshold_MainWidget(MWB, QWidget):
         clr_img.setPixelColor(0, 0, QColor(Qt.black))
 
         self.image_label.setPixmap(QPixmap(clr_img))
-        print(self.width(), self.height())
+        #print(self.width(), self.height())
         self.resize(200,50)
         self.node.update_shape() #works the best. But doesnt minimize shape immediately
     
-    # def get_state(self) -> dict:
-    #     return {
-    #         'v': self.mv(),
-    #     }
+    def get_state(self) -> dict:
+        return {
+            'val1': self.t,
+            'val2': self.mv,
+        }
 
-    # def set_state(self, data: dict):
-    #     self.slider_label(data['v'])
+    def set_state(self, data: dict):
+        #ksize
+        self.t_size_input.setValue(data['val1'])
+        self.slider_label.setValue(data['val1'])
+        # self.slider_label.setRange(1, data['val1']*2)
+        self.t = data['val1']
+
+        self.maxv_size_input.setValue(data['val2'])
+        self.mvslider_label.setValue(data['val2'])
+        # self.mvslider_label.setRange(1, data['val2']*2)
+        self.mv = data['val2']
+
+# Local Thresholding Widget Base
+# blocksize: odd integers 3, 5, 7, 11...
+# C: constant subtracted from the mean or weighted mean: positive, zero, or negative. 
+class Threshold_Local_MainWidget(MWB, Widget_Base8):
+    #define Signal
+    previewState = Signal(bool)
+    threshValueChanged = Signal(int)  #threshold
+    mvValueChanged = Signal(int)      #maxval
+
+    def __init__(self, params):
+        MWB.__init__(self, params)
+        QWidget.__init__(self)
+
+        self.resize(300, 300)
+        default1 = 11
+        default_range1 = default1*2
+        default2 = 2
+        default_range2 = default2*2
+        self.t = default1
+        self.mv = default2
+
+        
+                
+        #Added Widget -----------------------------------------------
+        #threshold------------
+        self.tsize_label = QLabel('block size:')
+        self.tsize_label.setStyleSheet('font-size: 14px;')
+        self.t_size_input = QSpinBox()
+        self.t_size_input.setMaximum(255)
+        self.t_size_input.setValue(default1)
+        self.t_size_input.setKeyboardTracking(False)
+        self.t_size_input.setButtonSymbols(QAbstractSpinBox.NoButtons)
+
+        #thresh slider
+        self.slider_label = QSlider(Qt.Horizontal)
+        self.slider_label.setRange(3, 255)    
+        self.slider_label.setValue(default1)
+        self.slider_label.setSingleStep(2)
+        #maxvalue ------------
+        self.maxv_label = QLabel('C:')
+        self.maxv_label.setStyleSheet('font-size: 14px;')
+        self.maxv_size_input = QSpinBox()
+        self.maxv_size_input.setMaximum(255)
+        self.maxv_size_input.setValue(default2)
+        self.maxv_size_input.setKeyboardTracking(False)
+        self.maxv_size_input.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        #mv slider
+        self.mvslider_label = QSlider(Qt.Horizontal)
+        self.mvslider_label.setRange(1, 10)
+        self.mvslider_label.setValue(default2)
+        #preview
+        self.preview_label = QLabel('Preview:')
+        self.preview_label.setStyleSheet('font-size: 14px;')
+        self.preview_checkbox = QCheckBox()
+        self.preview_checkbox.setText('Preview')
+        self.preview_checkbox.setCheckState(Qt.Checked)
+        #image
+        self.image_label = QLabel()
+               #self.image_label.resize(800, 800)
+        # Layout ----------------------------------------------------
+        self.layout1 = QVBoxLayout()
+        # tsize
+        self.layout1.addWidget(self.tsize_label)
+        self.layout1.addWidget(self.t_size_input)
+        self.layout1.addWidget(self.slider_label)
+        # maxval
+        self.layout1.addWidget(self.maxv_label)
+        self.layout1.addWidget(self.maxv_size_input)
+        self.layout1.addWidget(self.mvslider_label)
+        # Preview
+        self.layout1.addWidget(self.preview_checkbox)
+        self.layout1.addWidget(self.image_label)
+        #self.layout1.setSpacing(0) 
+        self.setLayout(self.layout1)
+
+        #Signals -------------------------------------------------
+        # Spinbox triggers
+        self.t_size_input.editingFinished.connect(self.the_spinbox_was_changed)  #USER ONLY
+        self.maxv_size_input.editingFinished.connect(self.the_mvspinbox_was_changed)
+        # Slider triggers
+        self.slider_label.sliderMoved.connect(self.the_slider_was_changed)
+        self.mvslider_label.sliderMoved.connect(self.the_mvslider_was_changed)
+        # Check box
+        self.preview_checkbox.stateChanged.connect(self.the_checkbox_was_changed)
+
+    # Slot Functions -------------------------------------------
+    # checkbox -------------------------------------------------
+    def the_checkbox_was_changed(self, state):
+        self.previewState.emit(state)
+          
+    # thresh ----------------------------------------------------
+    def the_spinbox_was_changed(self):    
+        self.slider_label.setRange(1, (self.t_size_input.value()*2 + 1))  
+        if (self.t_size_input.value() % 2) == 0:
+            self.t = self.t_size_input.value()+1 
+        else:
+             self.t = self.t_size_input.value()
+             
+        self.slider_label.setValue(self.t)
+        self.t_size_input.setValue(self.t) #updates even number in spinbox to odd
+        self.threshValueChanged.emit(self.t)
+    
+    def the_slider_was_changed(self, v):    # v: value emitted by a slider signal 
+        if (v % 2) == 0:
+            self.t = v+1 
+            # #print('even')
+        else:
+            self.t = v
+            #  #print('odd')
+        self.t_size_input.setValue(self.t)
+        self.threshValueChanged.emit(self.t)
+    # def the_spinbox_was_changed(self):    
+    #     # self.slider_label.setRange(1, (self.t_size_input.value()*2))  
+    #     self.t = self.t_size_input.value()
+    #     self.slider_label.setValue(self.t)
+    #     self.t_size_input.setValue(self.t)
+    #     self.threshValueChanged.emit(self.t)
+    
+    # def the_slider_was_changed(self, v):    # v: value emitted by a slider signal
+    #     self.t = v
+    #         #  #print('odd')
+    #     self.t_size_input.setValue(self.t)
+    #     self.threshValueChanged.emit(self.t)
+    # maxval --------------------------------------------------
+    def the_mvspinbox_was_changed(self): 
+        # self.mvslider_label.setRange(1, (self.maxv_size_input.value()*2))  
+        self.mv = self.maxv_size_input.value()
+        self.mvslider_label.setValue(self.mv)
+        self.maxv_size_input.setValue(self.mv)
+        self.mvValueChanged.emit(self.mv)
+
+    def the_mvslider_was_changed(self, v):    
+        self.mv = v
+        self.maxv_size_input.setValue(self.mv)
+        self.mvValueChanged.emit(self.mv)
+        
+    # hide image ---------------------------------------------   
+    def clear_img(self):
+         # Create a black image of size 1x1
+        clr_img = QImage(1, 1, QImage.Format_RGB888)
+        clr_img.setPixelColor(0, 0, QColor(Qt.black))
+
+        self.image_label.setPixmap(QPixmap(clr_img))
+        #print(self.width(), self.height())
+        self.resize(200,50)
+        self.node.update_shape() #works the best. But doesnt minimize shape immediately
+    
+    def get_state(self) -> dict:
+        return {
+            'val1': self.t,
+            'val2': self.mv,
+        }
+
+    def set_state(self, data: dict):
+        #ksize
+        self.t_size_input.setValue(data['val1'])
+        self.slider_label.setValue(data['val1'])
+        # self.slider_label.setRange(1, data['val1']*2)
+        self.t = data['val1']
+
+        self.maxv_size_input.setValue(data['val2'])
+        self.mvslider_label.setValue(data['val2'])
+        # self.mvslider_label.setRange(1, data['val2']*2)
+        self.mv = data['val2']
+
+# Global Thresholding Widget Base
+class Global_MainWidget(MWB, Widget_Base8):
+    #define Signal
+    previewState = Signal(bool)
+
+    def __init__(self, params):
+        MWB.__init__(self, params)
+        QWidget.__init__(self)
+
+        self.resize(300, 300)
+              
+        #Added Widget -----------------------------------------------
+        #preview
+        self.preview_label = QLabel('Preview:')
+        self.preview_label.setStyleSheet('font-size: 14px;')
+        self.preview_checkbox = QCheckBox()
+        self.preview_checkbox.setText('Preview')
+        self.preview_checkbox.setCheckState(Qt.Checked)
+        #image
+        self.image_label = QLabel()
+               #self.image_label.resize(800, 800)
+        # Layout ----------------------------------------------------
+        self.layout1 = QVBoxLayout()
+        # Preview
+        self.layout1.addWidget(self.preview_checkbox)
+        self.layout1.addWidget(self.image_label)
+        #self.layout1.setSpacing(0) 
+        self.setLayout(self.layout1)
+
+        #Signals -------------------------------------------------
+        # Check box
+        self.preview_checkbox.stateChanged.connect(self.the_checkbox_was_changed)
+
+    # Slot Functions -------------------------------------------
+    # checkbox -------------------------------------------------
+    def the_checkbox_was_changed(self, state):
+        self.previewState.emit(state)
+        
+    # hide image ---------------------------------------------   
+    def clear_img(self):
+         # Create a black image of size 1x1
+        clr_img = QImage(1, 1, QImage.Format_RGB888)
+        clr_img.setPixelColor(0, 0, QColor(Qt.black))
+
+        self.image_label.setPixmap(QPixmap(clr_img))
+        # #print(self.width(), self.height())
+        self.resize(200,50)
+        self.node.update_shape() #works the best. But doesnt minimize shape immediately
+    
 
 #thresh #maxval
-class Morphological_MainWidget(MWB, QWidget):
+class Morphological_MainWidget(MWB, Widget_Base8):
     #define Signal
     previewState = Signal(bool)
     Value1Changed = Signal(int)  #kernel
@@ -2536,7 +4405,7 @@ class Morphological_MainWidget(MWB, QWidget):
         QWidget.__init__(self)
 
         self.resize(300, 300)
-        default1 = 10
+        default1 = 2
         default_range1 = default1*2
         default2 = 100
         default_range2 = default2*2
@@ -2544,6 +4413,7 @@ class Morphological_MainWidget(MWB, QWidget):
         #Added Widget -----------------------------------------------
         #kernel size------------
         self.label_1 = QLabel('kernel/radius:')
+        self.label_1.setStyleSheet('font-size: 14px;')
         self.input_1 = QSpinBox()
         self.input_1.setMaximum(255)
         self.input_1.setValue(default1)
@@ -2567,6 +4437,7 @@ class Morphological_MainWidget(MWB, QWidget):
         # self.mvslider_label.setValue(default2)
         #preview
         self.preview_label = QLabel('Preview:')
+        self.preview_label.setStyleSheet('font-size: 14px;')
         self.preview_checkbox = QCheckBox()
         self.preview_checkbox.setText('Preview')
         self.preview_checkbox.setCheckState(Qt.Checked)
@@ -2608,38 +4479,46 @@ class Morphological_MainWidget(MWB, QWidget):
     
     def slider_1_changed(self, v):    # v: value emitted by a slider signal
         self.t = v
-            #  print('odd')
+            #  #print('odd')
         self.input_1.setValue(self.t)
         self.Value1Changed.emit(self.t)
     
     # update image ---------------------------------------------
-    def show_image(self, img):
-        # self.resize(800,800)
+    # def show_image(self, img):
+    #     # self.resize(800,800)
 
-        try:
-            if len(img.shape) == 2:
-                # Grayscale image
-                qt_image = QImage(img.data, img.shape[1], img.shape[0], img.shape[1], QImage.Format_Grayscale8)
-            else:
-                # RGB image
-                rgb_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                h, w, ch = rgb_image.shape
-                bytes_per_line = ch * w
-                qt_image = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format_RGB888)
+    #     try:
+    #         if img.shape[-1] == 1:
+    #             # Grayscale image
+    #             qt_image = QImage(img.data, img.shape[1], img.shape[0], img.shape[1], QImage.Format_Grayscale8)
+    #             # #print("came here for Sliderwidget")
+    #         elif img.shape[-1] == 3:
+    #             h, w, ch = img.shape
+    #             bytes_per_line = ch * w
+    #             qt_image = QImage(img.data, w, h, bytes_per_line, QImage.Format_RGB888) #Format_RGB888
+    #         elif img.shape[-1] == 4:
+    #             h, w, ch = img.shape
+    #             #print(f"ch: {ch}")
+    #             bytes_per_line = ch * 4
+    #             qt_image = QImage(img.data, w, h, QImage.Format_RGBA8888) #Format_RGB888
             
-            # Calculate the target size for scaling
-            scale_factor = 0.4  # Increase the scaling factor for clarity
-            target_width = int(qt_image.width() * scale_factor)
-            target_height = int(qt_image.height() * scale_factor)
+    #         # Calculate the target size for scaling
+    #         scale_factor = 0.7  # Increase the scaling factor for clarity
+    #         target_width = int(qt_image.width() * scale_factor)
+    #         # Use scaledToWidth to reduce the size while maintaining aspect ratio
+    #         scaled_pixmap = QPixmap.fromImage(qt_image).scaledToWidth(target_width)
             
-            qt_image = qt_image.scaled(target_width, target_height, Qt.KeepAspectRatio)
+    #         # Set the scaled pixmap
+    #         self.image_label.setPixmap(scaled_pixmap)
             
-            self.image_label.setPixmap(QPixmap.fromImage(qt_image))
-            self.resize(target_width, target_height)
-            self.node.update_shape()
-        except Exception as e:
-            print("Error:", e)
-
+    #         # Resize the widget to match the pixmap size
+    #         self.resize(scaled_pixmap.width(), scaled_pixmap.height())
+            
+    #         # Ensure that any necessary updates are performed
+    #         self.node.update_shape()
+            
+    #     except Exception as e:
+    #         #print("Error:", e)
         
     # hide image ---------------------------------------------   
     def clear_img(self):
@@ -2648,22 +4527,23 @@ class Morphological_MainWidget(MWB, QWidget):
         clr_img.setPixelColor(0, 0, QColor(Qt.black))
 
         self.image_label.setPixmap(QPixmap(clr_img))
-        print(self.width(), self.height())
+        #print(self.width(), self.height())
         self.resize(200,50)
         self.node.update_shape() #works the best. But doesnt minimize shape immediately
     
     # def get_state(self) -> dict:
     #     return {
-    #         'v': self.mv(),
+    #         'val1': self.t
     #     }
 
     # def set_state(self, data: dict):
-    #     self.slider_label(data['v'])
-# class MainWidget(QWidget):
+    #     #ksize
+    #     self.input_1.setValue(data['val1'])
+    #     self.slider_label_1.setValue(data['val1'])
+    #     self.slider_label_1.setRange(1, data['val1']*2)
+    #     self.t = data['val1']
 
-#     def imageproc()
-
-class Dilate_MainWidget(MWB, QWidget):
+class Dilate_MainWidget(MWB, Widget_Base8):
     #define Signal
     previewState = Signal(bool)
     Value1Changed = Signal(int)  #kernel
@@ -2678,10 +4558,13 @@ class Dilate_MainWidget(MWB, QWidget):
         default_range1 = default1*2
         default2 = 100
         default_range2 = default2*2
+        self.t = default1
+        self.t2 = 1
                 
         #Added Widget -----------------------------------------------
         #kernel size------------
         self.label_1 = QLabel('kernel:')
+        self.label_1.setStyleSheet('font-size: 14px;')
         self.input_1 = QSpinBox()
         self.input_1.setMaximum(255)
         self.input_1.setValue(default1)
@@ -2695,6 +4578,7 @@ class Dilate_MainWidget(MWB, QWidget):
 
         #itteration size------------
         self.label_2 = QLabel('iteration:')
+        self.label_2.setStyleSheet('font-size: 14px;')
         self.input_2 = QSpinBox()
         self.input_2.setMaximum(5)
         self.input_2.setValue(1)
@@ -2708,6 +4592,7 @@ class Dilate_MainWidget(MWB, QWidget):
        
         #preview
         self.preview_label = QLabel('Preview:')
+        self.preview_label.setStyleSheet('font-size: 14px;')
         self.preview_checkbox = QCheckBox()
         self.preview_checkbox.setText('Preview')
         self.preview_checkbox.setCheckState(Qt.Checked)
@@ -2755,7 +4640,7 @@ class Dilate_MainWidget(MWB, QWidget):
     
     def slider_1_changed(self, v):    # v: value emitted by a slider signal
         self.t = v
-            #  print('odd')
+            #  #print('odd')
         self.input_1.setValue(self.t)
         self.Value1Changed.emit(self.t)
     #itt
@@ -2768,38 +4653,10 @@ class Dilate_MainWidget(MWB, QWidget):
     
     def slider_2_changed(self, v):    # v: value emitted by a slider signal
         self.t2 = v
-            #  print('odd')
+            #  #print('odd')
         self.input_2.setValue(self.t2)
         self.Value2Changed.emit(self.t2)    
-    # update image ---------------------------------------------
-    def show_image(self, img):
-        # self.resize(800,800)
-
-        try:
-            if len(img.shape) == 2:
-                # Grayscale image
-                qt_image = QImage(img.data, img.shape[1], img.shape[0], img.shape[1], QImage.Format_Grayscale8)
-            else:
-                # RGB image
-                rgb_image = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                h, w, ch = rgb_image.shape
-                bytes_per_line = ch * w
-                qt_image = QImage(rgb_image.data, w, h, bytes_per_line, QImage.Format_RGB888)
-            
-            # Calculate the target size for scaling
-            scale_factor = 0.4  # Increase the scaling factor for clarity
-            target_width = int(qt_image.width() * scale_factor)
-            target_height = int(qt_image.height() * scale_factor)
-            
-            qt_image = qt_image.scaled(target_width, target_height, Qt.KeepAspectRatio)
-            
-            self.image_label.setPixmap(QPixmap.fromImage(qt_image))
-            self.resize(target_width, target_height)
-            self.node.update_shape()
-        except Exception as e:
-            print("Error:", e)
-
-        
+       
     # hide image ---------------------------------------------   
     def clear_img(self):
          # Create a black image of size 1x1
@@ -2807,17 +4664,398 @@ class Dilate_MainWidget(MWB, QWidget):
         clr_img.setPixelColor(0, 0, QColor(Qt.black))
 
         self.image_label.setPixmap(QPixmap(clr_img))
-        print(self.width(), self.height())
+        #print(self.width(), self.height())
         self.resize(200,50)
         self.node.update_shape() #works the best. But doesnt minimize shape immediately
     
-    # def get_state(self) -> dict:
-    #     return {
-    #         'v': self.mv(),
-    #     }
+    def get_state(self) -> dict:
+        return {
+            'val1': self.t,
+            'val2': self.t2,
+        }
 
-    # def set_state(self, data: dict):
-    #     self.slider_label(data['v'])
+    def set_state(self, data: dict):
+        #ksize
+        self.input_1.setValue(data['val1'])
+        self.slider_label_1.setValue(data['val1'])
+        self.slider_label_1.setRange(1, data['val1']*2)
+        self.t = data['val1']
+
+        self.input_2.setValue(data['val2'])
+        self.slider_label_2.setValue(data['val2'])
+        self.slider_label_2.setRange(1, data['val2']*2)
+        self.t2 = data['val2']
+
+class Alpha_MainWidget(MWB, Widget_Base8):
+    #define Signal
+    previewState = Signal(bool)
+    Value1Changed = Signal(float)  #kernel
+    Value2Changed = Signal(float)  #itt
+
+    def __init__(self, params):
+        MWB.__init__(self, params)
+        QWidget.__init__(self)
+
+        self.resize(300, 300)
+        default1 = 3
+        default_range1 = default1*2
+        default2 = 1
+        default_range2 = 5
+        self.t = default1
+        self.t2 = default2
+                
+        #Added Widget -----------------------------------------------
+        #alpha size------------
+        self.label_1 = QLabel('alpha:')
+        self.label_1.setStyleSheet('font-size: 14px;')
+        self.input_1 = QDoubleSpinBox()
+        # self.input_1.setMaximum(255)
+        self.input_1.setValue(default1)
+        self.input_1.setKeyboardTracking(False)
+        self.input_1.setButtonSymbols(QAbstractSpinBox.NoButtons)
+
+        #a slider
+        self.slider_label_1 = QSlider(Qt.Horizontal)
+        self.slider_label_1.setRange(1, default_range1*100)    
+        self.slider_label_1.setValue(default1*100)
+
+        #beta size------------
+        self.label_2 = QLabel('beta:')
+        self.label_2.setStyleSheet('font-size: 14px;')
+        self.input_2 = QDoubleSpinBox()
+        # self.input_2.setMaximum(5)
+        self.input_2.setValue(default2)
+        self.input_2.setKeyboardTracking(False)
+        self.input_2.setButtonSymbols(QAbstractSpinBox.NoButtons)
+
+        #b slider
+        self.slider_label_2 = QSlider(Qt.Horizontal)
+        self.slider_label_2.setRange(1, default_range2*100)    
+        self.slider_label_2.setValue(default2)
+       
+        #preview
+        self.preview_label = QLabel('Preview:')
+        self.preview_label.setStyleSheet('font-size: 14px;')
+        self.preview_checkbox = QCheckBox()
+        self.preview_checkbox.setText('Preview')
+        self.preview_checkbox.setCheckState(Qt.Checked)
+        #image
+        self.image_label = QLabel()
+               #self.image_label.resize(800, 800)
+        # Layout ----------------------------------------------------
+        self.layout1 = QVBoxLayout()
+        # kernel
+        self.layout1.addWidget(self.label_1)
+        self.layout1.addWidget(self.input_1)
+        self.layout1.addWidget(self.slider_label_1)
+        # itt
+        self.layout1.addWidget(self.label_2)
+        self.layout1.addWidget(self.input_2)
+        self.layout1.addWidget(self.slider_label_2)
+        # Preview
+        self.layout1.addWidget(self.preview_checkbox)
+        self.layout1.addWidget(self.image_label)
+        #self.layout1.setSpacing(0) 
+        self.setLayout(self.layout1)
+
+        #Signals -------------------------------------------------
+        # Spinbox triggers
+        self.input_1.editingFinished.connect(self.spinbox_1_changed)  #USER ONLY
+        self.input_2.editingFinished.connect(self.spinbox_2_changed)
+        # Slider triggers
+        self.slider_label_1.sliderMoved.connect(self.slider_1_changed)
+        self.slider_label_2.sliderMoved.connect(self.slider_2_changed)
+        # Check box
+        self.preview_checkbox.stateChanged.connect(self.prev_checkbox_changed)
+
+    # Slot Functions -------------------------------------------
+    # checkbox -------------------------------------------------
+    def prev_checkbox_changed(self, state):
+        self.previewState.emit(state)
+          
+    # thresh ----------------------------------------------------
+    def spinbox_1_changed(self):    
+        self.t = self.input_1.value()
+        v = self.t*100
+        self.slider_label_1.setRange(1, v*2) 
+        self.slider_label_1.setValue(v)
+        # self.input_1.setValue(self.t)
+        self.Value1Changed.emit(self.t)
+    
+    def slider_1_changed(self, v):    # v: value emitted by a slider signal
+        self.t = v/100
+            #  #print('odd')
+        self.input_1.setValue(self.t)
+        self.Value1Changed.emit(self.t)
+    #itt
+    def spinbox_2_changed(self):    
+        self.t2 = self.input_2.value()
+        v = self.input_2.value()*100
+        self.slider_label_2.setRange(1, v*2)
+        self.slider_label_2.setValue(v)
+        # self.input_2.setValue(self.t2)
+        self.Value2Changed.emit(self.t2)
+    
+    def slider_2_changed(self, v):    # v: value emitted by a slider signal
+        self.t2 = v/100
+            #  #print('odd')
+        self.input_2.setValue(self.t2)
+        self.Value2Changed.emit(self.t2)    
+       
+    # hide image ---------------------------------------------   
+    def clear_img(self):
+         # Create a black image of size 1x1
+        clr_img = QImage(1, 1, QImage.Format_RGB888)
+        clr_img.setPixelColor(0, 0, QColor(Qt.black))
+
+        self.image_label.setPixmap(QPixmap(clr_img))
+        #print(self.width(), self.height())
+        self.resize(200,50)
+        self.node.update_shape() #works the best. But doesnt minimize shape immediately
+    
+    def get_state(self) -> dict:
+        return {
+            'val1': self.t,
+            'val2': self.t2,
+        }
+
+    def set_state(self, data: dict):
+        #ksize
+        self.input_1.setValue(data['val1'])
+        self.slider_label_1.setValue(data['val1']*100)
+        self.slider_label_1.setRange(1, data['val1']*200)
+        self.t = data['val1']
+
+        self.input_2.setValue(data['val2'])
+        self.slider_label_2.setValue(data['val2']*100)
+        self.slider_label_2.setRange(1, data['val2']*200)
+        self.t2 = data['val2']
+
+
+class Gamma_Corr_MainWidget(MWB, Widget_Base8):
+    #define Signal
+    previewState = Signal(bool)
+    Value1Changed = Signal(float)  #kernel
+    Value2Changed = Signal(float)  #itt
+
+    def __init__(self, params):
+        MWB.__init__(self, params)
+        QWidget.__init__(self)
+
+        self.resize(300, 300)
+        default1 = 0.5
+        default_range1 = default1*3
+        self.t = default1
+                
+        #Added Widget -----------------------------------------------
+        #alpha size------------
+        self.label_1 = QLabel('gamma:')
+        self.label_1.setStyleSheet('font-size: 14px;')
+        self.input_1 = QDoubleSpinBox()
+        # self.input_1.setMaximum(255)
+        self.input_1.setValue(default1)
+        self.input_1.setKeyboardTracking(False)
+        self.input_1.setButtonSymbols(QAbstractSpinBox.NoButtons)
+
+        #a slider
+        self.slider_label_1 = QSlider(Qt.Horizontal)
+        self.slider_label_1.setRange(1, default_range1*100)    
+        self.slider_label_1.setValue(default1*100)
+       
+        #preview
+        self.preview_label = QLabel('Preview:')
+        self.preview_label.setStyleSheet('font-size: 14px;')
+        self.preview_checkbox = QCheckBox()
+        self.preview_checkbox.setText('Preview')
+        self.preview_checkbox.setCheckState(Qt.Checked)
+        #image
+        self.image_label = QLabel()
+               #self.image_label.resize(800, 800)
+        # Layout ----------------------------------------------------
+        self.layout1 = QVBoxLayout()
+        # kernel
+        self.layout1.addWidget(self.label_1)
+        self.layout1.addWidget(self.input_1)
+        self.layout1.addWidget(self.slider_label_1)
+        # Preview
+        self.layout1.addWidget(self.preview_checkbox)
+        self.layout1.addWidget(self.image_label)
+        #self.layout1.setSpacing(0) 
+        self.setLayout(self.layout1)
+
+        #Signals -------------------------------------------------
+        # Spinbox triggers
+        self.input_1.editingFinished.connect(self.spinbox_1_changed)  #USER ONLY
+        # Slider triggers
+        self.slider_label_1.sliderMoved.connect(self.slider_1_changed)
+        # Check box
+        self.preview_checkbox.stateChanged.connect(self.prev_checkbox_changed)
+
+    # Slot Functions -------------------------------------------
+    # checkbox -------------------------------------------------
+    def prev_checkbox_changed(self, state):
+        self.previewState.emit(state)
+          
+    # thresh ----------------------------------------------------
+    def spinbox_1_changed(self):    
+        self.t = self.input_1.value()
+        v = self.t*100
+        self.slider_label_1.setRange(1, v*3) 
+        self.slider_label_1.setValue(v)
+        self.Value1Changed.emit(self.t)
+    
+    def slider_1_changed(self, v):    # v: value emitted by a slider signal
+        self.t = v/100
+            #  #print('odd')
+        self.input_1.setValue(self.t)
+        self.Value1Changed.emit(self.t)   
+       
+    # hide image ---------------------------------------------   
+    def clear_img(self):
+         # Create a black image of size 1x1
+        clr_img = QImage(1, 1, QImage.Format_RGB888)
+        clr_img.setPixelColor(0, 0, QColor(Qt.black))
+
+        self.image_label.setPixmap(QPixmap(clr_img))
+        #print(self.width(), self.height())
+        self.resize(200,50)
+        self.node.update_shape() #works the best. But doesnt minimize shape immediately
+    
+    def get_state(self) -> dict:
+        return {
+            'val1': self.t,
+        }
+
+    def set_state(self, data: dict):
+        #ksize
+        self.input_1.setValue(data['val1'])
+        self.slider_label_1.setValue(data['val1']*100)
+        self.slider_label_1.setRange(1, data['val1']*300)
+        self.t = data['val1']
+
+class HisogramWidg(MWB, QWidget):
+    displayHist = Signal(bool)
+    LogHist = Signal(bool)
+    def __init__(self, params):
+        MWB.__init__(self, params)
+        QWidget.__init__(self)
+
+        layout = QVBoxLayout(self)
+        self.image = QLabel()
+        self.button = QPushButton('Show histogram')
+        self.logCheckbox = QCheckBox()
+        self.label = QLabel('Histogram for binarized images')
+        self.logCheckbox.setText('log scale (click the checkbox)')
+        self.logCheckbox.setStyleSheet('font-size: 14px;')
+        self.logCheckbox.setChecked(False)
+        self.figure = Figure(dpi=100) #figsize=(0.3, 0.2)
+        self.canvas = FigureCanvas(self.figure)
+        self.canvas.setFixedSize(420, 300)
+        # self.figure.subplots_adjust(left=0.05, right=0.05, top=0.9, bottom=0.1)
+        # self.figure.set_size_inches(800 / self.figure.dpi, 800/ self.figure.dpi)
+        # Add a subplot and adjust its position and size within the figure
+        self.sub = self.figure.add_subplot(111)
+        self.sub.set_position([0.2, 0.2, 0.7, 0.7])  # Adjust the position and size as needed
+        layout.addWidget(self.label)
+        layout.addWidget(self.button)
+        layout.addWidget(self.logCheckbox)
+        layout.addWidget(self.canvas)
+        layout.addWidget(self.image)
+        
+        # self.ax = self.figure.add_subplot(111)
+        self.button.clicked.connect(self.emitHist)
+        # self.button.clicked.connect(self.emitHist)
+        self.logCheckbox.stateChanged.connect(self.the_checkbox_was_changed)
+        
+
+        # self.plot_histogram(gray)
+    def emitHist(self):
+        self.displayHist.emit(True)
+
+    def the_checkbox_was_changed(self, state):
+        #print("statechanged")
+        self.LogHist.emit(state)
+
+    def clear_hist(self):
+        self.logCheckbox.setChecked(False)
+        self.figure.clear()
+        self.sub = self.figure.add_subplot(111)
+        self.sub.set_position([0.2, 0.2, 0.7, 0.7])  # Adjust the position and size as needed
+        self.canvas.draw()
+
+    def show_histogram(self, img):
+        self.logCheckbox.setChecked(False)
+        # if self.logCheckbox.isChecked:
+        #     self.log_hist(img)
+        self.figure.clear()  # Clear the previous plot, if any.
+        self.sub = self.figure.add_subplot(111)
+        self.sub.set_position([0.2, 0.2, 0.7, 0.7])  # Adjust the position and size as needed
+        # ax = self.figure.add_subplot(111)
+        # if img.shape==2:
+        gray_hist = cv2.calcHist([img], [0], None, [255], [0, 255])
+
+        self.sub.plot(gray_hist)
+        self.sub.set_title('Grayscale Histogram')
+        self.sub.set_xlabel('Pixel Value [0 - 255]')
+        self.sub.set_ylabel('# pixels')
+        self.sub.set_xlim([0, 255])
+        #print(f'image.shape{img.shape}')
+        # if img.shape==3:
+        #     hist = cv2.calcHist([img], [1], None, [256], [0, 256])
+        #     #print('hist!')
+        #     self.sub.plot(hist, color='green')
+        #     # colors = ('b', 'g', 'r')
+        #     # for i, col in enumerate(colors):
+        #     #     # self.sub = self.figure.add_subplot(111)
+        #     #     # self.sub.set_position([0.2, 0.2, 0.7, 0.7]) 
+        #     #     hist = cv2.calcHist([img], [i], None, [256], [0, 256])
+        #     #     self.sub.plot(hist, color=col)
+
+        #     self.sub.set_title('RGB Histogram')
+        #     self.sub.set_xlabel('Pixel Value [0 - 255]')
+        #     self.sub.set_ylabel('# pixels')
+        #     self.sub.set_xlim([0, 255])
+
+            # colors = ('b', 'g', 'r')
+            # for i, col in enumerate(colors):
+            #     hist = cv2.calcHist([img], [i], None, [256], [0, 256])
+            #     self.plot.plot(hist, color=col)
+
+            # self.plot.set_xlim([0, 255])
+
+            # colors = ('b', 'g', 'r')
+            # for i, col in enumerate(colors):
+            #     hist = cv2.calcHist([img], [i], None, [256], [0,256])
+            # self.sub.plot(hist, colors=col)
+            # self.sub.set_title('RGB Histogram')
+            # self.sub.set_xlabel('Pixel Value [0 - 255]')
+            # self.sub.set_ylabel('# pixels')
+            # self.sub.set_xlim([0, 255])
+
+
+        # Update the canvas to display the new plot
+        self.canvas.draw()
+    
+    def log_hist(self, img):
+        self.figure.clear()  # Clear the previous plot, if any.
+        self.sub = self.figure.add_subplot(111)
+        self.sub.set_position([0.2, 0.2, 0.7, 0.7])  # Adjust the position and size as needed
+        # ax = self.figure.add_subplot(111)
+        
+        gray_hist = cv2.calcHist([img], [0], None, [255], [0, 255])
+
+        self.sub.plot(gray_hist)
+        self.sub.set_title('Grayscale Histogram (Log Scale)')
+        self.sub.set_xlabel('Pixel Value [0 - 255]')
+        self.sub.set_ylabel('# pixels (log scale)')
+        self.sub.set_xlim([0, 255])
+        self.sub.set_yscale('log') 
+
+        # Update the canvas to display the new plot
+        self.canvas.draw()
+
+    
+   
 
 class ButtonNode_MainWidget(QPushButton, MWB):
 
@@ -3020,6 +5258,122 @@ class ConsoleOutDisplay(QPlainTextEdit):
         self.setReadOnly(True)
         self.setFont(QFont('Source Code Pro', 9))
 
+#Tuple 
+class Tuple(MWB, QWidget):
+           #define Signal
+    kValueChanged = Signal(int)
+    previewState = Signal(bool)
+
+    def __init__(self, params):
+        MWB.__init__(self, params)
+        QWidget.__init__(self)
+
+        self.resize(300, 300)
+        default = 5
+        default_range = default*2
+                
+        #Added Widget -----------------------------------------------
+        #ksize------------
+        self.ksize_label = QLabel('ksize:')
+        self.k_size_input = QSpinBox()
+        self.k_size_input.setValue(default)
+        self.k_size_input.setKeyboardTracking(False)
+        self.k_size_input.setButtonSymbols(QAbstractSpinBox.NoButtons)
+
+        #ksize slider
+        self.slider_label = QSlider(Qt.Horizontal)
+        self.slider_label.setRange(1, default_range)    
+        self.slider_label.setValue(default)
+        #sigmaX ------------
+        self.sigmaX_label = QLabel('sigmaX:')
+        self.sigmaX_size_input = QDoubleSpinBox()
+        #Xslider
+        self.sliderX_label = QSlider(Qt.Horizontal)
+        # self.sliderX_label.setRange(0, 1000)
+        #preview
+        self.preview_label = QLabel('Preview:')
+        self.preview_checkbox = QCheckBox()
+        self.preview_checkbox.setText('Preview')
+        self.preview_checkbox.setCheckState(Qt.Checked)
+        #image
+        self.image_label = QLabel()
+               #self.image_label.resize(800, 800)
+        
+        self.layout1 = QVBoxLayout()
+        self.layout1.addWidget(self.ksize_label)
+        self.layout1.addWidget(self.k_size_input)
+        self.layout1.addWidget(self.slider_label)
+        # self.layout1.addWidget(self.preview_checkbox)
+        # self.layout1.addWidget(self.image_label)
+        #self.layout1.setSpacing(0) 
+        self.setLayout(self.layout1)
+        
+        #Signals 
+        # Spinbox triggers
+        self.k_size_input.editingFinished.connect(self.the_spinbox_was_changed)  #USER ONLY
+        # Slider triggers
+        self.slider_label.sliderMoved.connect(self.the_slider_was_changed)
+        # Check box
+        # self.preview_checkbox.stateChanged.connect(self.the_checkbox_was_changed)
+
+    def the_checkbox_was_changed(self, state):
+        self.previewState.emit(state)
+          
+    #slot functions
+    def the_spinbox_was_changed(self):    # v: value emitted by a signal.
+        self.slider_label.setRange(1, self.k_size_input.value()*2)  
+        self.slider_label.setValue(self.k_size_input.value())  
+        self.k = self.k_size_input.value()
+        self.kValueChanged.emit(self.k)
+        #debug
+        # #print(f'slider:{self.slider_label.value()}')
+
+    def the_slider_was_changed(self, v):    # v: value emitted by a signal -> slider value (0-1000)
+        self.k_size_input.setValue(v)
+        self.k = int(v)
+        self.kValueChanged.emit(self.k)
+        
+    # def show_image(self, img):
+    #     # self.resize(800,800)
+
+    #     try:
+    #         #img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    #     except cv2.error:
+    #         return
+        
+    #     # qt_image = QImage(img.data, img.shape[1], img.shape[0], QImage.Format_RGB888)
+    #     h, w, ch = img.shape
+    #     bytes_per_line = ch * w
+    #     qt_image = QImage(img.data, w, h, bytes_per_line, QImage.Format_RGB888)
+    #     # Calculate the target size for scaling
+    #     scale_factor = 0.4  # Adjust the scaling factor as needed
+    #     target_width = int(w * scale_factor)
+    #     target_height = int(h * scale_factor)
+    #     qt_image = qt_image.scaled(target_width, target_height, Qt.KeepAspectRatio)
+    #     # #print("H:", target_height, "W:", target_width)
+    #     self.image_label.setPixmap(QPixmap(qt_image))
+    #     self.resize(100, 100)
+    #     self.node.update_shape()
+    #     # #print('Update Shape:',  #print(self.width(), self.height()))
+        
+        
+    def clear_img(self):
+         # Create a black image of size 1x1
+        clr_img = QImage(1, 1, QImage.Format_RGB888)
+        clr_img.setPixelColor(0, 0, QColor(Qt.black))
+        self.image_label.setPixmap(QPixmap(clr_img))
+        #print(self.width(), self.height())
+        self.resize(200,50)
+        self.node.update_shape() #works the best. But doesnt minimize shape immediately
+        #print(self.k_size_input.value())
+    
+    # def get_state(self) -> dict:
+    #     return {
+    #         'val': self.value(),
+    #     }
+
+    # def set_state(self, data: dict):
+    #     self.setValue(data['val'])
 
 export_widgets(
     ButtonNode_MainWidget,
@@ -3041,13 +5395,24 @@ export_widgets(
     Slider_widget,
     ChooseFileInputWidget,
     ChooseFileInputWidgetBASE,
+    PathInput,
+    Crop_MainWidget,
+    OutputMetadataWidg,
+    Split_Img,
     Blur_Averaging_MainWidget,
     Blur_Median_MainWidget,
     Gaus_Blur_MainWidget,
+    Gaus_Blur_MainWidget3D,
     Bilateral_MainWidget,
-    Threshold_MainWidget,
+    Threshold_Manual_MainWidget,
+    Threshold_Local_MainWidget,
+    Global_MainWidget,
     Morphological_MainWidget,
     Dilate_MainWidget,
+    Alpha_MainWidget,
+    Gamma_Corr_MainWidget,
     ChooseFileInputWidgetBASE2,
     ChooseFileInputWidgetBASE3,
+    HisogramWidg,
+    Tuple, 
 )
