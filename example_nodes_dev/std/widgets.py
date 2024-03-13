@@ -32,6 +32,7 @@ from qtpy.QtWidgets import (QPushButton,
                             QPlainTextEdit, 
                             QWidget, 
                             QVBoxLayout, 
+                            QHBoxLayout,
                             QLineEdit,
                             QLabel,
                             QFileDialog,     
@@ -45,7 +46,9 @@ from qtpy.QtWidgets import (QPushButton,
                             QApplication, 
                             QMainWindow,    
                             QDialog,
-                            QScrollArea,                            
+                            QScrollArea, 
+                            QSizePolicy,
+                            QAbstractItemView                           
                             )
 import cv2
 import os
@@ -923,6 +926,7 @@ class ChooseFileInputWidgetBASE(MWB, Widget_Base):
         default = 0
         default_range = 5
 
+
         self.shape_label = QLabel()
         self.shape_label.setStyleSheet('background-color: #1E242A; color: white; font-size: 14px;')
         self.input_label1 = QLabel('time instance:')
@@ -1224,6 +1228,39 @@ class ChooseFileInputWidgetBASE3(MWB, QWidget):
         self.val1 = default
         self.val2 = 3
 
+        
+        self.dropdowns = []
+        self.checkboxes = []
+        self.stack_dict = {
+            "time_step": 0,
+            "colour": {
+                "red": 100,
+                "green": 100,
+                "blue": 100,
+                "magenta": 100,
+                "cyan": 100
+            }
+        }
+        self.temp_dict = {
+            "time_step": 0,
+            "colour": {
+                "red": 100,
+                "green": 100,
+                "blue": 100,
+                "magenta": 100,
+                "cyan": 100
+            }
+        }
+       
+        self.color_codes = {
+        'red': 1,
+        'green': 2,
+        'blue': 3,
+        'magenta': 4,
+        'cyan': 5
+        }
+
+
         self.shape_label = QLabel()
         self.shape_label.setStyleSheet('background-color: #1E242A; color: white; font-size: 14px;')
         self.input_label1 = QLabel('frame (time instance):')
@@ -1258,7 +1295,35 @@ class ChooseFileInputWidgetBASE3(MWB, QWidget):
                #self.image_label.resize(800, 800)
         # Layout ----------------------------------------------------
         self.layout1 = QVBoxLayout()
-        
+        longest_word_width = max(len(word) for word in self.color_codes.keys())
+
+        for i in range(5):
+            self.channel_layout = QHBoxLayout()
+            label = QLabel(f"Channel {i}:")
+            label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+            label.setMinimumWidth(longest_word_width)
+            dropdown = QComboBox()
+            dropdown.addItem("None")
+            dropdown.setStyleSheet("QComboBox QAbstractItemView { background-color: #091C7F }")
+            for color_code in self.color_codes.keys():
+                dropdown.addItem(color_code)
+            dropdown.currentIndexChanged.connect(lambda index, i=i, diction = self.temp_dict: self.handle_selection(index, i, diction))
+            self.channel_layout.addWidget(label)
+            self.channel_layout.addWidget(dropdown)
+            self.layout1.addLayout(self.channel_layout)
+            self.dropdowns.append(dropdown)
+
+        self.button_layout = QHBoxLayout()
+        # Confrim checkbox
+        self.checkbox = QCheckBox("Confirm channel selection")
+        self.checkbox.stateChanged.connect(lambda state,  diction = self.temp_dict : self.update_dict(state, diction))
+        self.button_layout.addWidget(self.checkbox)
+
+
+        self.clear_button = QPushButton("Clear Channel Choices")
+        self.clear_button.clicked.connect(lambda: self.clear_choices(self.stack_dict, self.temp_dict))
+        self.button_layout.addWidget(self.clear_button)
+        self.layout1.addLayout(self.button_layout)
         #add widgets
             #shape message
         self.layout1.addWidget(self.shape_label)
@@ -1287,6 +1352,41 @@ class ChooseFileInputWidgetBASE3(MWB, QWidget):
         self.slider_label1.sliderReleased.connect(self.slider1_released)
         # self.slider_label2.sliderReleased.connect(self.slider2_released)
 
+    # Drop down channel selcetion ---------------------------------------
+
+    def handle_selection(self, index, channel_index, dicttemp):
+        if index != 0:
+            color_name =self.dropdowns[channel_index].currentText()
+            dicttemp["colour"][color_name] = channel_index
+            print(f"{color_name}: Channel {channel_index}")
+            print(self.stack_dict)
+            # Uncheck the checkbox when a dropdown is changed
+            self.checkbox.setChecked(False)
+
+    def update_dict(self, state, dicttemp):
+        if state == 2:  # Checkbox checked state
+            for color in dicttemp["colour"]:
+                self.stack_dict["colour"][color] = dicttemp["colour"][color]
+                dicttemp["colour"][color] = 100
+                #WILL NEED TO SEND TO SPECIAL NODES LAYER
+            
+            print("Dictionary updated:", self.stack_dict)
+            print("Dictionary temporary cleared:", dicttemp)
+
+        
+    def clear_choices(self, dict, dicttemp):
+        self.checkbox.setChecked(False)
+        for dropdown in self.dropdowns:
+            dropdown.setCurrentIndex(0)  # Reset dropdown menu to "None"
+        
+        for color in dict["colour"]:
+            dict["colour"][color] = 100  # Reset color values to 100
+            dicttemp["colour"][color] = 100
+        
+        print("Choices cleared and color values reset to 100:", self.stack_dict)    
+
+    # --------------------------------------------------------------------
+        
     #new image -> reset sliders and inputs
     def reset_widg(self, val):
         # self.input1.setValue(1) #val = midpoint
@@ -5391,6 +5491,7 @@ export_widgets(
     V3QvBoxDev_MainWidget,
     V4QvBoxDev_MainWidget,
     V5QvBoxDev_MainWidget,
+
     #PipelineWidgets
     Slider_widget,
     ChooseFileInputWidget,

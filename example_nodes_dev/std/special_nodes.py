@@ -2438,15 +2438,57 @@ class ReadImage(NodeBase0):
         if self.image_filepath.endswith('.tif'): #----------------------------------------------------------------------------------TIFF
             try:
                 self.image_data = tiff.imread(self.image_filepath)
+
+                
+
+
                 # Normalize - generate dimension list (T,Z,H,W,C)
                 self.dim = self.id_tiff_dim(self.image_filepath)
                 # Reshape - STANDARDIZED 
+                self.image_data = ((self.image_data / np.max(self.image_data)) * 255).astype(np.uint8)
+                
+                # IF shape: ZCXY 
+                # Change to TZXYC
+                if self.image_data.shape[-3] <= 4:
+                    
+                    # dim = [1, 15, 1024, 1024, 3]
+                    print("Strange dimension")
+                    #if no time step data 
+                    if len(self.image_data.shape) == 4: 
+                        print(f'length {len(self.image_data.shape)}')
+                        self.image_data = self.image_data[np.newaxis,:,:,:,:]
+
+                    # Create an empty array with the specified dimensions
+                    image_data_stacked = np.empty(self.dim, dtype=np.uint8)
+
+                    num_time_frames = self.dim[0]  # Get the number of time frames
+                    
+                    for t in range(num_time_frames):  # Iterate over the time frames
+                        for i in range(self.dim[1]):  # Iterate over the images in each time frame
+                            # Get the red, green, and blue channels for the i-th image in the t-th time frame
+                            print(i)
+                            red_channel = self.image_data[t, i, 0, :, :]  # Assuming the first dimension is time frame, then image index
+                            green_channel = self.image_data[t, i, 1, :, :]
+                            blue_channel = self.image_data[t, i, 2, :, :]
+                            
+                            # Stack the channels along the last axis
+                            image_data_stacked[t, i, :, :, 0] = red_channel
+                            image_data_stacked[t, i, :, :, 1] = green_channel
+                            image_data_stacked[t, i, :, :, 2] = blue_channel    
+
+                    print(image_data_stacked.shape)   
+
+                    self.image_data = image_data_stacked            
+
+                    
                 self.reshaped_data = self.image_data.reshape(self.dim)
                 # print(f"reshaped: {self.reshaped_data.shape}")
                 # self.handle_stack()
+
+                
                 # Grayscale
-                if self.reshaped_data.shape[4] == 1: #self.dim[4]==1:
-                    self.reshaped_data = ((self.reshaped_data/self.reshaped_data.max())*255).astype('uint8')
+                # if self.reshaped_data.shape[4] == 1: #self.dim[4]==1:
+                # self.reshaped_data = ((self.reshaped_data/self.reshaped_data.max())*255).astype('uint8')
                     # print("NORMALIZED FOR GRAYSCALE")
                 
                 # Display image
@@ -2562,6 +2604,7 @@ class ReadImage(NodeBase0):
             self.SIGNALS.reset_widget.emit(set_widg)
             self.ttval=0
             self.zzval=0
+        print(f'Image dim: {dimension}')
         return dimension
         
     def onValue1Changed(self, value):
@@ -3127,6 +3170,7 @@ class Split_Img(NodeBase0):
     main_widget_class = widgets.Split_Img
     main_widget_pos = 'below ports'
 
+    # Please ensure the colour channels are selected in the correct order Eg RGB must be ch1:R ch2:G ch3:B ch4:None)
     def __init__(self, params):
         super().__init__(params)
 
@@ -3236,14 +3280,42 @@ class Split_Img(NodeBase0):
         stack4D=self.image_stack
         print(f"shape stack4D {stack4D.shape}")
         # Split the RGB data into separate channels
-        red_stack = stack4D[..., 0]  # Extract the red channel (index 0)
-        red_stack = red_stack[:, :, :, np.newaxis]
+        shape = stack4D.shape
 
-        green_stack = stack4D[..., 1]  # Extract the green channel (index 1)
-        green_stack = green_stack[:, :, :, np.newaxis]
+        if shape[-1] == 1:
+            print("GRAYSCALE")
 
-        blue_stack = stack4D[..., 2]  # Extract the blue channel (index 2)
-        blue_stack = blue_stack[:, :, :, np.newaxis]
+        elif shape[-1] > 1: 
+            red_stack = stack4D[..., 0]  # Extract the red channel (index 0)
+            red_stack = red_stack[:, :, :, np.newaxis]
+
+            green_stack = stack4D[..., 1]  # Extract the green channel (index 1)
+            green_stack = green_stack[:, :, :, np.newaxis]
+
+            blue_stack = stack4D[..., 2]  # Extract the blue channel (index 2)
+            blue_stack = blue_stack[:, :, :, np.newaxis]
+
+            if shape[-1] == 4:
+                
+
+                magenta_stack = stack4D[..., 3]  # Extract the blue channel (index 2)
+                magenta_stack = magenta_stack[:, :, :, np.newaxis]
+
+                self.set_output_val(0, (red_stack, self.frame, self.z_sclice))
+                print(f"shape split: {red_stack.shape}")
+                self.set_output_val(1, (green_stack, self.frame, self.z_sclice))
+                self.set_output_val(2, (blue_stack, self.frame, self.z_sclice))
+                self.set_output_val(3, (magenta_stack, self.frame, self.z_sclice))
+
+            # If the input is an RGB image
+            elif shape[-1] == 3:
+                blank_stack = np.zeros_like(stack4D[..., 0])
+                self.set_output_val(0, (red_stack, self.frame, self.z_sclice))
+                print(f"shape split: {red_stack.shape}")
+                self.set_output_val(1, (green_stack, self.frame, self.z_sclice))
+                self.set_output_val(2, (blue_stack, self.frame, self.z_sclice))    
+                # send a blank stack to magenta channel 
+                self.set_output_val(3, (blank_stack, self.frame, self.z_sclice))
         # #print(f"proc input stack: {stack4D.shape}")
          #Ensure only on 3D data
         # if stack4D.shape[0] > 1:
@@ -3266,10 +3338,7 @@ class Split_Img(NodeBase0):
         #     self.SIGNALS.clr_img.emit(self.new_img_wrp.img)
 
         # self.set_output_val(0, (self.reshaped_proc_data, self.frame, self.z_sclice))
-        self.set_output_val(0, (red_stack, self.frame, self.z_sclice))
-        print(f"shape split: {red_stack.shape}")
-        self.set_output_val(1, (green_stack, self.frame, self.z_sclice))
-        self.set_output_val(2, (blue_stack, self.frame, self.z_sclice))
+        
                 
     
     # def get_img(self, zslice):
