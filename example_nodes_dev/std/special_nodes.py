@@ -2408,6 +2408,16 @@ class ReadImage(NodeBase0):
         self.image_filepath = ''
         self.ttval = 6
         self.zzval = 4
+        self.stack_dict = {
+            "time_step": self.ttval,
+            "colour": {
+                "red": 100,
+                "green": 100,
+                "blue": 100,
+                "magenta": 100,
+                "cyan": 100
+            }
+        }
 
     def view_place_event(self):
         self.input_widget(0).path_chosen.connect(self.path_chosen)
@@ -2418,12 +2428,19 @@ class ReadImage(NodeBase0):
         self.main_widget().ValueChanged1.connect(self.onValue1Changed)
         self.main_widget().ValueChanged2.connect(self.onValue2Changed) 
         self.main_widget().released1.connect(self.output_data)  
+        self.main_widget().dict_widg.connect(self.dict_col)   
         # self.main_widget().ValueChanged2.connect(self.output_data) 
         # try:
         #     self.SIGNALS.new_img.emit(self.get_img())
         # except:  # there might not be an image ready yet
         #     pass
         # self.main_widget_message.connect(self.main_widget().show_path)
+   
+   # When user presses confirm the dictionary is updated with the new colour choices
+    def dict_col(self, dictt):
+        for color in self.stack_dict["colour"]:
+                self.stack_dict["colour"][color] = dictt["colour"][color]
+        print(f'self.stack_dict["colour"] {self.stack_dict}')
 
     def update_event(self, inp=-1):   #called when the input is changed
         #therefore new image 
@@ -2447,7 +2464,7 @@ class ReadImage(NodeBase0):
                 # Reshape - STANDARDIZED 
                 self.image_data = ((self.image_data / np.max(self.image_data)) * 255).astype(np.uint8)
                 
-                # IF shape: ZCXY 
+                # IF shape: ZCXY ---------------------------------------------------------------
                 # Change to TZXYC
                 if self.image_data.shape[-3] <= 4:
                     
@@ -2467,19 +2484,28 @@ class ReadImage(NodeBase0):
                         for i in range(self.dim[1]):  # Iterate over the images in each time frame
                             # Get the red, green, and blue channels for the i-th image in the t-th time frame
                             print(i)
-                            red_channel = self.image_data[t, i, 0, :, :]  # Assuming the first dimension is time frame, then image index
-                            green_channel = self.image_data[t, i, 1, :, :]
-                            blue_channel = self.image_data[t, i, 2, :, :]
+                            chan_0 = self.image_data[t, i, 0, :, :]  # Assuming the first dimension is time frame, then image index
+                            chan_1 = self.image_data[t, i, 1, :, :]
+                            chan_2 = self.image_data[t, i, 2, :, :]
                             
                             # Stack the channels along the last axis
-                            image_data_stacked[t, i, :, :, 0] = red_channel
-                            image_data_stacked[t, i, :, :, 1] = green_channel
-                            image_data_stacked[t, i, :, :, 2] = blue_channel    
+                            image_data_stacked[t, i, :, :, 0] = chan_0
+                            image_data_stacked[t, i, :, :, 1] = chan_1
+                            image_data_stacked[t, i, :, :, 2] = chan_2   
+                            # if have a an alpha channel
+                            if self.image_data.shape[2] >= 4:
+                                chan_3 = self.image_data[t, i, 3, :, :] 
+                                image_data_stacked[t, i, :, :, 3] = chan_3 
+
+                            # if have a an alpha channel
+                            if self.image_data.shape[2] == 5:
+                                chan_4 = self.image_data[t, i, 4, :, :] 
+                                image_data_stacked[t, i, :, :, 4] = chan_4 
 
                     print(image_data_stacked.shape)   
 
-                    self.image_data = image_data_stacked            
-
+                    self.image_data = image_data_stacked 
+                # ---------------------------------------------------------------------------------           
                     
                 self.reshaped_data = self.image_data.reshape(self.dim)
                 # print(f"reshaped: {self.reshaped_data.shape}")
@@ -2501,9 +2527,10 @@ class ReadImage(NodeBase0):
                     # print("shape", new_img_wrp.shape)
                 if self.session.gui:
                         self.SIGNALS.new_img.emit(new_img_wrp.img)
+                        # self.main_widget().update_shape()
                     # mulitple time steps
                 # if self.reshaped_data.shape[0] != 1:
-                self.set_output_val(0, (self.reshaped_data[self.ttval, :, :, :, :], self.ttval, self.zzval))
+                self.set_output_val(0, (self.reshaped_data[self.stack_dict["time_step"], :, :, :, :], self.stack_dict, self.zzval))
                 # else:
                 #     self.set_output_val(0, (self.reshaped_data[0, :, :, :, :], self.ttval, self.zzval))
 
@@ -2597,19 +2624,21 @@ class ReadImage(NodeBase0):
         set_widg[1] = dimension[1] #z
         self.SIGNALS.reset_widget.emit(set_widg)
         self.SIGNALS.image_shape.emit(dimension)
-        self.ttval= 1
+        self.stack_dict["time_step"]= 1
         self.zzval= round(set_widg[1]/2)
         if (dimension[0])==1 or (dimension[1])==1:
             set_widg = [1,1]
             self.SIGNALS.reset_widget.emit(set_widg)
-            self.ttval=0
+            self.stack_dict["time_step"]=0
             self.zzval=0
         print(f'Image dim: {dimension}')
         return dimension
         
     def onValue1Changed(self, value):
         # print(f"timevalue{value}")
-        self.ttval=value-1 #slider: 1-max for biologists
+        # self.ttval=value-1 #slider: 1-max for biologists
+        self.stack_dict["time_step"] = value-1
+        print(f'stack {self.stack_dict["time_step"]}')
         self.new_img_wrp = CVImage(self.get_img())
         
         if self.session.gui:
@@ -2628,15 +2657,15 @@ class ReadImage(NodeBase0):
     
     def output_data(self, value):
         if self.reshaped_data.shape[0] != 1:
-            self.set_output_val(0, (self.reshaped_data[self.ttval, :, :, :, :], self.ttval, self.zzval))
+            self.set_output_val(0, (self.reshaped_data[self.stack_dict["time_step"], :, :, :, :], self.stack_dict, self.zzval))
         else:
-            self.set_output_val(0, (self.reshaped_data[0, :, :, :, :], self.ttval, self.zzval))
+            self.set_output_val(0, (self.reshaped_data[0, :, :, :, :], self.stack_dict, self.zzval))
 
 
     def get_img(self):
         # 4D
         # if (self.dim[0] != 1) & (self.dim[1] != 1):
-        self.sliced = self.reshaped_data[self.ttval,self.zzval,:,:,:]
+        self.sliced = self.reshaped_data[self.stack_dict["time_step"],self.zzval,:,:,:]
         # reshaped = self.sliced.reshape(self.sliced.shape[:-1] + (-1,))
         # print(f"THIS is the RESHAPE: {self.sliced.shape}")
         return self.sliced
@@ -2647,13 +2676,12 @@ class ReadImage(NodeBase0):
         # elif self.dim[1] != 1:
         #     return self.reshaped_data[1,self.zzval,:,:]
     
-    # def get_state(self):
-    #     data = {'image file path': self.image_filepath}
-    #     return data
+    # def update_dict
+
     def get_state(self) -> dict:
         data = {
             'image file path': self.image_filepath,
-            'val1': self.ttval,
+            'val1': self.stack_dict["time_step"],
             'val2': self.zzval,
                 # 'dimension': self.dim
             }
@@ -2663,7 +2691,7 @@ class ReadImage(NodeBase0):
 
     def set_state(self, data: dict, version):
         self.path_chosen(data['image file path'])
-        self.ttval = data['val1']
+        self.stack_dict["time_step"] = data['val1']
         self.zzval = data['val2']
         self.update()
         # self.dim = data['dimension']
@@ -2748,13 +2776,12 @@ class SaveImg(NodeBase0):
             
         
         if self.input(0)[0].shape[3] == 3:
-            RGB_stack = stack[0, :, :, :]
             # print(f"RGB shape {RGB_stack.shape}")
             custom_metadata = {
                 "Description": "Stack (RGB) preprocessed with Visual Processing Pipeline. Developed using Ryven by Emma Sharratt and Dr Rensue Theart",
                 "Author": "Emma Sharratt and Dr Rensue Theart",
                 "Date": "Pipeline created in 2023",
-                'axes': 'ZYX'
+                'axes': 'ZCYX'
                 # "256": RGB_stack.shape[2], #W
                 # "257": RGB_stack.shape[1], #H
                 # "slices=": RGB_stack.shape[0],
@@ -2762,7 +2789,7 @@ class SaveImg(NodeBase0):
                 # "channels=": RGB_stack.shape[3],
             }
 
-            tiff.imwrite(self.file_path, RGB_stack, photometric='rgb', imagej=True, metadata=custom_metadata)  # You can adjust options as needed
+            tiff.imwrite(self.file_path, stack, photometric='rgb', imagej=True, metadata=custom_metadata)  # You can adjust options as needed
 
     def update_event(self, inp=-1):
         self.SIGNALS.reset_widget.emit(1)
@@ -2907,6 +2934,302 @@ class OutputMetadata(NodeBase0):
 
     # def set_state(self, data: dict, version):
     #     self.kk = data['val1']
+    
+class BatchProcess(NodeBase0):
+    title = 'Batch Process'
+    # input_widget_classes = {
+    #     'choose file path': widgets.ChooseFileInputWidget
+    # }
+    init_inputs = [
+        NodeInputBP('connet to end'),
+        # NodeInputBP('path', add_data={'widget name': 'path input', 'widget pos': 'below'}),
+    ]
+
+    init_outputs = [
+        NodeOutputBP('connect to start')
+    ]
+
+    main_widget_class = widgets.BatchPathInput
+    main_widget_pos = 'below ports'
+
+    def __init__(self, params):
+        super().__init__(params)
+        
+        if self.session.gui:
+            from qtpy.QtCore import QObject, Signal
+            class Signals(QObject):
+                reset_widget = Signal(int)
+            # to send images to main_widget in gui mode
+            self.SIGNALS = Signals()
+        
+        self.file_path = ''
+        self.proceed_batchp = 0
+        self.ttval = 0
+        self.zzval = 4
+        self.stack_dict = {
+            "time_step": self.ttval,
+            "colour": {
+                "red": 100,
+                "green": 100,
+                "blue": 100,
+                "magenta": 100,
+                "cyan": 100
+            }
+        }
+        
+        # self.actions['make executable'] = {'method': self.action_make_executable}
+
+    def view_place_event(self):
+        # self.input_widget(1).path_chosen.connect(self.path_chosen)
+        # self.file_path.path_chosen.connect(self.path_chosen)
+        self.main_widget().path_chosen.connect(self.path_chosen)
+        self.SIGNALS.reset_widget.connect(self.main_widget().reset_w)
+        self.proceed_batchp = 0
+    
+    def path_chosen(self, new_path):
+        # Allow batch processing to start
+        self.proceed_batchp = 1
+        # Move to second file 
+        self.i = 1
+        self.file_path = new_path
+
+        # Path to new folder
+        self.new_folder_name = "BatchProcessed"
+        self.new_folder_path = os.path.join(self.file_path, self.new_folder_name)
+        # Create new file path
+        print(f'new folder: {self.new_folder_path}')
+
+        # List files in the selected folder
+        # files = os.listdir(self.file_path)
+        files = os.listdir(self.file_path)
+        self.tiff_files = [file for file in files if file.lower().endswith(('.tif', '.tiff'))]
+        self.num_tiff = len(self.tiff_files)
+        firstfile = self.tiff_files[0]
+        self.extract_imagedata(self.file_path, firstfile)
+
+        
+        
+
+    def update_event(self, inp=-1):
+        #New batch process May need to include somewhere ***
+        # self.SIGNALS.reset_widget.emit(1)
+        # Allow batch processing to start if batch processing button pressed
+        if self.proceed_batchp == 1:
+            # save the previous file
+            stack = self.input(0)[0]
+            self.save_stack(stack)
+
+            # once saved last file, won't enter this
+            if self.i < self.num_tiff:
+                print('perform on next file')
+                
+                # Step through files in the folder
+                # From second file to the end
+                filename = self.tiff_files[self.i]
+                # Extract and output the stack to the pipeline
+                self.extract_imagedata(self.file_path, filename)
+                 # move to next file
+                self.i += 1
+               
+    
+    def extract_imagedata(self, file_path, filename):
+        #create new file path for the stack - where it will be saved
+        self.new_file_path = os.path.join(self.new_folder_path, "batched_processed_" + filename)
+
+        if os.path.isfile(os.path.join(file_path, filename)):
+            currentfile = os.path.join(file_path, filename)
+            print(f'filepath currently batch processing: {currentfile}')
+            print('filename')
+            if currentfile == '':
+                return
+            # Check if the file has a .tiff extension   --> tif file capability Check tiff 
+            if currentfile.endswith('.tif'): #----------------------------------------------------------------------------------TIFF
+                try:
+                    self.image_data = tiff.imread(currentfile)
+
+                    
+
+
+                    # Normalize - generate dimension list (T,Z,H,W,C)
+                    self.dim = self.id_tiff_dim(currentfile)
+                    # Reshape - STANDARDIZED 
+                    self.image_data = ((self.image_data / np.max(self.image_data)) * 255).astype(np.uint8)
+                    
+                    # IF shape: ZCXY ---------------------------------------------------------------
+                    # Change to TZXYC
+                    if self.image_data.shape[-3] <= 4:
+                        
+                        # dim = [1, 15, 1024, 1024, 3]
+                        print("Strange dimension")
+                        #if no time step data 
+                        if len(self.image_data.shape) == 4: 
+                            print(f'length {len(self.image_data.shape)}')
+                            self.image_data = self.image_data[np.newaxis,:,:,:,:]
+
+                        # Create an empty array with the specified dimensions
+                        image_data_stacked = np.empty(self.dim, dtype=np.uint8)
+
+                        num_time_frames = self.dim[0]  # Get the number of time frames
+                        
+                        for t in range(num_time_frames):  # Iterate over the time frames
+                            for i in range(self.dim[1]):  # Iterate over the images in each time frame
+                                # Get the red, green, and blue channels for the i-th image in the t-th time frame
+                                print(i)
+                                chan_0 = self.image_data[t, i, 0, :, :]  # Assuming the first dimension is time frame, then image index
+                                chan_1 = self.image_data[t, i, 1, :, :]
+                                chan_2 = self.image_data[t, i, 2, :, :]
+                                
+                                # Stack the channels along the last axis
+                                image_data_stacked[t, i, :, :, 0] = chan_0
+                                image_data_stacked[t, i, :, :, 1] = chan_1
+                                image_data_stacked[t, i, :, :, 2] = chan_2   
+                                # if have a an alpha channel
+                                if self.image_data.shape[2] >= 4:
+                                    chan_3 = self.image_data[t, i, 3, :, :] 
+                                    image_data_stacked[t, i, :, :, 3] = chan_3 
+
+                                # if have a an alpha channel
+                                if self.image_data.shape[2] == 5:
+                                    chan_4 = self.image_data[t, i, 4, :, :] 
+                                    image_data_stacked[t, i, :, :, 4] = chan_4 
+
+                        print(image_data_stacked.shape)   
+
+                        self.image_data = image_data_stacked 
+                    # ---------------------------------------------------------------------------------           
+                        
+                    self.reshaped_data = self.image_data.reshape(self.dim)
+
+                    self.set_output_val(0, (self.reshaped_data[self.stack_dict["time_step"], :, :, :, :], self.stack_dict, self.zzval))
+                
+                except Exception as e:
+                    print(e)
+                    print("failed")
+
+    def save_stack(self, stack):
+        #perform a check to see if folder exists 
+        # if it exisists rename + "n"
+        # n += 1 (set to zero when create folder)
+        if stack.shape[3] == 1:
+            grayscale_stack = stack[:, :, :, 0]
+            #NEED TO CHANGE 259 / slices=
+            metadata = {
+                'Description': 'Stack (RGB) preprocessed with Visual Processing Pipeline. Developed using Ryven at Stellenbosch University by Emma Sharratt and Dr Rensue Theart',
+                'Author': 'Emma Sharratt and Dr Rensu Theart',
+                'axes': 'ZYX'
+                # 'Width': grayscale_stack.shape[2],
+                # 'Height': grayscale_stack.shape[1],
+                # 'BitsPerSample': 16,  # Adjust as needed
+                # 'Photometric': 'minisblack',
+                # Add more metadata fields as needed
+                }
+            # print("stack shape {grayscale_stack}")
+            tiff.imwrite(self.new_file_path, grayscale_stack, photometric='minisblack', imagej=True, metadata=metadata)  # You can adjust options as needed
+            
+        
+        if stack.shape[3] == 3:
+            # WHY ONLY SAVE FIRST??
+            # RGB_stack = stack[:, :, :, :]
+            # print(f"RGB shape {RGB_stack.shape}")
+            custom_metadata = {
+                "Description": "Stack (RGB) preprocessed with Visual Processing Pipeline. Developed using Ryven by Emma Sharratt and Dr Rensue Theart",
+                "Author": "Emma Sharratt and Dr Rensue Theart",
+                "Date": "Pipeline created in 2023",
+                'axes': 'ZCYX'
+                # "256": RGB_stack.shape[2], #W
+                # "257": RGB_stack.shape[1], #H
+                # "slices=": RGB_stack.shape[0],
+                # "frames=": 1,
+                # "channels=": RGB_stack.shape[3],
+            }
+            print(f"RGB save shape: {stack.shape}")
+            tiff.imwrite(self.new_file_path, stack, photometric='rgb', imagej=True, metadata=custom_metadata)  # You can adjust options as needed
+        # tiff.imwrite(self.new_file_path, stack, photometric='rgb', imagej=True, metadata=custom_metadata)  # You can adjust options as needed
+
+    def id_tiff_dim(self,f_path):
+        tif_file = tiff.TiffFile(f_path)
+        # Check for TIFF metadata tags
+        metadata = tif_file.pages[0].tags
+        if metadata:
+            # print("Metadata Tags:")
+            for tag_name, tag in metadata.items():
+                print(f"{tag_name}: {tag.value}")
+
+            #set dimension to 0 when a new tiff file is processed
+            dimension = [1,1,1,1,1] #dim, slices , time
+            
+            
+            #  T Z Y X C  (F, Z, H, W, C)
+            #  0 1 2 3 4
+            
+            if 256 in metadata: #width
+                            # Access the tag value directly
+                            dimension[3] = metadata[256].value
+            if 257 in metadata: #H
+                            # Access the tag value directly
+                            dimension[2] = metadata[257].value
+            if 277 in metadata: #channels
+                            # Access the tag value directly
+                            dimension[4] = metadata[277].value
+            if 259 in metadata:  # Tag for slices
+                            print("meta",metadata[259].value)
+                            dimension[1] = metadata[259].value
+                        
+            if 'ImageDescription' in metadata:
+                    # Access 'ImageDescription' tag
+                    image_description = metadata['ImageDescription']
+            
+                    # Split the 'ImageDescription' string into lines
+                    description_lines = image_description.value.split('\n')
+                    # Parse the lines to extract slices and frames information
+                    for line in description_lines:
+                        # if 262 in metadata:  # Tag for frames
+                        #     dimension[4] = metadata[262].value
+                        #     print("dim",dimension[4])
+                        if line.startswith("slices="):
+                            dimension[1] = int(line.split('=')[1]) #slice
+                        if line.startswith("frames="):
+                            dimension[0] = int(line.split('=')[1]) #frames
+                            # print("frames", int(line.split('=')[1]))
+                            # print("dim",dimension[4])
+                        if line.startswith("channels="):
+                            dimension[4] = int(line.split('=')[1]) #frames
+                            # print("dim",dimension[4])
+                        
+        else:
+                print("ImageDescription tag not found in metadata.")
+                        
+        # print(f'Width: {dimension[3]}')
+        # print(f'Height: {dimension[2]}')
+        # print(f'Channels: {dimension[4]}')
+        # print(f"Slices: {dimension[1]}")
+        # print(f"Frames: {dimension[0]}")
+        # print(f'Dimension: {dimension[0]}')
+        # self.dimension=dimension
+        # set_widg = [1,1]
+        # set_widg[0] = dimension[0] #t
+        # set_widg[1] = dimension[1] #z
+        # self.SIGNALS.reset_widget.emit(set_widg)
+        # self.SIGNALS.image_shape.emit(dimension)
+        # self.stack_dict["time_step"]= 1
+        # self.zzval= round(set_widg[1]/2)
+        # if (dimension[0])==1 or (dimension[1])==1:
+        #     set_widg = [1,1]
+        #     self.SIGNALS.reset_widget.emit(set_widg)
+        #     self.stack_dict["time_step"]=0
+        #     self.zzval=0
+        print(f'Image dim: {dimension}')
+        # Set the Z and T slice at the midpoint to display through the pipeline
+        self.zzval = int(dimension[1] /2)
+        self.stack_dict["time_step"] = int(dimension[0] / 2)
+        return dimension
+
+    def get_state(self):
+        return {'path': self.file_path}
+
+    def set_state(self, data, version):
+        self.file_path = data['path']
+
 
 class ReadImageTiff(NodeBase0):
     """Reads an image from a file"""
@@ -3163,9 +3486,10 @@ class Split_Img(NodeBase0):
          
     ]
     init_outputs = [
-        NodeOutputBP('red channel'), #img
-        NodeOutputBP('green channel'), #img
-        NodeOutputBP('blue channel'), #img
+        NodeOutputBP('channel 0'), #img
+        NodeOutputBP('channel 1'), #img
+        NodeOutputBP('channel 2'), #img
+        NodeOutputBP('channel 3'), #img
     ]
     main_widget_class = widgets.Split_Img
     main_widget_pos = 'below ports'
@@ -5113,7 +5437,7 @@ class Threshold_Manual_Base(NodeBase2):        #Nodebase just a different colour
         if self.prev == True:
             if self.session.gui:
                 self.SIGNALS.new_img.emit(self.new_img_wrp.img)
-
+        print(f'current threshold: {self.thr}')
         self.proc_stack_parallel()
         self.set_output_val(0, (self.reshaped_proc_data, self.frame, self.z_sclice))
     
@@ -6526,6 +6850,7 @@ nodes = [
     ReadImage,
     SaveImg,
     OutputMetadata,
+    BatchProcess,
     # ReadImageTiff,
     DisplayImg,
     Crop,

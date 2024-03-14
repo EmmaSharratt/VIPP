@@ -1218,6 +1218,7 @@ class ChooseFileInputWidgetBASE3(MWB, QWidget):
     ValueChanged2 = Signal(int)  #z-slice (depth)
     released1 = Signal(int)
     released2 = Signal(int)
+    dict_widg = Signal(dict)
 
     def __init__(self, params):
         MWB.__init__(self, params)
@@ -1369,7 +1370,7 @@ class ChooseFileInputWidgetBASE3(MWB, QWidget):
                 self.stack_dict["colour"][color] = dicttemp["colour"][color]
                 dicttemp["colour"][color] = 100
                 #WILL NEED TO SEND TO SPECIAL NODES LAYER
-            
+            self.dict_widg.emit(self.stack_dict)
             print("Dictionary updated:", self.stack_dict)
             print("Dictionary temporary cleared:", dicttemp)
 
@@ -1758,6 +1759,84 @@ class PathInput(MWB, QWidget):
     def reset_w(self, int):
         # #print("reset received")
         self.path_label.setText('  (save output: select file path)')
+
+    def get_state(self):
+        return {'path': self.path,
+                'abs': self.abs_f_path}
+    
+    def set_state(self, data):
+        self.path = data['path']
+        self.abs_f_path = data['abs']
+        self.path_label.setText(self.abs_f_path)
+        self.node.update_shape()
+
+class BatchPathInput(MWB, QWidget):
+    path_chosen = Signal(str)
+
+    def __init__(self, params):
+        MWB.__init__(self, params)
+        QWidget.__init__(self)
+
+        self.path = ''
+        # path_chosen = ''
+
+        # setup UI
+        l = QVBoxLayout()
+        self.path_label0 = QLabel('1. Connect node to pipeline\n2. Select a folder\n3. Press button to start batch processing') ##print(f"Image saved to {file_path}")
+        self.path_label0.setStyleSheet('font-size: 14px;')
+        l.addWidget(self.path_label0)
+        button = QPushButton('Select Folder')
+        button.clicked.connect(self.choose_button_clicked)
+        l.addWidget(button)
+        self.path_label = QLabel('(select a folder to batch process)') ##print(f"Image saved to {file_path}")
+        self.path_label.setStyleSheet('font-size: 14px;')
+        l.addWidget(self.path_label)
+
+        button2 = QPushButton('Batch Process and Save Output')
+        button2.clicked.connect(self.bacthp_button_clicked)
+        l.addWidget(button2)
+        self.path_label2 = QLabel('(Press the button to perform batch processing)') ##print(f"Image saved to {file_path}")
+        self.path_label2.setStyleSheet('font-size: 14px;')
+        l.addWidget(self.path_label2)
+
+        self.setLayout(l)
+    
+    def choose_button_clicked(self):
+        self.abs_f_path = QFileDialog.getExistingDirectory(self, 'Select folder to batch process') #filter='TIFF Files (*.tif *.tiff)
+        self.path = os.path.relpath(self.abs_f_path)
+
+        # self.path_label.setText(f"output saved to\n {self.abs_f_path}")
+         # Create a new folder in the selected location
+        self.new_folder_name = "BatchProcessed"  # You can change this to your desired folder name
+        self.new_folder_path = os.path.join(self.abs_f_path, self.new_folder_name)
+        os.makedirs(self.new_folder_path)
+
+        # Update the label text to show the selected folder 
+        self.path_label.setText(f"Input folder selected:\n{self.abs_f_path}")
+        #print(f"setText {self.path}")
+        #print(f"abs_f_path {self.abs_f_path}")
+        self.adjustSize()  # important! otherwise the widget won't shrink
+        # self.path_chosen.emit(self.path)
+
+        self.node.update_shape()
+    
+    def bacthp_button_clicked(self):
+        # # Ensure backslashes are used in the file path
+        # self.new_folder_path = self.new_folder_path.replace('/', '\\')
+        # Update the label text to show the newly created folder
+        self.path_label2.setText(f"New folder created:{self.new_folder_name}")
+        #print(f"setText {self.path}")
+        #print(f"abs_f_path {self.abs_f_path}")
+        self.adjustSize()  # important! otherwise the widget won't shrink
+
+        self.path_chosen.emit(self.path)
+
+        self.node.update_shape()
+    
+    def reset_w(self, int):
+        # #print("reset received")
+        self.path_label.setText('(Select folder to batch process)')
+        self.path_label2.setText('Press the button to perform batch processing')
 
     def get_state(self):
         return {'path': self.path,
@@ -5497,6 +5576,7 @@ export_widgets(
     ChooseFileInputWidget,
     ChooseFileInputWidgetBASE,
     PathInput,
+    BatchPathInput,
     Crop_MainWidget,
     OutputMetadataWidg,
     Split_Img,
