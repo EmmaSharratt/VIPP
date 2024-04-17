@@ -1228,8 +1228,11 @@ class ChooseFileInputWidgetBASE3(MWB, QWidget):
         default_range = 6
         self.val1 = default
         self.val2 = 3
+        # update image when confirmed 
+        self.update_img = 0
 
-        
+        self.old_choice_array = [None, None, None, None, None, None]
+        self.color_name = [None, None, None, None, None, None] 
         self.dropdowns = []
         self.checkboxes = []
         self.stack_dict = {
@@ -1238,8 +1241,9 @@ class ChooseFileInputWidgetBASE3(MWB, QWidget):
                 "red": 100,
                 "green": 100,
                 "blue": 100,
-                "magenta": 100,
-                "cyan": 100
+                "cyan": 100,
+                "yellow": 100,
+                "magenta": 100                
             }
         }
         self.temp_dict = {
@@ -1248,19 +1252,21 @@ class ChooseFileInputWidgetBASE3(MWB, QWidget):
                 "red": 100,
                 "green": 100,
                 "blue": 100,
-                "magenta": 100,
-                "cyan": 100
+                "cyan": 100,
+                "yellow": 100,
+                "magenta": 100                
             }
         }
-       
+
         self.color_codes = {
         'red': 1,
         'green': 2,
         'blue': 3,
-        'magenta': 4,
-        'cyan': 5
+        #CHANGED
+        'cyan': 4,
+        'yellow': 5,
+        'magenta': 6
         }
-
 
         self.shape_label = QLabel()
         self.shape_label.setStyleSheet('background-color: #1E242A; color: white; font-size: 14px;')
@@ -1297,22 +1303,37 @@ class ChooseFileInputWidgetBASE3(MWB, QWidget):
         # Layout ----------------------------------------------------
         self.layout1 = QVBoxLayout()
         longest_word_width = max(len(word) for word in self.color_codes.keys())
+        col1_layout = QVBoxLayout()
+        col2_layout = QVBoxLayout()
 
-        for i in range(5):
-            self.channel_layout = QHBoxLayout()
+        # Add dropdowns to two columns
+        for i, color in enumerate(self.color_codes.keys()):
             label = QLabel(f"Channel {i}:")
             label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
             label.setMinimumWidth(longest_word_width)
             dropdown = QComboBox()
-            dropdown.addItem("None")
+            dropdown.addItem("Select")
             dropdown.setStyleSheet("QComboBox QAbstractItemView { background-color: #091C7F }")
             for color_code in self.color_codes.keys():
                 dropdown.addItem(color_code)
-            dropdown.currentIndexChanged.connect(lambda index, i=i, diction = self.temp_dict: self.handle_selection(index, i, diction))
-            self.channel_layout.addWidget(label)
-            self.channel_layout.addWidget(dropdown)
-            self.layout1.addLayout(self.channel_layout)
+            dropdown.currentIndexChanged.connect(lambda index, i=i, diction=self.temp_dict: self.handle_selection(index, i, diction))
             self.dropdowns.append(dropdown)
+            
+            row_layout = QHBoxLayout()  # Create a QHBoxLayout for each row
+            row_layout.addWidget(label)
+            row_layout.addWidget(dropdown)
+            
+            # create two coloumns 
+            if i < len(self.color_codes)/2:
+                col1_layout.addLayout(row_layout)  # Add the row layout to the column layout
+            else:
+                col2_layout.addLayout(row_layout)  # Add the row layout to the column layout
+
+        # Add column layouts to the main layout
+        col_layout = QHBoxLayout()
+        col_layout.addLayout(col1_layout)
+        col_layout.addLayout(col2_layout)
+        self.layout1.addLayout(col_layout)
 
         self.button_layout = QHBoxLayout()
         # Confrim checkbox
@@ -1325,6 +1346,7 @@ class ChooseFileInputWidgetBASE3(MWB, QWidget):
         self.clear_button.clicked.connect(lambda: self.clear_choices(self.stack_dict, self.temp_dict))
         self.button_layout.addWidget(self.clear_button)
         self.layout1.addLayout(self.button_layout)
+        
         #add widgets
             #shape message
         self.layout1.addWidget(self.shape_label)
@@ -1357,32 +1379,53 @@ class ChooseFileInputWidgetBASE3(MWB, QWidget):
 
     def handle_selection(self, index, channel_index, dicttemp):
         if index != 0:
-            color_name =self.dropdowns[channel_index].currentText()
-            dicttemp["colour"][color_name] = channel_index
-            print(f"{color_name}: Channel {channel_index}")
+            # update the specific channel
+            self.old_choice_array[channel_index] = self.color_name[channel_index]
+            print(self.old_choice_array)
+            old_colour = self.old_choice_array[channel_index]
+            print(old_colour)
+            if old_colour is not None:
+                dicttemp["colour"][old_colour] = 100
+            
+            # update dictionary 
+            self.color_name[channel_index] = self.dropdowns[channel_index].currentText()
+            dicttemp["colour"][self.color_name[channel_index]] = channel_index
+            print(f"{self.color_name[channel_index]}: Channel {channel_index}")
             print(self.stack_dict)
             # Uncheck the checkbox when a dropdown is changed
-            self.checkbox.setChecked(False)
+            if self.checkbox.isChecked():
+                self.checkbox.setChecked(False)
+                self.clear_img()
 
     def update_dict(self, state, dicttemp):
         if state == 2:  # Checkbox checked state
+            self.update_img = 1
             for color in dicttemp["colour"]:
                 self.stack_dict["colour"][color] = dicttemp["colour"][color]
-                dicttemp["colour"][color] = 100
+                # dicttemp["colour"][color] = 100
                 #WILL NEED TO SEND TO SPECIAL NODES LAYER
             self.dict_widg.emit(self.stack_dict)
             print("Dictionary updated:", self.stack_dict)
             print("Dictionary temporary cleared:", dicttemp)
 
+            # update image 
+            self.show_image(self.RGB_img)
+
         
     def clear_choices(self, dict, dicttemp):
         self.checkbox.setChecked(False)
+        self.update_img = 0
         for dropdown in self.dropdowns:
             dropdown.setCurrentIndex(0)  # Reset dropdown menu to "None"
         
         for color in dict["colour"]:
             dict["colour"][color] = 100  # Reset color values to 100
             dicttemp["colour"][color] = 100
+
+        self.old_choice_array = [None, None, None, None, None, None]
+        self.color_name = [None, None, None, None, None, None]
+        
+        self.clear_img()
         
         print("Choices cleared and color values reset to 100:", self.stack_dict)    
 
@@ -1418,7 +1461,56 @@ class ChooseFileInputWidgetBASE3(MWB, QWidget):
 
             self.slider_label2.setValue(z)
             self.slider_label2.setRange(1, val[1])
-        
+    
+    def assign_channels_RGB(self, img):
+        single_chan = img[:, :, 0]
+        # Initialize RGB channels with zeros
+        red_channel = np.zeros_like(single_chan)
+        green_channel = np.zeros_like(single_chan)
+        blue_channel = np.zeros_like(single_chan)
+
+        for color, channel_value in self.stack_dict["colour"].items():
+            # Check if the channel is part of the image
+            if channel_value != 100:
+                # Assign channels based on the color
+                if color == "red":
+                    red_channel += img[:, :, channel_value]
+                elif color == "green":
+                    green_channel += img[:, :, channel_value]
+                elif color == "blue":
+                    blue_channel += img[:, :, channel_value]
+                elif color == "cyan":
+                    cyan_channel = img[:, :, channel_value]
+                    green_channel += cyan_channel
+                    blue_channel += cyan_channel
+                elif color == "magenta":
+                    magenta_channel = img[:, :, channel_value]
+                    red_channel += magenta_channel
+                    blue_channel += magenta_channel
+                elif color == "yellow":
+                    yellow_channel = img[:, :, channel_value]
+                    red_channel += yellow_channel
+                    green_channel += yellow_channel
+
+        # Clip values to ensure they remain within the valid range [0, 255]
+        red_channel = np.clip(red_channel, 0, 255)
+        green_channel = np.clip(green_channel, 0, 255)
+        blue_channel = np.clip(blue_channel, 0, 255)
+
+        # Combine channels back into image data
+        rgb_image_stack = np.stack([red_channel, green_channel, blue_channel], axis=2)
+
+        return rgb_image_stack    
+    
+    def clear_img(self):
+        # Create a black image of size 1x1
+        clr_img = QImage(1, 1, QImage.Format_RGB888)
+        clr_img.setPixelColor(0, 0, QColor(Qt.black))
+
+        self.image_label.setPixmap(QPixmap(clr_img))
+        # print(self.width(), self.height())
+        self.resize(200,50)
+        self.node.update_shape() #works the best. But doesnt minimize shape immediately
 
     def remove_widgets(self):
         #print("REMOVE")
@@ -1520,45 +1612,50 @@ class ChooseFileInputWidgetBASE3(MWB, QWidget):
     # def slider2_released(self):
     #     self.released2.emit(self.slider_label2.value())
     
-    def show_image(self, img):
+    def show_image(self, old_img):
         # self.resize(800,800)
 
-        try:
-            if img.shape[-1] == 1:
-                # Grayscale image
-                qt_image = QImage(img.data, img.shape[1], img.shape[0], img.shape[1], QImage.Format_Grayscale8)
-                # #print("came here for Sliderwidget")
-            elif img.shape[-1] == 3:
-                h, w, ch = img.shape
-                bytes_per_line = ch * w
-                qt_image = QImage(img.data, w, h, bytes_per_line, QImage.Format_RGB888) #Format_RGB888
-            elif img.shape[-1] == 4:
-                h, w, ch = img.shape
-                #print(f"ch: {ch}")
-                bytes_per_line = ch * 4
-                qt_image = QImage(img.data, w, h, QImage.Format_RGBA8888) #Format_RGB888
-            if qt_image is not None:
-                # Calculate the target size for scaling
-                scale_factor = 0.7  # Increase the scaling factor for clarity
-                if qt_image.width() < 400:
-                    scale_factor = 1
-                if qt_image.width() > 900:
-                    scale_factor = 0.5
-                target_width = int(qt_image.width() * scale_factor)
-                # Use scaledToWidth to reduce the size while maintaining aspect ratio
-                scaled_pixmap = QPixmap.fromImage(qt_image).scaledToWidth(target_width)
+        self.RGB_img = self.assign_channels_RGB(old_img)
+        # If confirm button has been pressed
+        if self.update_img == 1:
+            try:
+                if self.RGB_img.shape[-1] == 1:
+                    # Grayscale image
+                    qt_image = QImage(self.RGB_img.data, self.RGB_img.shape[1], self.RGB_img.shape[0], self.RGB_img.shape[1], QImage.Format_Grayscale8)
+                    # #print("came here for Sliderwidget")
+                elif self.RGB_img.shape[-1] == 3:
+                    h, w, ch = self.RGB_img.shape
+                    bytes_per_line = ch * w
+                    qt_image = QImage(self.RGB_img.data, w, h, bytes_per_line, QImage.Format_RGB888) #Format_RGB888
+                elif self.RGB_img.shape[-1] == 4:
+                    h, w, ch = self.RGB_img.shape
+                    #print(f"ch: {ch}")
+                    bytes_per_line = ch * 4
+                    qt_image = QImage(self.RGB_img.data, w, h, QImage.Format_RGBA8888) #Format_RGB888
+                if qt_image is not None:
+                    # Calculate the target size for scaling
+                    scale_factor = 0.7  # Increase the scaling factor for clarity
+                    if qt_image.width() < 400:
+                        scale_factor = 1
+                    if qt_image.width() > 900:
+                        scale_factor = 0.5
+                    target_width = int(qt_image.width() * scale_factor)
+                    # Use scaledToWidth to reduce the size while maintaining aspect ratio
+                    scaled_pixmap = QPixmap.fromImage(qt_image).scaledToWidth(target_width)
+                    
+                    # Set the scaled pixmap
+                    self.image_label.setPixmap(scaled_pixmap)
+                    
+                    # Resize the widget to match the pixmap size
+                    self.resize(scaled_pixmap.width(), scaled_pixmap.height())
+                    
+                    # Ensure that any necessary updates are performed
+                    self.node.update_shape()
                 
-                # Set the scaled pixmap
-                self.image_label.setPixmap(scaled_pixmap)
-                
-                # Resize the widget to match the pixmap size
-                self.resize(scaled_pixmap.width(), scaled_pixmap.height())
-                
-                # Ensure that any necessary updates are performed
-                self.node.update_shape()
-            
-        except Exception as e:
-            print("Error:", e)
+            except Exception as e:
+                print("Error:", e)
+        else:
+            self.clear_img()
     
     def get_state(self) -> dict:
         return {
@@ -1743,7 +1840,7 @@ class PathInput(MWB, QWidget):
         l.addWidget(self.path_label)
         self.setLayout(l)
     
-    def choose_button_clicked(self):
+    def choose_button_clicked(self): 
         self.abs_f_path = QFileDialog.getSaveFileName(self, 'Save stack',filter='TIFF Files (*.tif *.tiff)')[0] #filter='TIFF Files (*.tif *.tiff)
         self.path = os.path.relpath(self.abs_f_path)
 
@@ -2590,6 +2687,92 @@ class Split_Img(MWB, Widget_Base8):
     # checkbox -------------------------------------------------
     def prev_checkbox_changed(self, state):
         self.previewState.emit(state)
+    
+    # def assign_channels_RGB(self, img):
+    #     single_chan = img[:, :, 0]
+    #     # Initialize RGB channels with zeros
+    #     red_channel = np.zeros_like(single_chan)
+    #     green_channel = np.zeros_like(single_chan)
+    #     blue_channel = np.zeros_like(single_chan)
+
+    #     for color, channel_value in self.stack_dict["colour"].items():
+    #         # Check if the channel is part of the image
+    #         if channel_value != 100:
+    #             # Assign channels based on the color
+    #             if color == "red":
+    #                 red_channel += img[:, :, channel_value]
+    #             elif color == "green":
+    #                 green_channel += img[:, :, channel_value]
+    #             elif color == "blue":
+    #                 blue_channel += img[:, :, channel_value]
+    #             elif color == "cyan":
+    #                 cyan_channel = img[:, :, channel_value]
+    #                 green_channel += cyan_channel
+    #                 blue_channel += cyan_channel
+    #             elif color == "magenta":
+    #                 magenta_channel = img[:, :, channel_value]
+    #                 red_channel += magenta_channel
+    #                 blue_channel += magenta_channel
+    #             elif color == "yellow":
+    #                 yellow_channel = img[:, :, channel_value]
+    #                 red_channel += yellow_channel
+    #                 green_channel += yellow_channel
+
+    #     # Clip values to ensure they remain within the valid range [0, 255]
+    #     red_channel = np.clip(red_channel, 0, 255)
+    #     green_channel = np.clip(green_channel, 0, 255)
+    #     blue_channel = np.clip(blue_channel, 0, 255)
+
+    #     # Combine channels back into image data
+    #     rgb_image_stack = np.stack([red_channel, green_channel, blue_channel], axis=2)
+
+    #     return rgb_image_stack    
+    
+    # # redefine show image
+    # def show_image(self, old_img):
+    #     # self.resize(800,800)
+
+    #     self.RGB_img = self.assign_channels_RGB(old_img)
+    #     # If confirm button has been pressed
+    #     if self.update_img == 1:
+    #         try:
+    #             if self.RGB_img.shape[-1] == 1:
+    #                 # Grayscale image
+    #                 qt_image = QImage(self.RGB_img.data, self.RGB_img.shape[1], self.RGB_img.shape[0], img.shape[1], QImage.Format_Grayscale8)
+    #                 # #print("came here for Sliderwidget")
+    #             elif self.RGB_img.shape[-1] == 3:
+    #                 h, w, ch = self.RGB_img.shape
+    #                 bytes_per_line = ch * w
+    #                 qt_image = QImage(self.RGB_img.data, w, h, bytes_per_line, QImage.Format_RGB888) #Format_RGB888
+    #             elif self.RGB_img.shape[-1] == 4:
+    #                 h, w, ch = self.RGB_img.shape
+    #                 #print(f"ch: {ch}")
+    #                 bytes_per_line = ch * 4
+    #                 qt_image = QImage(self.RGB_img.data, w, h, QImage.Format_RGBA8888) #Format_RGB888
+    #             if qt_image is not None:
+    #                 # Calculate the target size for scaling
+    #                 scale_factor = 0.7  # Increase the scaling factor for clarity
+    #                 if qt_image.width() < 400:
+    #                     scale_factor = 1
+    #                 if qt_image.width() > 900:
+    #                     scale_factor = 0.5
+    #                 target_width = int(qt_image.width() * scale_factor)
+    #                 # Use scaledToWidth to reduce the size while maintaining aspect ratio
+    #                 scaled_pixmap = QPixmap.fromImage(qt_image).scaledToWidth(target_width)
+                    
+    #                 # Set the scaled pixmap
+    #                 self.image_label.setPixmap(scaled_pixmap)
+                    
+    #                 # Resize the widget to match the pixmap size
+    #                 self.resize(scaled_pixmap.width(), scaled_pixmap.height())
+                    
+    #                 # Ensure that any necessary updates are performed
+    #                 self.node.update_shape()
+                
+    #         except Exception as e:
+    #             print("Error:", e)
+    #     else:
+            # self.clear_img()
           
     # thresh ----------------------------------------------------
     # def spinbox_1_changed(self):    

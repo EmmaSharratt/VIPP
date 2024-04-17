@@ -19,7 +19,7 @@
                     {
                         "identifier": "std.ReadImage",
                         "version": "v0.1",
-                        "state data": "gASVOAAAAAAAAAB9lCiMD2ltYWdlIGZpbGUgcGF0aJSMDGZseWJyYWluLnRpZpSMBHZhbDGUSwCMBHZhbDKUSwB1Lg==",
+                        "state data": "gASVOQAAAAAAAAB9lCiMD2ltYWdlIGZpbGUgcGF0aJSMDUNvbnRyb2xfMi50aWaUjAR2YWwxlEsAjAR2YWwylEsAdS4=",
                         "additional data": {
                             "special actions": {},
                             "display title": "Read Image"
@@ -44,89 +44,14 @@
                             }
                         ],
                         "GID": 7,
-                        "pos x": 449.2334259579129,
-                        "pos y": 582.8458217552609,
-                        "main widget data": "gASVMwAAAAAAAAB9lCiMCWRpbWVuc2lvbpRdlChLAUs5TQABTQABSwNljAR2YWwxlEsFjAR2YWwylEsHdS4=",
-                        "unconnected ports hidden": false,
-                        "collapsed": false
-                    },
-                    {
-                        "identifier": "std.ThresholdBinary",
-                        "version": "v0.1",
-                        "state data": "gASVFwAAAAAAAAB9lCiMBHZhbDGUSyaMBHZhbDKUS6p1Lg==",
-                        "additional data": {
-                            "special actions": {},
-                            "display title": "Binary Threshold"
-                        },
-                        "inputs": [
-                            {
-                                "type": "data",
-                                "label": "input img",
-                                "GID": 28,
-                                "has widget": false
-                            }
-                        ],
-                        "outputs": [
-                            {
-                                "type": "data",
-                                "label": "output img",
-                                "GID": 29
-                            }
-                        ],
-                        "GID": 27,
-                        "pos x": 1066.677992672868,
-                        "pos y": 517.7442888412168,
-                        "main widget data": "gASVFwAAAAAAAAB9lCiMBHZhbDGUSyaMBHZhbDKUS6p1Lg==",
-                        "unconnected ports hidden": false,
-                        "collapsed": false
-                    },
-                    {
-                        "identifier": "std.Bilateral_Filtering",
-                        "version": "v0.1",
-                        "state data": "gASVMwAAAAAAAAB9lCiMBWtzaXpllEsHjAZzaWdtYViUR0AJHrhR64UfjAZzaWdtYVmUR0AJHrhR64UfdS4=",
-                        "additional data": {
-                            "special actions": {},
-                            "display title": "Bilateral Filtering"
-                        },
-                        "inputs": [
-                            {
-                                "type": "data",
-                                "label": "input img",
-                                "GID": 31,
-                                "has widget": false
-                            }
-                        ],
-                        "outputs": [
-                            {
-                                "type": "data",
-                                "label": "output img",
-                                "GID": 32
-                            }
-                        ],
-                        "GID": 30,
-                        "pos x": 1709.1799414758239,
-                        "pos y": 552.0526453306949,
-                        "main widget data": "gASVMwAAAAAAAAB9lCiMBWtzaXpllEsHjAZzaWdtYViUR0AJHrhR64UfjAZzaWdtYVmUR0AJHrhR64UfdS4=",
+                        "pos x": 263.0,
+                        "pos y": 321.0,
+                        "main widget data": "gASVMwAAAAAAAAB9lCiMCWRpbWVuc2lvbpRdlChLAUsPTQAETQAESwNljAR2YWwxlEsFjAR2YWwylEsDdS4=",
                         "unconnected ports hidden": false,
                         "collapsed": false
                     }
                 ],
-                "connections": [
-                    {
-                        "GID": 33,
-                        "parent node index": 0,
-                        "output port index": 0,
-                        "connected node": 1,
-                        "connected input port index": 0
-                    },
-                    {
-                        "GID": 34,
-                        "parent node index": 1,
-                        "output port index": 0,
-                        "connected node": 2,
-                        "connected input port index": 0
-                    }
-                ],
+                "connections": [],
                 "GID": 6,
                 "flow view": {
                     "drawings": [],

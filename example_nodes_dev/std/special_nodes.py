@@ -35,7 +35,8 @@ class NodeBase0(Node):
     #     print(f"shape {self.image_stack.shape}, frame {self.frame}, z {self.z_sclice}, SCLICE {squeeze.shape}")
     def handle_stack(self):
         self.image_stack = self.input(0)[0]
-        self.frame = self.input(0)[1] #dont actually need this anymore, but keep incase. Good to know wich time step
+        # self.frame = self.input(0)[1] #dont actually need this anymore, but keep incase. Good to know wich time step
+        self.stack_dict = self.input(0)[1] #dictioary
         self.z_sclice = self.input(0)[2]
         # self.squeeze = np.squeeze(self.image_stack)
         self.z_size = self.image_stack.shape[0]
@@ -2414,8 +2415,9 @@ class ReadImage(NodeBase0):
                 "red": 100,
                 "green": 100,
                 "blue": 100,
-                "magenta": 100,
-                "cyan": 100
+                "cyan": 100,
+                "yellow": 100,
+                "magenta": 100
             }
         }
 
@@ -2441,6 +2443,10 @@ class ReadImage(NodeBase0):
         for color in self.stack_dict["colour"]:
                 self.stack_dict["colour"][color] = dictt["colour"][color]
         print(f'self.stack_dict["colour"] {self.stack_dict}')
+        #update iimage
+        new_img_wrp = CVImage(self.get_img()) 
+        if self.session.gui:
+                        self.SIGNALS.new_img.emit(new_img_wrp.img)
 
     def update_event(self, inp=-1):   #called when the input is changed
         #therefore new image 
@@ -3478,7 +3484,7 @@ class Crop(NodeBase0):        #Nodebase just a different colour
         
 
 class Split_Img(NodeBase0):
-    title = 'Split Channels (RGB)'
+    title = 'Split Channels'
     version = 'v0.1'
     init_inputs = [
         
@@ -3490,6 +3496,8 @@ class Split_Img(NodeBase0):
         NodeOutputBP('channel 1'), #img
         NodeOutputBP('channel 2'), #img
         NodeOutputBP('channel 3'), #img
+        NodeOutputBP('channel 4'), #img
+        NodeOutputBP('channel 5'), #img
     ]
     main_widget_class = widgets.Split_Img
     main_widget_pos = 'below ports'
@@ -3601,45 +3609,76 @@ class Split_Img(NodeBase0):
               
     def proc_technique(self):
         # add check for RGB
-        stack4D=self.image_stack
-        print(f"shape stack4D {stack4D.shape}")
-        # Split the RGB data into separate channels
-        shape = stack4D.shape
 
-        if shape[-1] == 1:
-            print("GRAYSCALE")
+        # if shape[-1] == 1:
+        #     print("GRAYSCALE")
 
-        elif shape[-1] > 1: 
-            red_stack = stack4D[..., 0]  # Extract the red channel (index 0)
-            red_stack = red_stack[:, :, :, np.newaxis]
+        # elif shape[-1] > 1: 
 
-            green_stack = stack4D[..., 1]  # Extract the green channel (index 1)
-            green_stack = green_stack[:, :, :, np.newaxis]
+        # Initialize an empty image array to use for blank channels
+        # self.image_stack: 4D stack ZXYC
+        blank_image = np.zeros_like(self.image_stack[:, :, :, 0])
 
-            blue_stack = stack4D[..., 2]  # Extract the blue channel (index 2)
-            blue_stack = blue_stack[:, :, :, np.newaxis]
+        # Initialize a list to store the output values
+        output_values = [blank_image] * 6  # Initialize with blank images
 
-            if shape[-1] == 4:
+        # Loop through the colors in the dictionary and assign channels to outputs
+        for color, channel_idx in self.stack_dict["colour"].items():
+            print(f'node split_img dict: {self.stack_dict}')
+            if channel_idx != 100:
+                # Extract the channel from the image
+                channel = self.image_stack[:, :, :, channel_idx]
+                channel = channel[:,:,:,np.newaxis]
+                # Set the output value for the corresponding output index
+                output_values[channel_idx] = channel
+
+        # Set output values for each output idx: colour channel
+        for output_idx, output_value in enumerate(output_values):
+            print(f"channel {output_idx} shape: {output_value.shape}")
+            self.set_output_val(output_idx, (output_value, self.stack_dict, self.z_sclice))
+            # self.set_output_val(output_idx, output_value)
+
+
+
+        # stack4D=self.image_stack
+        # print(f"shape stack4D {stack4D.shape}")
+        # # Split the RGB data into separate channels
+        # shape = stack4D.shape
+
+        # if shape[-1] == 1:
+        #     print("GRAYSCALE")
+
+        # elif shape[-1] > 1: 
+        #     red_stack = stack4D[..., 0]  # Extract the red channel (index 0)
+        #     red_stack = red_stack[:, :, :, np.newaxis]
+
+        #     green_stack = stack4D[..., 1]  # Extract the green channel (index 1)
+        #     green_stack = green_stack[:, :, :, np.newaxis]
+
+        #     blue_stack = stack4D[..., 2]  # Extract the blue channel (index 2)
+        #     blue_stack = blue_stack[:, :, :, np.newaxis]
+
+        #     if shape[-1] == 4:
                 
 
-                magenta_stack = stack4D[..., 3]  # Extract the blue channel (index 2)
-                magenta_stack = magenta_stack[:, :, :, np.newaxis]
+        #         magenta_stack = stack4D[..., 3]  # Extract the blue channel (index 2)
+        #         magenta_stack = magenta_stack[:, :, :, np.newaxis]
 
-                self.set_output_val(0, (red_stack, self.frame, self.z_sclice))
-                print(f"shape split: {red_stack.shape}")
-                self.set_output_val(1, (green_stack, self.frame, self.z_sclice))
-                self.set_output_val(2, (blue_stack, self.frame, self.z_sclice))
-                self.set_output_val(3, (magenta_stack, self.frame, self.z_sclice))
+        #         self.set_output_val(0, (red_stack, self.frame, self.z_sclice))
+        #         print(f"shape split: {red_stack.shape}")
+        #         self.set_output_val(1, (green_stack, self.frame, self.z_sclice))
+        #         self.set_output_val(2, (blue_stack, self.frame, self.z_sclice))
+        #         self.set_output_val(3, (magenta_stack, self.frame, self.z_sclice))
 
-            # If the input is an RGB image
-            elif shape[-1] == 3:
-                blank_stack = np.zeros_like(stack4D[..., 0])
-                self.set_output_val(0, (red_stack, self.frame, self.z_sclice))
-                print(f"shape split: {red_stack.shape}")
-                self.set_output_val(1, (green_stack, self.frame, self.z_sclice))
-                self.set_output_val(2, (blue_stack, self.frame, self.z_sclice))    
-                # send a blank stack to magenta channel 
-                self.set_output_val(3, (blank_stack, self.frame, self.z_sclice))
+        #     # If the input is an RGB image
+        #     elif shape[-1] == 3:
+        #         blank_stack = np.zeros_like(stack4D[..., 0])
+        #         self.set_output_val(0, (red_stack, self.frame, self.z_sclice))
+        #         print(f"shape split: {red_stack.shape}")
+        #         self.set_output_val(1, (green_stack, self.frame, self.z_sclice))
+        #         self.set_output_val(2, (blue_stack, self.frame, self.z_sclice))    
+        #         # send a blank stack to magenta channel 
+        #         self.set_output_val(3, (blank_stack, self.frame, self.z_sclice))
         # #print(f"proc input stack: {stack4D.shape}")
          #Ensure only on 3D data
         # if stack4D.shape[0] > 1:
