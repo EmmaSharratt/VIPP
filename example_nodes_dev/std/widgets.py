@@ -872,30 +872,83 @@ class Widget_Base(QWidget):
 
 class Widget_Base8(QWidget):
     # update image ---------------------------------------------
-    def show_image(self, img):
+
+    # the node emits the channel dictionary to the widget which will be used in the show_img / assign method
+    def channels(self, channels_dict):
+        self.stack_dict = channels_dict
+        print("came to channels", self.stack_dict)
+
+    def assign_channels_RGB(self, img):
+        single_chan = img[:, :, 0]
+        # Initialize RGB channels with zeros
+        red_channel = np.zeros_like(single_chan)
+        green_channel = np.zeros_like(single_chan)
+        blue_channel = np.zeros_like(single_chan)
+
+        for color, channel_value in self.stack_dict["colour"].items():
+            # Check if the channel is part of the image
+            if channel_value != 100:
+                # Assign channels based on the color
+                if color == "red":
+                    red_channel += img[:, :, channel_value]
+                elif color == "green":
+                    green_channel += img[:, :, channel_value]
+                elif color == "blue":
+                    blue_channel += img[:, :, channel_value]
+                elif color == "cyan":
+                    cyan_channel = img[:, :, channel_value]
+                    green_channel += cyan_channel
+                    blue_channel += cyan_channel
+                elif color == "magenta":
+                    magenta_channel = img[:, :, channel_value]
+                    red_channel += magenta_channel
+                    blue_channel += magenta_channel
+                elif color == "yellow":
+                    yellow_channel = img[:, :, channel_value]
+                    red_channel += yellow_channel
+                    green_channel += yellow_channel
+
+        # Clip values to ensure they remain within the valid range [0, 255]
+        red_channel = np.clip(red_channel, 0, 255)
+        green_channel = np.clip(green_channel, 0, 255)
+        blue_channel = np.clip(blue_channel, 0, 255)
+
+        # Combine channels back into image data
+        rgb_image_stack = np.stack([red_channel, green_channel, blue_channel], axis=2)
+
+        return rgb_image_stack
+    
+    # original image. If 3 channels, default RGB, may need to assign the custom channels 
+    def show_image(self, orignial_img):
         # self.resize(800,800)
         # print(f"DIMENSION WIDGET {img.shape[-1]}")
+
         try:
-            if img.shape[-1] == 1:
-                # Grayscale image
-                # print(f"shape[2]/[-1] == 1")
-                qt_image = QImage(img.data, img.shape[1], img.shape[0], img.shape[1], QImage.Format_Grayscale8)
-                # print("came here for Sliderwidget")
-            elif img.shape[-1] == 3:
-                # print(f"shape[2]/[-1] == 1")
-                h, w, ch = img.shape
+            # Grayscale image
+            if orignial_img.shape[-1] == 1:
+                qt_image = QImage(orignial_img.data, orignial_img.shape[1], orignial_img.shape[0], orignial_img.shape[1], QImage.Format_Grayscale8)
+
+            # 3 colour channels (default RGB, may need to assign the custom channels)
+            elif orignial_img.shape[-1] == 3:
+                # Assign the channels to the image 
+                self.RGB_img = self.assign_channels_RGB(orignial_img)
+                h, w, ch = self.RGB_img.shape
                 bytes_per_line = ch * w
-                qt_image = QImage(img.data, w, h, bytes_per_line, QImage.Format_RGB888) #Format_RGB888
-            elif img.shape[-1] == 4:
-                h, w, ch = img.shape
-                print(f"ch: {ch}")
+                qt_image = QImage(self.RGB_img.data, w, h, bytes_per_line, QImage.Format_RGB888) #Format_RGB888
+
+            # not sure if this is necesssary
+            # note rgb image is now assigned custom channels 
+            # may need to adjust code for 4 channel image (take original_img and apply)   
+            elif self.RGB_img.shape[-1] == 4:
+                h, w, ch = self.RGB_img.shape
+                #print(f"ch: {ch}")
                 bytes_per_line = ch * 4
-                qt_image = QImage(img.data, w, h, QImage.Format_RGBA8888) #Format_RGB888
+                qt_image = QImage(self.RGB_img.data, w, h, QImage.Format_RGBA8888) #Format_RGB888
             if qt_image is not None:
                 # Calculate the target size for scaling
                 scale_factor = 0.7  # Increase the scaling factor for clarity
                 if qt_image.width() < 400:
-                    scale_factor = 1.2
+                    scale_factor = 1
                 if qt_image.width() > 900:
                     scale_factor = 0.5
                 target_width = int(qt_image.width() * scale_factor)
@@ -907,12 +960,13 @@ class Widget_Base8(QWidget):
                 
                 # Resize the widget to match the pixmap size
                 self.resize(scaled_pixmap.width(), scaled_pixmap.height())
-            
-            # Ensure that any necessary updates are performed
-            self.node.update_shape()
+                
+                # Ensure that any necessary updates are performed
+                self.node.update_shape()
             
         except Exception as e:
             print("Error:", e)
+        
 
 class ChooseFileInputWidgetBASE(MWB, Widget_Base):
 
@@ -1211,6 +1265,22 @@ class ChooseFileInputWidgetBASE(MWB, Widget_Base):
     #         return
         
     #     self.path_chosen.emit(file_path)
+'''
+Move up later
+Initially from special nodes
+'''
+
+#New Slider Guas design
+class CVImage:
+    """
+    The OpenCV Mat(rix) data type seems to have overridden comparison operations to perform element-wise comparisons
+    which breaks ryverncore-internal object comparisons.
+    To avoid this, I'll simply use this wrapper class and recreate a new object every time for now, so ryvencore
+    doesn't think two different images are the same.
+    """
+
+    def __init__(self, img):
+        self.img = img
 
 class ChooseFileInputWidgetBASE3(MWB, QWidget):
 
@@ -1409,7 +1479,10 @@ class ChooseFileInputWidgetBASE3(MWB, QWidget):
             print("Dictionary temporary cleared:", dicttemp)
 
             # update image 
-            self.show_image(self.RGB_img)
+            # self.RGB_img = self.assign_channels_RGB(self.RGB_img)
+            # self.show_image(CVImage(self.RGB_img))
+            # self.ValueChanged1.emit(self.val1)
+            # print(f"self.val1 {self.val1}")
 
         
     def clear_choices(self, dict, dicttemp):

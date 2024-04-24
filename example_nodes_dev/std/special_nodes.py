@@ -51,7 +51,7 @@ class NodePipeline(Node):
     
     def handle_stack(self):
         self.image_stack = self.input(0)[0]
-        self.frame = self.input(0)[1] #dont actually need this anymore, but keep incase. Good to know wich time step
+        self.stack_dict = self.input(0)[1] #dictioary
         self.z_sclice = self.input(0)[2]
         # self.squeeze = np.squeeze(self.image_stack)
         self.z_size = self.image_stack.shape[0]
@@ -118,7 +118,7 @@ class NodeBase2(Node):
 
     def handle_stack(self):
         self.image_stack = self.input(0)[0]
-        self.frame = self.input(0)[1] #dont actually need this anymore, but keep incase. Good to know wich time step
+        self.stack_dict = self.input(0)[1] #dictioary
         self.z_sclice = self.input(0)[2]
         # self.squeeze = np.squeeze(self.image_stack)
         self.z_size = self.image_stack.shape[0]
@@ -178,7 +178,7 @@ class NodeBase3D(Node):
 
     def handle_stack(self):
         self.image_stack = self.input(0)[0]
-        self.frame = self.input(0)[1] #dont actually need this anymore, but keep incase. Good to know wich time step
+        self.stack_dict = self.input(0)[1] #dictioary
         self.z_sclice = self.input(0)[2]
         # self.squeeze = np.squeeze(self.image_stack)
         self.z_size = self.image_stack.shape[0]
@@ -2431,6 +2431,7 @@ class ReadImage(NodeBase0):
         self.main_widget().ValueChanged2.connect(self.onValue2Changed) 
         self.main_widget().released1.connect(self.output_data)  
         self.main_widget().dict_widg.connect(self.dict_col)   
+
         # self.main_widget().ValueChanged2.connect(self.output_data) 
         # try:
         #     self.SIGNALS.new_img.emit(self.get_img())
@@ -2445,8 +2446,12 @@ class ReadImage(NodeBase0):
         print(f'self.stack_dict["colour"] {self.stack_dict}')
         #update iimage
         new_img_wrp = CVImage(self.get_img()) 
-        if self.session.gui:
-                        self.SIGNALS.new_img.emit(new_img_wrp.img)
+        # if self.session.gui:
+        # display immediately 
+        self.SIGNALS.new_img.emit(new_img_wrp.img)
+
+        # output dictionary to update next nodes
+        self.output_data(self.stack_dict)
 
     def update_event(self, inp=-1):   #called when the input is changed
         #therefore new image 
@@ -2639,6 +2644,7 @@ class ReadImage(NodeBase0):
             self.zzval=0
         print(f'Image dim: {dimension}')
         return dimension
+           
         
     def onValue1Changed(self, value):
         # print(f"timevalue{value}")
@@ -3512,6 +3518,7 @@ class Split_Img(NodeBase0):
                 #Signals used for preview
                 new_img = Signal(object)    #original
                 clr_img = Signal(object)    #added      
+                channels_dict = Signal(dict)
         
             # to send images to main_widget in gui mode
             self.SIGNALS = Signals()
@@ -3528,6 +3535,7 @@ class Split_Img(NodeBase0):
     def view_place_event(self):
         self.SIGNALS.new_img.connect(self.main_widget().show_image)
         self.SIGNALS.clr_img.connect(self.main_widget().clear_img)
+        self.SIGNALS.channels_dict.connect(self.main_widget().channels)
         self.main_widget().previewState.connect(self.preview)
         # self.main_widget().Value1Changed.connect(self.ValueChanged1)
         # self.main_widget().Value1Changed.connect(self.proc_stack_parallel)
@@ -3547,6 +3555,10 @@ class Split_Img(NodeBase0):
     #called when img connected - send output
     def update_event(self, inp=-1):  #called when an input is changed
         self.handle_stack()
+
+        # send channel information to widget to display img in selected channel colours
+        self.SIGNALS.channels_dict.emit(self.stack_dict) # stack dict defined in handel_stack
+        
         self.new_img_wrp = CVImage(self.sliced)
         if self.prev == True:
             if self.session.gui:
@@ -3847,7 +3859,7 @@ class Merge_Img(Node):
         self.red_stack = self.input(0)[0]
         self.gr_stack = self.input(1)[0]
         self.blue_stack = self.input(2)[0]
-        self.frame = self.input(0)[1] #dont actually need this anymore, but keep incase. Good to know wich time step
+        self.stack_dict = self.input(0)[1] #dictioary
         self.z_sclice = self.input(0)[2]
         # self.squeeze = np.squeeze(self.image_stack)
         self.z_size = self.red_stack.shape[0]
@@ -3900,7 +3912,8 @@ class Blur_Averaging(NodeBase):        #Nodebase just a different colour
             class Signals(QObject):
                 #Signals used for preview
                 new_img = Signal(object)    #original
-                clr_img = Signal(object)    #added      
+                clr_img = Signal(object)    #added 
+                channels_dict = Signal(dict) #store colour channels     
         
             # to send images to main_widget in gui mode
             self.SIGNALS = Signals()
@@ -3914,6 +3927,7 @@ class Blur_Averaging(NodeBase):        #Nodebase just a different colour
     def view_place_event(self):
         self.SIGNALS.new_img.connect(self.main_widget().show_image)
         self.SIGNALS.clr_img.connect(self.main_widget().clear_img)
+        self.SIGNALS.channels_dict.connect(self.main_widget().channels)
         self.main_widget().kValueChanged.connect(self.onSliderValueChanged)
         self.main_widget().kValueChanged.connect(self.proc_stack_parallel)
         self.main_widget().previewState.connect(self.preview)
@@ -3932,6 +3946,10 @@ class Blur_Averaging(NodeBase):        #Nodebase just a different colour
     def update_event(self, inp=-1):  #called when an input is changed
         #extract slice
         self.handle_stack()
+        print("stack dict from handle dict: ", self.stack_dict)
+        # send assigned channels to widegt to display / show image correctly
+        self.SIGNALS.channels_dict.emit(self.stack_dict)
+
         self.new_img_wrp = CVImage(self.get_img(self.sliced))
         if self.prev == True:
             if self.session.gui:
