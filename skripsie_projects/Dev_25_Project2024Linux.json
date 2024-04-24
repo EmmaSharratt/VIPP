@@ -1,0 +1,67 @@
+{
+    "general info": {
+        "type": "Ryven project file",
+        "ryven version": "v3.1"
+    },
+    "required packages": [
+        {
+            "name": "std",
+            "dir": "/home/emma/ve/vipp/SkripsieProject/example_nodes_dev/std"
+        }
+    ],
+    "scripts": [
+        {
+            "title": "hello world",
+            "variables": {},
+            "flow": {
+                "algorithm mode": "data",
+                "nodes": [
+                    {
+                        "identifier": "std.ReadImage",
+                        "version": "v0.1",
+                        "state data": "gASVSwAAAAAAAAB9lCiMD2ltYWdlIGZpbGUgcGF0aJSMH3Nrcmlwc2llX3Byb2plY3RzL0NvbnRyb2xfMi50aWaUjAR2YWwxlEsAjAR2YWwylEsAdS4=",
+                        "additional data": {
+                            "special actions": {},
+                            "display title": "Read Image"
+                        },
+                        "inputs": [
+                            {
+                                "type": "data",
+                                "label": "f_path",
+                                "GID": 8,
+                                "val": "gAROLg==",
+                                "has widget": true,
+                                "widget name": "choose file IW",
+                                "widget pos": "besides",
+                                "widget data": "gAR9lC4="
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "type": "data",
+                                "label": "img",
+                                "GID": 9
+                            }
+                        ],
+                        "GID": 7,
+                        "pos x": 263.0,
+                        "pos y": 321.0,
+                        "main widget data": "gASVMwAAAAAAAAB9lCiMCWRpbWVuc2lvbpRdlChLAUsPTQAETQAESwNljAR2YWwxlEsFjAR2YWwylEsDdS4=",
+                        "unconnected ports hidden": false,
+                        "collapsed": false
+                    }
+                ],
+                "connections": [],
+                "GID": 6,
+                "flow view": {
+                    "drawings": [],
+                    "view size": [
+                        6400.0,
+                        4800.0
+                    ]
+                }
+            },
+            "GID": 1
+        }
+    ]
+}

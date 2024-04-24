@@ -101,7 +101,7 @@ class NodePipeline(Node):
         # print(f"proc_data shape: {proc_data.shape}")
         self.reshaped_proc_data = proc_data
         # print(f"reshaped_proc_data shape: {self.reshaped_proc_data.shape}")
-        self.set_output_val(0, (self.reshaped_proc_data, self.frame, self.z_sclice))
+        self.set_output_val(0, (self.reshaped_proc_data, self.stack_dict, self.z_sclice))
 
 class NodeBase(NodePipeline):
     version = 'v0.1'
@@ -165,7 +165,7 @@ class NodeBase2(Node):
         self.reshaped_proc_data = proc_data
         #print(f"reshaped_proc_data shape*: {self.reshaped_proc_data.shape}")
         #print(f"data : {self.reshaped_proc_data.dtype}")
-        self.set_output_val(0, (self.reshaped_proc_data, self.frame, self.z_sclice))
+        self.set_output_val(0, (self.reshaped_proc_data, self.stack_dict, self.z_sclice))
 
 class NodeBase4(NodePipeline):
     version = 'v0.1'
@@ -3957,7 +3957,7 @@ class Blur_Averaging(NodeBase):        #Nodebase just a different colour
 
         self.proc_stack_parallel()
       
-        self.set_output_val(0, (self.reshaped_proc_data, self.frame, self.z_sclice))
+        self.set_output_val(0, (self.reshaped_proc_data, self.stack_dict, self.z_sclice))
     
     def preview(self, state):
         if state ==  True:
@@ -4024,7 +4024,8 @@ class Median_Blur(NodeBase):        #Nodebase just a different colour
             class Signals(QObject):
                 #Signals used for preview
                 new_img = Signal(object)    #original
-                clr_img = Signal(object)    #added      
+                clr_img = Signal(object)    #added
+                channels_dict = Signal(dict) #store colour channels      
         
             # to send images to main_widget in gui mode
             self.SIGNALS = Signals()
@@ -4038,6 +4039,7 @@ class Median_Blur(NodeBase):        #Nodebase just a different colour
     def view_place_event(self):
         self.SIGNALS.new_img.connect(self.main_widget().show_image)
         self.SIGNALS.clr_img.connect(self.main_widget().clear_img)
+        self.SIGNALS.channels_dict.connect(self.main_widget().channels)
         self.main_widget().kValueChanged.connect(self.onSliderValueChanged)
         self.main_widget().kValueChanged.connect(self.proc_stack_parallel)
         self.main_widget().previewState.connect(self.preview)
@@ -4056,6 +4058,7 @@ class Median_Blur(NodeBase):        #Nodebase just a different colour
     def update_event(self, inp=-1):  #called when an input is changed
         #extract slice
         self.handle_stack()
+        self.SIGNALS.channels_dict.emit(self.stack_dict)
         # print(f"type {self.sliced.dtype}")
         # print(f"shape {self.sliced.shape}")
         self.new_img_wrp = CVImage(self.get_img(self.sliced))
@@ -4438,7 +4441,8 @@ class Gaussian_Blur(NodeBase):        #Nodebase just a different colour
             class Signals(QObject):
                 #Signals used for preview
                 new_img = Signal(object)    #original
-                clr_img = Signal(object)    #added      
+                clr_img = Signal(object)    #added     
+                channels_dict = Signal(dict) #store colour channels  
         
             # to send images to main_widget in gui mode
             self.SIGNALS = Signals()
@@ -4458,6 +4462,7 @@ class Gaussian_Blur(NodeBase):        #Nodebase just a different colour
     def view_place_event(self):
         self.SIGNALS.new_img.connect(self.main_widget().show_image)
         self.SIGNALS.clr_img.connect(self.main_widget().clear_img)
+        self.SIGNALS.channels_dict.connect(self.main_widget().channels)
         self.main_widget().previewState.connect(self.preview)
         self.main_widget().kValueChanged.connect(self.onkValueChanged)
         self.main_widget().XValueChanged.connect(self.onXvalueChanged)        
@@ -4483,12 +4488,13 @@ class Gaussian_Blur(NodeBase):        #Nodebase just a different colour
     def update_event(self, inp=-1):  #called when an input is changed
         #extract slice
         self.handle_stack()
+        self.SIGNALS.channels_dict.emit(self.stack_dict)
         self.new_img_wrp = CVImage(self.get_img(self.sliced))
         if self.prev == True:
             if self.session.gui:
                 self.SIGNALS.new_img.emit(self.new_img_wrp.img)
         self.proc_stack_parallel()
-        self.set_output_val(0, (self.reshaped_proc_data, self.frame, self.z_sclice))
+        self.set_output_val(0, (self.reshaped_proc_data, self.stack_dict, self.z_sclice))
     
     def preview(self, state):
         if state ==  True:
@@ -4601,6 +4607,7 @@ class Gaussian_Blur3D(NodeBase):        #Nodebase just a different colour
                 new_img = Signal(object)    #original
                 clr_img = Signal(object)    #added      
                 warning = Signal(int)
+                channels_dict = Signal(dict) #store colour channels  
         
             # to send images to main_widget in gui mode
             self.SIGNALS = Signals()
@@ -4622,6 +4629,7 @@ class Gaussian_Blur3D(NodeBase):        #Nodebase just a different colour
         self.SIGNALS.new_img.connect(self.main_widget().show_image)
         self.SIGNALS.clr_img.connect(self.main_widget().clear_img)
         self.SIGNALS.warning.connect(self.main_widget().warning)
+        self.SIGNALS.channels_dict.connect(self.main_widget().channels)
         self.main_widget().previewState.connect(self.preview)
         self.main_widget().kValueChanged.connect(self.onkValueChanged)
         self.main_widget().XValueChanged.connect(self.onXvalueChanged)        
@@ -4648,6 +4656,7 @@ class Gaussian_Blur3D(NodeBase):        #Nodebase just a different colour
     def update_event(self, inp=-1):  #called when an input is changed
         #extract slice
         self.handle_stack()
+        self.SIGNALS.channels_dict.emit(self.stack_dict)
         # 3D
         if self.z_size > 1:
             self.SIGNALS.warning.emit(0)
@@ -4663,7 +4672,7 @@ class Gaussian_Blur3D(NodeBase):        #Nodebase just a different colour
             self.SIGNALS.clr_img.emit(self.new_img_wrp.img) 
         # self.proc_stack_parallel()
         # 3D process stack
-        self.set_output_val(0, (self.reshaped_proc_data, self.frame, self.z_sclice))
+        self.set_output_val(0, (self.reshaped_proc_data, self.stack_dict, self.z_sclice))
     
     def preview(self, state):
         if state ==  True:
@@ -4755,7 +4764,7 @@ class Gaussian_Blur3D(NodeBase):        #Nodebase just a different colour
             else:
                 self.SIGNALS.clr_img.emit(self.new_img_wrp.img)
 
-            self.set_output_val(0, (self.reshaped_proc_data, self.frame, self.z_sclice))
+            self.set_output_val(0, (self.reshaped_proc_data, self.stack_dict, self.z_sclice))
                 
         
             #emit Warning! A 3D Gaussian Blur cannot be performed on 2D data
@@ -4801,6 +4810,7 @@ class Bilateral_Filtering(NodeBase):        #Nodebase just a different colour
                 #Signals used for preview
                 new_img = Signal(object)    #original
                 clr_img = Signal(object)    #added      
+                channels_dict = Signal(dict) #store colour channels     
         
             # to send images to main_widget in gui mode
             self.SIGNALS = Signals()
@@ -4820,6 +4830,7 @@ class Bilateral_Filtering(NodeBase):        #Nodebase just a different colour
     def view_place_event(self):
         self.SIGNALS.new_img.connect(self.main_widget().show_image)
         self.SIGNALS.clr_img.connect(self.main_widget().clear_img)
+        self.SIGNALS.channels_dict.connect(self.main_widget().channels)
         self.main_widget().previewState.connect(self.preview)
         self.main_widget().kValueChanged.connect(self.onkValueChanged)
         self.main_widget().XValueChanged.connect(self.onXvalueChanged)        
@@ -4843,12 +4854,14 @@ class Bilateral_Filtering(NodeBase):        #Nodebase just a different colour
     def update_event(self, inp=-1):  #called when an input is changed
         #extract slice
         self.handle_stack()
+        self.SIGNALS.channels_dict.emit(self.stack_dict)
         self.new_img_wrp = CVImage(self.get_img(self.sliced))
         if self.prev == True:
             if self.session.gui:
                 self.SIGNALS.new_img.emit(self.new_img_wrp.img)
         self.proc_stack_parallel()
-        self.set_output_val(0, (self.reshaped_proc_data, self.frame, self.z_sclice))
+        self.set_output_val(0, (self.reshaped_proc_data, self.stack_dict, self.z_sclice))
+    
     
     def preview(self, state):
         if state ==  True:
@@ -5083,7 +5096,8 @@ class Dilation(NodeBase4):        #Nodebase just a different colour
             class Signals(QObject):
                 #Signals used for preview
                 new_img = Signal(object)    #original
-                clr_img = Signal(object)    #added      
+                clr_img = Signal(object)    #added 
+                channels_dict = Signal(dict) #store colour channels          
         
             # to send images to main_widget in gui mode
             self.SIGNALS = Signals()
@@ -5100,6 +5114,7 @@ class Dilation(NodeBase4):        #Nodebase just a different colour
     def view_place_event(self):
         self.SIGNALS.new_img.connect(self.main_widget().show_image)
         self.SIGNALS.clr_img.connect(self.main_widget().clear_img)
+        self.SIGNALS.channels_dict.connect(self.main_widget().channels)
         self.main_widget().previewState.connect(self.preview)
         self.main_widget().Value1Changed.connect(self.ValueChanged1)
         self.main_widget().Value1Changed.connect(self.proc_stack_parallel)
@@ -5119,12 +5134,13 @@ class Dilation(NodeBase4):        #Nodebase just a different colour
     #called when img connected - send output
     def update_event(self, inp=-1):  #called when an input is changed
         self.handle_stack()
+        self.SIGNALS.channels_dict.connect(self.main_widget().channels)
         self.new_img_wrp = CVImage(self.get_img(self.sliced))
         if self.prev == True:
             if self.session.gui:
                 self.SIGNALS.new_img.emit(self.new_img_wrp.img)
         self.proc_stack_parallel()
-        self.set_output_val(0, (self.reshaped_proc_data, self.frame, self.z_sclice))
+        self.set_output_val(0, (self.reshaped_proc_data, self.stack_dict, self.z_sclice))
     
     def preview(self, state):
         if state ==  True:
@@ -5455,6 +5471,7 @@ class Threshold_Manual_Base(NodeBase2):        #Nodebase just a different colour
                 #Signals used for preview
                 new_img = Signal(object)    #original
                 clr_img = Signal(object)    #added      
+                channels_dict = Signal(dict) #store colour channels     
         
             # to send images to main_widget in gui mode
             self.SIGNALS = Signals()
@@ -5471,6 +5488,7 @@ class Threshold_Manual_Base(NodeBase2):        #Nodebase just a different colour
     def view_place_event(self):
         self.SIGNALS.new_img.connect(self.main_widget().show_image)
         self.SIGNALS.clr_img.connect(self.main_widget().clear_img)
+        self.SIGNALS.channels_dict.connect(self.main_widget().channels)
         self.main_widget().previewState.connect(self.preview)
         self.main_widget().threshValueChanged.connect(self.ontValueChanged)
         self.main_widget().threshValueChanged.connect(self.proc_stack_parallel)
@@ -5490,13 +5508,15 @@ class Threshold_Manual_Base(NodeBase2):        #Nodebase just a different colour
     #called when img connected - send output
     def update_event(self, inp=-1):  #called when an input is changed
         self.handle_stack()
+        self.SIGNALS.channels_dict.emit(self.stack_dict)
+
         self.new_img_wrp = CVImage(self.get_img(self.sliced))
         if self.prev == True:
             if self.session.gui:
                 self.SIGNALS.new_img.emit(self.new_img_wrp.img)
         print(f'current threshold: {self.thr}')
         self.proc_stack_parallel()
-        self.set_output_val(0, (self.reshaped_proc_data, self.frame, self.z_sclice))
+        self.set_output_val(0, (self.reshaped_proc_data, self.stack_dict, self.z_sclice))
     
     def preview(self, state):
         if state ==  True:
