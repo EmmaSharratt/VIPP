@@ -3418,7 +3418,7 @@ class Gaus_Blur_MainWidget3D(MWB, Widget_Base8):
     
     previewState = Signal(bool)
     linkState = Signal(bool)
-    kValueChanged = Signal(float)
+    kValueChanged = Signal(float) #change to "released" for better user experience (update when slider released)
     XValueChanged = Signal(float)
     YValueChanged = Signal(float)
     sigChanged = Signal(float)
@@ -3522,9 +3522,11 @@ class Gaus_Blur_MainWidget3D(MWB, Widget_Base8):
         self.sigmaX_size_input.editingFinished.connect(self.the_Xspinbox_was_changed)
         self.sigmaY_size_input.editingFinished.connect(self.the_Yspinbox_was_changed)
         # Slider triggers
-        self.slider_label.sliderMoved.connect(self.the_slider_was_changed)
-        self.Xslider_label.sliderMoved.connect(self.the_Xslider_was_changed)
-        self.Yslider_label.sliderMoved.connect(self.the_Yslider_was_changed)
+        # Note, the released signal does not return a value
+        # Therfore within the connected method, the value is updated: value = self.slider.value()
+        self.slider_label.sliderReleased.connect(self.the_slider_was_changed)
+        self.Xslider_label.sliderReleased.connect(self.the_Xslider_was_changed)
+        self.Yslider_label.sliderReleased.connect(self.the_Yslider_was_changed)
         # Check box
         self.preview_checkbox.stateChanged.connect(self.the_checkbox_was_changed)
         self.link_checkbox.stateChanged.connect(self.link_checkbox_checked)
@@ -3583,9 +3585,10 @@ class Gaus_Blur_MainWidget3D(MWB, Widget_Base8):
         self.kValueChanged.emit(self.k)
 
     
-    def the_slider_was_changed(self, v):    # v: value emitted by a slider signal 
+    def the_slider_was_changed(self):    # v: value emitted by a slider signal 
         # if self.link_checkbox.isChecked():
         #     self.slider_label.setValue(self.X*100)
+        v = self.slider_label.value()
         self.k = v/100
         self.k_size_input.setValue(self.k)
         self.kValueChanged.emit(self.k)
@@ -3619,7 +3622,8 @@ class Gaus_Blur_MainWidget3D(MWB, Widget_Base8):
             
             
 
-    def the_Xslider_was_changed(self, v):           
+    def the_Xslider_was_changed(self):      
+        v = self.Xslider_label.value()     
         self.X = v/100
         self.sigmaX_size_input.setValue(self.X)
 
@@ -3654,7 +3658,8 @@ class Gaus_Blur_MainWidget3D(MWB, Widget_Base8):
             self.YValueChanged.emit(self.Y)
 
 
-    def the_Yslider_was_changed(self, v):    
+    def the_Yslider_was_changed(self):  
+        v = self.Yslider_label.value()  
         if self.link_checkbox.isChecked():
             self.Yslider_label.setValue(self.X*100) 
         else:
