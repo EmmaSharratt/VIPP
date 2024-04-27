@@ -4613,10 +4613,10 @@ class Gaussian_Blur3D(NodeBase):        #Nodebase just a different colour
             self.SIGNALS = Signals()
 
         self.prev = True
-        default = 5
-        self.kk = 1
-        self.xx = 1
-        self.yy = 1
+        default = 2
+        self.kk = default
+        self.xx = default
+        self.yy = default
         warning = 0
         # self.kk = default
         # self.xx = default
@@ -4634,6 +4634,7 @@ class Gaussian_Blur3D(NodeBase):        #Nodebase just a different colour
         self.main_widget().kValueChanged.connect(self.onkValueChanged)
         self.main_widget().XValueChanged.connect(self.onXvalueChanged)        
         self.main_widget().YValueChanged.connect(self.onYvalueChanged)
+        # updates both X and Y when linked 
         self.main_widget().sigChanged.connect(self.onSigValueChanged) 
         
 
@@ -4748,6 +4749,8 @@ class Gaussian_Blur3D(NodeBase):        #Nodebase just a different colour
          #Ensure only on 3D data
         if stack4D.shape[0] > 1:
             # Apply the gaussian filter to the entire 4D array
+            print(f"Performing gaus blur 3D x: {self.xx}, y:{self.yy}, z:{self.kk}")
+            print(f"stack4D shape: {stack4D.shape}")
             filtered_image = gaussian_filter(stack4D, sigma=(self.kk, self.yy,self.xx, 0))
             # #print(self.kk)
             # prevent the use of for loops, but no sigma applied to channels

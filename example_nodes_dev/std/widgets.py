@@ -3428,7 +3428,7 @@ class Gaus_Blur_MainWidget3D(MWB, Widget_Base8):
         QWidget.__init__(self)
 
         # self.resize(300, 300)
-        default = 5
+        default = 2
         default_range = default*2
         self.X = default
         self.Y = default
@@ -3524,9 +3524,13 @@ class Gaus_Blur_MainWidget3D(MWB, Widget_Base8):
         # Slider triggers
         # Note, the released signal does not return a value
         # Therfore within the connected method, the value is updated: value = self.slider.value()
-        self.slider_label.sliderReleased.connect(self.the_slider_was_changed)
-        self.Xslider_label.sliderReleased.connect(self.the_Xslider_was_changed)
-        self.Yslider_label.sliderReleased.connect(self.the_Yslider_was_changed)
+        self.slider_label.sliderMoved.connect(self.the_slider_was_changed)
+        self.Xslider_label.sliderMoved.connect(self.the_Xslider_was_changed)
+        self.Yslider_label.sliderMoved.connect(self.the_Yslider_was_changed)
+
+        self.slider_label.sliderReleased.connect(self.the_slider_was_released)
+        self.Xslider_label.sliderReleased.connect(self.the_Xslider_was_released)
+        self.Yslider_label.sliderReleased.connect(self.the_Yslider_was_released)
         # Check box
         self.preview_checkbox.stateChanged.connect(self.the_checkbox_was_changed)
         self.link_checkbox.stateChanged.connect(self.link_checkbox_checked)
@@ -3573,7 +3577,7 @@ class Gaus_Blur_MainWidget3D(MWB, Widget_Base8):
 
         #self.linkState is a signal object, not a boolean value: if  self.linkState == True: will not work
               
-    # sigmaZ ----------------------------------------------------
+    # sigmaZ (last parameter on node) ----------------------------------------------------
     def the_spinbox_was_changed(self):    
         # if self.link_checkbox.isChecked():
         #     self.k_size_input.setValue(self.X)
@@ -3591,7 +3595,12 @@ class Gaus_Blur_MainWidget3D(MWB, Widget_Base8):
         v = self.slider_label.value()
         self.k = v/100
         self.k_size_input.setValue(self.k)
+        
+    
+    def the_slider_was_released(self):    # v: value emitted by a slider signal 
+        
         self.kValueChanged.emit(self.k)
+        print(f"self.k emmitted when slider released {self.k}")
 
         
     # sigmaX --------------------------------------------------
@@ -3622,13 +3631,12 @@ class Gaus_Blur_MainWidget3D(MWB, Widget_Base8):
             
             
 
-    def the_Xslider_was_changed(self):      
-        v = self.Xslider_label.value()     
+    def the_Xslider_was_changed(self, v):         
         self.X = v/100
         self.sigmaX_size_input.setValue(self.X)
 
         if self.link_checkbox.isChecked():
-            self.sigChanged.emit(self.X)
+            # self.sigChanged.emit(self.X)
             # update Y spinbox
             self.Y = v/100
             self.sigmaY_size_input.setValue(self.Y)
@@ -3642,7 +3650,17 @@ class Gaus_Blur_MainWidget3D(MWB, Widget_Base8):
             # self.k_size_input.setValue(self.Y)
             # # self.Yslider_label.setRange(1, v*2)  
             # self.slider_label.setValue(v)  
+        # else:
+        #     self.XValueChanged.emit(self.X)
+    
+    def the_Xslider_was_released(self):
+        # emit to X value to node.py to perform 3D gaus blur (only when slider released to improve user experience)
+        if self.link_checkbox.isChecked():
+            # sigChanged updates both X and Y
+            self.sigChanged.emit(self.X)
+           
         else:
+            # update X only 
             self.XValueChanged.emit(self.X)
             
 
@@ -3658,14 +3676,21 @@ class Gaus_Blur_MainWidget3D(MWB, Widget_Base8):
             self.YValueChanged.emit(self.Y)
 
 
-    def the_Yslider_was_changed(self):  
-        v = self.Yslider_label.value()  
+    def the_Yslider_was_changed(self, v):  
+        # v = self.Yslider_label.value()  
         if self.link_checkbox.isChecked():
+            # prevent user from moving y (just set back to x value)
             self.Yslider_label.setValue(self.X*100) 
         else:
             self.Y = v/100
             self.sigmaY_size_input.setValue(self.Y)
+            
+    
+    def the_Yslider_was_released(self):
+        # emit to Y value to node.py to perform 3D gaus blur (only when slider released to improve user experience)
+        if not self.link_checkbox.isChecked():
             self.YValueChanged.emit(self.Y)
+            print(f"not linked update Y, emitted value: {self.Y}")
 
 
     # hide image ---------------------------------------------   
