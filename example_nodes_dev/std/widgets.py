@@ -2403,6 +2403,9 @@ class OutputMetadataWidg(MWB, QWidget):
         self.button3.clicked.connect(self.save_properties)
         # self.resize(400,400)
         
+    def channels(self, channels_dict):
+        self.stack_dict = channels_dict
+        print("came to channels", self.stack_dict)
 
     def button_clicked(self):
         self.pleaseWait.setText('Please wait ...')
@@ -4856,8 +4859,6 @@ class Morphological_MainWidget(MWB, Widget_Base8):
         self.resize(300, 300)
         default1 = 2
         default_range1 = default1*2
-        default2 = 100
-        default_range2 = default2*2
                 
         #Added Widget -----------------------------------------------
         #kernel size------------
@@ -5005,10 +5006,11 @@ class Dilate_MainWidget(MWB, Widget_Base8):
         self.resize(300, 300)
         default1 = 10
         default_range1 = default1*2
-        default2 = 100
-        default_range2 = default2*2
+        default2 = 1
+        # t2: itteration (max = 5 hard coded)
+        # default_range2 = default2*2
         self.t = default1
-        self.t2 = 1
+        self.t2 = default2
                 
         #Added Widget -----------------------------------------------
         #kernel size------------

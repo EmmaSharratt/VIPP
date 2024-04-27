@@ -2818,9 +2818,7 @@ class OutputMetadata(NodeBase0):
     init_inputs = [
         NodeInputBP('img'),
         # NodeInputBP('path', add_data={'widget name': 'path input', 'widget pos': 'below'}),
-    ]
-
-    
+    ]   
     init_outputs = [
         NodeOutputBP('output img'), #img
     ]
@@ -2834,15 +2832,18 @@ class OutputMetadata(NodeBase0):
             from qtpy.QtCore import QObject, Signal
             class Signals(QObject):
                 propertiesDf = Signal(pd.DataFrame, str)
+                channels_dict = Signal(dict) #store colour channels 
                 # propertiesStr = Signal(str)
             # to send images to main_widget in gui mode
             self.SIGNALS = Signals()
+              
         
         # self.file_path = ''
 
     def view_place_event(self):
         self.SIGNALS.propertiesDf.connect(self.main_widget().show_data)
         self.main_widget().new_data.connect(self.properties)
+        self.SIGNALS.channels_dict.connect(self.main_widget().channels)
         
         # try:
         #      self.new_img_wrp = CVImage(self.get_img(self.sliced))
@@ -2858,6 +2859,7 @@ class OutputMetadata(NodeBase0):
     def update_event(self, inp=-1):  #called when an input is changed
         #extract slice
         self.handle_stack()
+        self.SIGNALS.channels_dict.emit(self.stack_dict)
         # self.main_widget().new_data(self.image_stack)
         # self.properties(self.image_stack)
         # self.new_img_wrp = CVImage(self.get_img(self.sliced))
@@ -2867,7 +2869,7 @@ class OutputMetadata(NodeBase0):
 
         # self.proc_stack_parallel()
       
-        self.set_output_val(0, (self.image_stack, self.frame, self.z_sclice))
+        self.set_output_val(0, (self.image_stack, self.stack_dict, self.z_sclice))
     
     def properties(self, true):
         squeeze = np.squeeze(self.image_stack)
@@ -3567,40 +3569,6 @@ class Split_Img(NodeBase0):
         self.proc_technique()
         # self.set_output_val(0, (self.reshaped_proc_data, self.frame, self.z_sclice))
 
-    def setup_ports(self, inputs_data=None, outputs_data=None):
-        if not inputs_data and not outputs_data:
-            # generate initial ports
-            for i in range(len(self.init_inputs)):
-                inp = self.init_inputs[i]
-
-                if inp.dtype:
-                    self.create_input_dt(dtype=inp.dtype, label=inp.label, add_data=inp.add_data)
-                else:
-                    self.create_input(inp.label, inp.type_, add_data=self.init_inputs[i].add_data)
-
-            # Dynamically create outputs based on the number of channels
-            num_channels = self.get_num_channels()  # Replace this with your method to get the number of channels
-            for c in range(num_channels):
-                self.create_output(f"Output {c+1}", "any")  # You can adjust the label and type as needed
-        else:
-            # load from data
-            # initial ports specifications are irrelevant then
-
-            for inp in inputs_data:
-                if 'dtype' in inp:
-                    self.create_input_dt(dtype=DType.from_str(inp['dtype'])(
-                        _load_state=deserialize(inp['dtype state'])), label=inp['label'], add_data=inp)
-                else:
-                    self.create_input(label=inp['label'], type_=inp['type'], add_data=inp)
-
-                if 'val' in inp:
-                    # this means the input is 'data' and did not have any connections,
-                    # so we saved its value which was probably represented by some widget
-                    # in the front end which has probably overridden the Node.input() method
-                    self.inputs[-1].val = deserialize(inp['val'])
-
-            for out in outputs_data:
-                self.create_output(out['label'], out['type'])
     
     def preview(self, state):
         if state ==  True:
@@ -3816,9 +3784,9 @@ class Merge_Img(Node):
     version = 'v0.1'
     init_inputs = [
         
-        NodeInputBP('red channel'),
-        NodeInputBP('green channel'),
-        NodeInputBP('blue channel'),
+        NodeInputBP('channel 0'),
+        NodeInputBP('channel 1'),
+        NodeInputBP('channel 2'),
          
     ]
     init_outputs = [
@@ -4103,7 +4071,7 @@ class Median_Blur(NodeBase):        #Nodebase just a different colour
                 
         self.proc_stack_parallel()
       
-        self.set_output_val(0, (self.reshaped_proc_data, self.frame, self.z_sclice))
+        self.set_output_val(0, (self.reshaped_proc_data, self.stack_dict, self.z_sclice))
     
     def preview(self, state):
         if state ==  True:
@@ -5172,7 +5140,7 @@ class Dilation(NodeBase4):        #Nodebase just a different colour
     #called when img connected - send output
     def update_event(self, inp=-1):  #called when an input is changed
         self.handle_stack()
-        self.SIGNALS.channels_dict.connect(self.main_widget().channels)
+        self.SIGNALS.channels_dict.emit(self.stack_dict)
         self.new_img_wrp = CVImage(self.get_img(self.sliced))
         if self.prev == True:
             if self.session.gui:
@@ -5258,15 +5226,16 @@ class Erosion(NodeBase4):        #Nodebase just a different colour
                 #Signals used for preview
                 new_img = Signal(object)    #original
                 clr_img = Signal(object)    #added      
+                channels_dict = Signal(dict) #store colour channels  
         
             # to send images to main_widget in gui mode
             self.SIGNALS = Signals()
 
         self.prev = True
         default1 = 10
-        default2 = 100
+        default2 = 1
         self.value_1 = default1  #threshold
-        self.value_2 = 1
+        self.value_2 = default2
 
     def place_event(self):  
         self.update()
@@ -5274,6 +5243,7 @@ class Erosion(NodeBase4):        #Nodebase just a different colour
     def view_place_event(self):
         self.SIGNALS.new_img.connect(self.main_widget().show_image)
         self.SIGNALS.clr_img.connect(self.main_widget().clear_img)
+        self.SIGNALS.channels_dict.connect(self.main_widget().channels)
         self.main_widget().previewState.connect(self.preview)
         self.main_widget().Value1Changed.connect(self.ValueChanged1)
         self.main_widget().Value1Changed.connect(self.proc_stack_parallel)
@@ -5293,12 +5263,14 @@ class Erosion(NodeBase4):        #Nodebase just a different colour
     #called when img connected - send output
     def update_event(self, inp=-1):  #called when an input is changed
         self.handle_stack()
+        self.SIGNALS.channels_dict.emit(self.stack_dict)
+
         self.new_img_wrp = CVImage(self.get_img(self.sliced))
         if self.prev == True:
             if self.session.gui:
                 self.SIGNALS.new_img.emit(self.new_img_wrp.img)
         self.proc_stack_parallel()
-        self.set_output_val(0, (self.reshaped_proc_data, self.frame, self.z_sclice))
+        self.set_output_val(0, (self.reshaped_proc_data, self.stack_dict, self.z_sclice))
     
     def preview(self, state):
         if state ==  True:
@@ -5380,13 +5352,13 @@ class Morphological_Base(NodeBase4):        #Nodebase just a different colour
                 #Signals used for preview
                 new_img = Signal(object)    #original
                 clr_img = Signal(object)    #added      
+                channels_dict = Signal(dict) #store colour channels     
         
             # to send images to main_widget in gui mode
             self.SIGNALS = Signals()
 
         self.prev = True
         default1 = 2
-        default2 = 100
         self.value_1 = default1  #threshold
 
     def place_event(self):  
@@ -5395,6 +5367,7 @@ class Morphological_Base(NodeBase4):        #Nodebase just a different colour
     def view_place_event(self):
         self.SIGNALS.new_img.connect(self.main_widget().show_image)
         self.SIGNALS.clr_img.connect(self.main_widget().clear_img)
+        self.SIGNALS.channels_dict.connect(self.main_widget().channels)
         self.main_widget().previewState.connect(self.preview)
         self.main_widget().Value1Changed.connect(self.ValueChanged)
         self.main_widget().Value1Changed.connect(self.proc_stack_parallel)
@@ -5412,6 +5385,8 @@ class Morphological_Base(NodeBase4):        #Nodebase just a different colour
     #called when img connected - send output
     def update_event(self, inp=-1):  #called when an input is changed
         self.handle_stack()
+        self.SIGNALS.channels_dict.emit(self.stack_dict)
+
         self.new_img_wrp = CVImage(self.get_img(self.sliced))
         if self.prev == True:
             if self.session.gui:
@@ -5419,7 +5394,7 @@ class Morphological_Base(NodeBase4):        #Nodebase just a different colour
         
         self.proc_stack_parallel()
 
-        self.set_output_val(0, (self.reshaped_proc_data, self.frame, self.z_sclice))
+        self.set_output_val(0, (self.reshaped_proc_data, self.stack_dict, self.z_sclice))
     
     def preview(self, state):
         if state ==  True:
@@ -6130,6 +6105,7 @@ class Histogram(NodeBase3):
                 new_img = Signal(object)
                 logScale = Signal(object)
                 clear_graph = Signal(bool)
+                channels_dict = Signal(dict)
 
             # to send images to main_widget in gui mode
             self.SIGNALS = Signals()
@@ -6142,6 +6118,7 @@ class Histogram(NodeBase3):
         self.SIGNALS.clear_graph.connect(self.main_widget().clear_hist)
         self.main_widget().displayHist.connect(self.emitImage)
         self.main_widget().LogHist.connect(self.logScale)
+        self.SIGNALS.channels_dict.connect(self.main_widget().channels)
 
         # try:
         #     self.SIGNALS.new_img.emit(CVImage(self.z_sclice).img)
@@ -6151,12 +6128,13 @@ class Histogram(NodeBase3):
     def update_event(self, inp=-1):                                         #reset
         #extract from stack
         self.handle_stack()
+        self.SIGNALS.channels_dict.emit(self.stack_dict)
         # histo_s
         self.new_img_wrp = CVImage(self.sliced)
         if self.session.gui:
             self.SIGNALS.clear_graph.emit(True)
 
-        self.set_output_val(0, (self.image_stack,self.frame, self.z_sclice))
+        self.set_output_val(0, (self.image_stack,self.stack_dict, self.z_sclice))
     
     def emitImage(self):
         if self.session.gui:
