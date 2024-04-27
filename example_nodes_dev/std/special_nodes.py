@@ -3566,6 +3566,41 @@ class Split_Img(NodeBase0):
         print("SPLIT!")
         self.proc_technique()
         # self.set_output_val(0, (self.reshaped_proc_data, self.frame, self.z_sclice))
+
+    def setup_ports(self, inputs_data=None, outputs_data=None):
+        if not inputs_data and not outputs_data:
+            # generate initial ports
+            for i in range(len(self.init_inputs)):
+                inp = self.init_inputs[i]
+
+                if inp.dtype:
+                    self.create_input_dt(dtype=inp.dtype, label=inp.label, add_data=inp.add_data)
+                else:
+                    self.create_input(inp.label, inp.type_, add_data=self.init_inputs[i].add_data)
+
+            # Dynamically create outputs based on the number of channels
+            num_channels = self.get_num_channels()  # Replace this with your method to get the number of channels
+            for c in range(num_channels):
+                self.create_output(f"Output {c+1}", "any")  # You can adjust the label and type as needed
+        else:
+            # load from data
+            # initial ports specifications are irrelevant then
+
+            for inp in inputs_data:
+                if 'dtype' in inp:
+                    self.create_input_dt(dtype=DType.from_str(inp['dtype'])(
+                        _load_state=deserialize(inp['dtype state'])), label=inp['label'], add_data=inp)
+                else:
+                    self.create_input(label=inp['label'], type_=inp['type'], add_data=inp)
+
+                if 'val' in inp:
+                    # this means the input is 'data' and did not have any connections,
+                    # so we saved its value which was probably represented by some widget
+                    # in the front end which has probably overridden the Node.input() method
+                    self.inputs[-1].val = deserialize(inp['val'])
+
+            for out in outputs_data:
+                self.create_output(out['label'], out['type'])
     
     def preview(self, state):
         if state ==  True:
