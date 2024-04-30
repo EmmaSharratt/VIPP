@@ -2455,10 +2455,12 @@ class OutputMetadataWidg(MWB, QWidget):
 
         self.path_label.setText(f"output saved to\n {self.abs_f_path}")
         self.path_label.setStyleSheet('font-size: 14px;')
+        self.df.to_csv(self.path, index=False)
         #print(f"setText {self.path}")
         #print(f"abs_f_path {self.abs_f_path}")
         self.adjustSize()  # important! otherwise the widget won't shrink
-        self.df.to_csv(self.path, index=False)
+        self.node.update_shape()
+        
 
 
 
@@ -4506,7 +4508,6 @@ class Threshold_Manual_MainWidget(MWB, Widget_Base8):
         default1 = 100
         default_range1 = default1*2
         default2 = 255
-        default_range2 = default2*2
 
         
                 
@@ -4645,10 +4646,12 @@ class Threshold_Local_MainWidget(MWB, Widget_Base8):
         QWidget.__init__(self)
 
         self.resize(300, 300)
+        # Block size
         default1 = 11
-        default_range1 = default1*2
+        default_range1 = 255
+        # C
         default2 = 2
-        default_range2 = default2*2
+        default_range2 = 10
         self.t = default1
         self.mv = default2
 
@@ -4673,13 +4676,14 @@ class Threshold_Local_MainWidget(MWB, Widget_Base8):
         self.maxv_label = QLabel('C:')
         self.maxv_label.setStyleSheet('font-size: 14px;')
         self.maxv_size_input = QSpinBox()
+        # unlikely to enter a number this high (but doesn't matter)
         self.maxv_size_input.setMaximum(255)
         self.maxv_size_input.setValue(default2)
         self.maxv_size_input.setKeyboardTracking(False)
         self.maxv_size_input.setButtonSymbols(QAbstractSpinBox.NoButtons)
         #mv slider
         self.mvslider_label = QSlider(Qt.Horizontal)
-        self.mvslider_label.setRange(1, 10)
+        self.mvslider_label.setRange(1, default_range2)
         self.mvslider_label.setValue(default2)
         #preview
         self.preview_label = QLabel('Preview:')

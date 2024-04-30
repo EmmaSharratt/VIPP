@@ -2896,9 +2896,9 @@ class OutputMetadata(NodeBase0):
                 'Surface Area (Physical Space)': pr.surface_area,
                 'Sphericity (Physical Space)': pr.sphericity,
                 'Aspect Ratio (Major/Minor)': np.sqrt(pr.inertia_tensor_eigvals[0] / pr.inertia_tensor_eigvals[-1])
-                
             }
             property_dicts.append(property_dict)
+
             # print('append')
 
         # Create a pandas DataFrame from the list of property dictionaries
@@ -2931,6 +2931,11 @@ class OutputMetadata(NodeBase0):
             f"Average Sphericity: {Sphericity_avg}\n"
             f"Average Aspect Ratio: {Aspect_ratio}\n"
         )
+
+        # Formatting the 'Centroid' and 'Inertia Tensor Eigvals' columns
+        df['Centroid'] = df['Centroid'].apply(lambda x: f"{x[0]}, {x[1]}, {x[2]}")
+        df['Inertia Tensor Eigvals'] = df['Inertia Tensor Eigvals'].apply(lambda x: f"{x[0]}, {x[1]}, {x[2]}")
+        print(df)
 
         self.SIGNALS.propertiesDf.emit(df, summary_metadata)
         
@@ -5490,8 +5495,8 @@ class Threshold_Manual_Base(NodeBase2):        #Nodebase just a different colour
             self.SIGNALS = Signals()
 
         self.prev = True
-        default1 = 10
-        default2 = 100
+        default1 = 100
+        default2 = 255
         self.thr = default1  #threshold
         self.mv = default2   #maxvalue
 
@@ -5527,7 +5532,6 @@ class Threshold_Manual_Base(NodeBase2):        #Nodebase just a different colour
         if self.prev == True:
             if self.session.gui:
                 self.SIGNALS.new_img.emit(self.new_img_wrp.img)
-        print(f'current threshold: {self.thr}')
         self.proc_stack_parallel()
         self.set_output_val(0, (self.reshaped_proc_data, self.stack_dict, self.z_sclice))
     
@@ -5736,6 +5740,7 @@ class ThresholdAdaptiveMean(Threshold_Local_Base):
                 thresholdType=cv2.THRESH_BINARY,
                 blockSize=self.thr,
                 C=-self.mv, #self.mv
+                
             )
             img_rehsape = result[:, :, np.newaxis]
             return img_rehsape 
