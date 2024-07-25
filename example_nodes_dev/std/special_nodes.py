@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 import os
 import tifffile as tiff 
-from scipy.ndimage import gaussian_filter, label
+from scipy.ndimage import gaussian_filter, label, sum
 import concurrent.futures
 import json
 import pandas as pd
@@ -173,106 +173,6 @@ class NodeBase4(NodePipeline):
 
     
 
-class NodeBase3D(Node):
-    color = '#FFCA00' #yellow - Filtering 
-
-    def handle_stack(self):
-        self.image_stack = self.input(0)[0]
-        self.stack_dict = self.input(0)[1] #dictioary
-        self.z_sclice = self.input(0)[2]
-        # self.squeeze = np.squeeze(self.image_stack)
-        self.z_size = self.image_stack.shape[0]
-        self.sliced = self.image_stack[self.z_sclice, :, :, :] #Z, H, W, C
-        
-        #Debug
-        # print(f"size z {self.z_size}")
-        # print(f"shape colour {self.image_stack.shape[-1]}, frame {self.frame}, z {self.z_sclice}, SCLICE {self.squeeze.shape}")
-        # print(f"shape colour {self.sliced.shape[-1]}")
-
-    
-    def get_img(self, zslice):
-        #PROCESS SLICE 
-        #generate slice for dispay
-        # reshaped = self.sliced.reshape(zslice.shape[:-1] + (-1,))
-        # print(f"size shape {zslice.shape}")
-    
-        # Apply median blur to all channels simultaneously
-        processed_data = self.proc_technique(zslice)
-        
-        # Reshape the processed data back to the original shape
-        processed_slice = processed_data.reshape(zslice.shape)
-        
-        return processed_slice
-    
-    #signle time step
-    def proc_stack_parallel(self):
-        
-        # Define the number of worker threads or processes
-        num_workers = 6  # Adjust as needed
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
-            futures = []
-            #print(f"z size {self.z_size}")
-            for z in range(self.z_size):
-                    img = self.image_stack[z]
-                    # print(f"\nprocessed z slice {z}")
-                    future = executor.submit(self.get_img,img)
-                    futures.append((z, future))
-
-            proc_data = np.empty_like(self.image_stack)
-
-            for z, future in futures:
-                processed_frame = future.result()
-                proc_data[z] = processed_frame
-        
-        # print(f"proc_data shape: {proc_data.shape}")
-        self.reshaped_proc_data = proc_data
-      #print(f"reshaped_proc_data shape: {self.reshaped_proc_data.shape}")
-        self.set_output_val(0, (self.reshaped_proc_data, self.frame, self.z_sclice))
-
-class DualNodeBase(NodeBase):
-    """For nodes that can be active and passive"""
-
-    version = 'v0.1'
-
-    def __init__(self, params, active=True):
-        super().__init__(params)
-
-        self.active = active
-        if active:
-            self.actions['make passive'] = {'method': self.make_passive}
-        else:
-            self.actions['make active'] = {'method': self.make_active}
-
-    def make_passive(self):
-        del self.actions['make passive']
-
-        self.delete_input(0)
-        self.delete_output(0)
-        self.active = False
-
-        self.actions['make active'] = {'method': self.make_active}
-
-    def make_active(self):
-        del self.actions['make active']
-
-        self.create_input(type_='exec', insert=0)
-        self.create_output(type_='exec', insert=0)
-        self.active = True
-
-        self.actions['make passive'] = {'method': self.make_passive}
-
-    def get_state(self) -> dict:
-        return {
-            'active': self.active
-        }
-
-    def set_state(self, data: dict, version):
-        self.active = data['active']
-
-
-# -------------------------------------------
-
 
 class Checkpoint_Node(NodeBase):
     """Provides a simple checkpoint to reroute your connections"""
@@ -398,163 +298,6 @@ class Checkpoint_Node(NodeBase):
 
         if data['active']:
             self.make_active()
-
-
-# class Button_Node(NodeBase):
-#     title = 'Button'
-#     version = 'v0.1'
-#     main_widget_class = widgets.ButtonNode_MainWidget
-#     main_widget_pos = 'between ports'
-#     init_inputs = [
-
-#     ]
-#     init_outputs = [
-#         NodeOutputBP(type_='exec')
-#     ]
-#     color = '#99dd55'
-
-#     def update_event(self, inp=-1):
-#         self.exec_output(0)
-
-
-# class Print_Node(DualNodeBase):
-#     title = 'Print'
-#     version = 'v0.1'
-#     init_inputs = [
-#         NodeInputBP(type_='exec'),
-#         NodeInputBP(dtype=dtypes.Data(size='m')),
-#     ]
-#     init_outputs = [
-#         NodeOutputBP(type_='exec'),
-#     ]
-#     color = '#5d95de'
-
-#     def __init__(self, params):
-#         super().__init__(params, active=True)
-
-    # def update_event(self, inp=-1):
-        # if self.active and inp == 0:
-          #print(self.input(1))
-        # elif not self.active:
-          #print(self.input(0))
-
-
-# import logging
-
-
-# class Log_Node(DualNodeBase):
-#     title = 'Log'
-#     version = 'v0.1'
-#     init_inputs = [
-#         NodeInputBP(type_='exec'),
-#         NodeInputBP('msg', type_='data'),
-#     ]
-#     init_outputs = [
-#         NodeOutputBP(type_='exec'),
-#     ]
-#     main_widget_class = widgets.LogNode_MainWidget
-#     main_widget_pos = 'below ports'
-#     color = '#5d95de'
-
-#     def __init__(self, params):
-#         super().__init__(params, active=True)
-
-#         self.logger = self.new_logger('Log Node')
-
-#         self.targets = {
-#             **self.script.logs_manager.default_loggers,
-#             'own': self.logger,
-#         }
-#         self.target = 'global'
-
-#     def update_event(self, inp=-1):
-#         if self.active and inp == 0:
-#             i = 1
-#         elif not self.active:
-#             i = 0
-#         else:
-#             return
-
-#         msg = self.input(i)
-
-#         self.targets[self.target].log(logging.INFO, msg=msg)
-
-#     def get_state(self) -> dict:
-#         return {
-#             **super().get_state(),
-#             'target': self.target,
-#         }
-
-#     def set_state(self, data: dict, version):
-#         super().set_state(data, version)
-#         self.target = data['target']
-#         if self.session.gui and self.main_widget():
-#             self.main_widget().set_target(self.target)
-
-
-# class Clock_Node(NodeBase):
-#     title = 'clock'
-#     version = 'v0.1'
-#     init_inputs = [
-#         NodeInputBP(dtype=dtypes.Float(default=0.1), label='delay'),
-#         NodeInputBP(dtype=dtypes.Integer(default=-1, bounds=(-1, 1000)), label='iterations'),
-#     ]
-#     init_outputs = [
-#         NodeOutputBP(type_='exec')
-#     ]
-#     color = '#5d95de'
-#     main_widget_class = widgets.ClockNode_MainWidget
-#     main_widget_pos = 'below ports'
-
-#     def __init__(self, params):
-#         super().__init__(params)
-
-#         self.actions['start'] = {'method': self.start}
-#         self.actions['stop'] = {'method': self.stop}
-
-#         if self.session.gui:
-
-#             from qtpy.QtCore import QTimer
-#             self.timer = QTimer(self)
-#             self.timer.timeout.connect(self.timeouted)
-#             self.iteration = 0
-
-
-#     def timeouted(self):
-#         self.exec_output(0)
-#         self.iteration += 1
-#         if -1 < self.input(1) <= self.iteration:
-#             self.stop()
-
-#     def start(self):
-#         if self.session.gui:
-#             self.timer.setInterval(self.input(0)*1000)
-#             self.timer.start()
-#         else:
-#             import time
-#             for i in range(self.input(1)):
-#                 self.exec_output(0)
-#                 time.sleep(self.input(0))
-
-#     def stop(self):
-#         self.iteration = 0
-#         if self.session.gui:
-#             self.timer.stop()
-
-#     def toggle(self):
-#         # triggered from main widget
-#         if self.session.gui:
-#             if self.timer.isActive():
-#                 self.stop()
-#             else:
-#                 self.start()
-
-#     def update_event(self, inp=-1):
-#         if self.session.gui:
-#             self.timer.setInterval(self.input(0)*1000)
-
-#     def remove_event(self):
-#         self.stop()
 
 
 class Slider_Node(NodeBase):
@@ -848,7 +591,7 @@ class LinkIN_Node(NodeBase):
     if there is a linked OUT node, it will receive the data
     and propagate it further."""
 
-    title = 'link IN'
+    title = 'Link in'
     version = 'v0.1'
     init_inputs = [
         NodeInputBP(),
@@ -932,7 +675,7 @@ class LinkIN_Node(NodeBase):
 class LinkOUT_Node(NodeBase):
     """The complement to the link IN node"""
 
-    title = 'link OUT'
+    title = 'Link out'
     version = 'v0.1'
     init_inputs = []  # no inputs
     init_outputs = []  # will be synchronized with linked IN node
@@ -1093,53 +836,7 @@ class OpenCVNodeBase(NodeBase0):
     def get_img(self):
         return None
 
-class Slider_Gaus_Old(OpenCVNodeBase):        #Nodebase just a different colour
-    title = 'slider_Gaus_Tick'
-    version = 'v0.1'
-    init_inputs = [
-        
-        NodeInputBP(dtype=dtypes.Integer(default=1), label='min'),
-        NodeInputBP(dtype=dtypes.Integer(default=1), label='max'),
-        NodeInputBP(dtype=dtypes.Boolean(default=False), label='round'),
-        NodeInputBP('img'),
-    ]
-    init_outputs = [
-        NodeOutputBP(),
-    ]
-    main_widget_class = widgets.SliderNode_MainWidget
-    main_widget_pos = 'below ports'
 
-    def __init__(self, params):
-        super().__init__(params)
-
-        self.val = 0
-
-    def place_event(self):  #??
-        self.update()
-
-    def view_place_event(self):
-        # when running in gui mode, the value might come from the input widget
-        self.update()
-
-    def update_event(self, inp=-1):
-
-        range = self.input(1)-self.input(0)
-        self.v = self.input(0) + (range * self.val)
-        if self.input(2):
-            self.v = round(self.v)
-
-        self.set_output_val(0, self.v)
-
-    def get_state(self) -> dict:
-        return {
-            'val': self.val,
-        }
-    
-    # def get_img(self):
-    #     return cv2.medianBlur(src=self.input(3).img, ksize=self.v)
-
-    def set_state(self, data: dict, version):
-        self.val = data['val']
 
 #New Slider Guas design
 class CVImage:
@@ -1152,1225 +849,9 @@ class CVImage:
 
     def __init__(self, img):
         self.img = img
-
-
-class Slider_Gaus(NodeBase):        #Nodebase just a different colour
-    title = 'slider_Gaus'
-    version = 'v0.2'
-    init_inputs = [
-        
-        NodeInputBP(dtype=dtypes.Data(default=1), label='kSize'),              #0
-        NodeInputBP(dtype=dtypes.Boolean(default=True), label='round'),        #1
-        NodeInputBP('img'),                                                    #2
-    ]
-    init_outputs = [
-        #NodeOutputBP('img'),
-        NodeOutputBP('ksize')
-    ]
-    main_widget_class = widgets.OpenCVNode_MainWidget
-    main_widget_pos = 'below ports'
-
-    def __init__(self, params):
-        super().__init__(params)
-
-        self.val = 0
-
-        if self.session.gui:
-            from qtpy.QtCore import QObject, Signal
-            class Signals(QObject):
-                new_img = Signal(object)
-
-            # to send images to main_widget in gui mode
-            self.SIGNALS = Signals()
-        
-    def place_event(self):  #??
-        self.update()
-
-    def view_place_event(self):
-        #image
-        self.SIGNALS.new_img.connect(self.main_widget().show_image)
-
-        try:
-            self.SIGNALS.new_img.emit(self.get_img())
-        except:  # there might not be an image ready yet
-            pass
-        # when running in gui mode, the value might come from the input widget
-        self.update()
-        
-
-    def update_event(self, inp=-1):
-        new_img_wrp = CVImage(self.get_img())
-
-        if self.session.gui:
-            self.SIGNALS.new_img.emit(new_img_wrp.img)
-
-        # self.set_output_val(0, new_img_wrp)
-        #self.set_output_val(0, new_img_wrp)
-
-        if self.input(0)<=10:
-            range = self.input(0)*2
-            self.v = 0.1 + (range * self.val)
-        else:
-            range = 20                                                          #add if statements to ensure positive
-            self.v = (self.input(0)-(range/2)) + (range * self.val)
-        if self.input(1):
-            self.v = round(self.v)
-
-        self.set_output_val(0, self.v)
-
-
-    def get_state(self) -> dict:
-        return {
-            'val': self.val,
-        }
-    
-   
-    def set_state(self, data: dict, version):
-        self.val = data['val']
-
-    def get_img(self):
-        return cv2.medianBlur(src=self.input(2), ksize=self.self.input(0)) #self.v
-    
-#Slider and image working -------------------------------------
-   
-class Slider_Gaus_Tick_v2(OpenCVNodeBase):        #Nodebase just a different colour
-    title = 'slider_Gaus_Tick_v2'
-    version = 'v0.1'
-    init_inputs = [
-        
-        NodeInputBP(dtype=dtypes.Integer(default=1), label='min'),
-        NodeInputBP(dtype=dtypes.Integer(default=1), label='max'),
-        NodeInputBP(dtype=dtypes.Boolean(default=False), label='round'),
-        NodeInputBP('img'),
-    ]
-    init_outputs = [
-        NodeOutputBP(),
-        NodeOutputBP(),
-    ]
-    main_widget_class = widgets.QvBoxDev_MainWidget
-    main_widget_pos = 'below ports'
-
-    def __init__(self, params):
-        super().__init__(params)
-
-        if self.session.gui:
-            from qtpy.QtCore import QObject, Signal
-            class Signals(QObject):
-                new_img = Signal(object)
-        
-        
-            # to send images to main_widget in gui mode
-            self.SIGNALS = Signals()
-
-
-        self.val = 0
-
-    def place_event(self):  #??
-        self.update()
-
-    def view_place_event(self):
-        self.SIGNALS.new_img.connect(self.main_widget().show_image)
-
-        try:
-            self.SIGNALS.new_img.emit(self.get_img())
-        except:  # there might not be an image ready yet
-            pass
-        # when running in gui mode, the value might come from the input widget
-        self.update()
-
-    def update_event(self, inp=-1):
-        new_img_wrp = CVImage(self.get_img())
-
-        if self.session.gui:
-            self.SIGNALS.new_img.emit(new_img_wrp.img)
-
-        self.set_output_val(1, new_img_wrp)
-
-        #slider
-        range = self.input(1)-self.input(0)
-        self.v = self.input(0) + (range * self.val)
-        if self.input(2):
-            self.v = round(self.v)
-
-        self.set_output_val(0, self.v)
-
-    def get_state(self) -> dict:
-        return {
-            'val': self.val,
-        }
-    
-    # def get_img(self):
-    #     return cv2.medianBlur(src=self.input(3).img, ksize=self.v)
-
-    def set_state(self, data: dict, version):
-        self.val = data['val']
-
-    def get_img(self):
-        return self.input(3).img
-    
-#-------------Add blur functionality 
-class Slider_Gaus_Tick_v3(OpenCVNodeBase):        #Nodebase just a different colour
-    title = 'slider_Gaus_Tick_v3'
-    version = 'v0.1'
-    init_inputs = [
-        
-        NodeInputBP(dtype=dtypes.Integer(default=1), label='min'),
-        NodeInputBP(dtype=dtypes.Integer(default=1), label='max'),
-        NodeInputBP(dtype=dtypes.Boolean(default=False), label='round'),
-        NodeInputBP('img'),
-    ]
-    init_outputs = [
-        NodeOutputBP(),
-        NodeOutputBP(),
-    ]
-    main_widget_class = widgets.QvBoxDev_MainWidget
-    main_widget_pos = 'below ports'
-
-    def __init__(self, params):
-        super().__init__(params)
-
-        if self.session.gui:
-            from qtpy.QtCore import QObject, Signal
-            class Signals(QObject):
-                new_img = Signal(object)
-        
-        
-            # to send images to main_widget in gui mode
-            self.SIGNALS = Signals()
-
-
-        self.val = 0
-
-    def place_event(self):  #??
-        self.update()
-
-    def view_place_event(self):
-        self.SIGNALS.new_img.connect(self.main_widget().show_image)
-
-        try:
-            self.SIGNALS.new_img.emit(self.get_img())
-        except:  # there might not be an image ready yet
-            pass
-        # when running in gui mode, the value might come from the input widget
-        self.update()
-
-    def update_event(self, inp=-1):
-         #slider
-        range1 = self.input(1)-self.input(0)
-        self.v = self.input(0) + (range1 * self.val)
-        if self.input(2):
-            self.v = round(self.v)
-
-        self.set_output_val(0, self.v)
-        # print(self.v)
-
-        #image
-        new_img_wrp = CVImage(self.get_img())
-
-        if self.session.gui:
-            self.SIGNALS.new_img.emit(new_img_wrp.img)
-
-        self.set_output_val(1, new_img_wrp)
-
-#good :))
-    
-#-------------change inputs and layout 
-# - correctly updated code to only one input - ksize
-# - further improvement: current ksize (self.v) printed to widget
-#                        Preview still not working 
-class Slider_Gaus_Tick_v4(NodeBase):        #Nodebase just a different colour
-    title = 'slider_Gaus_Tick_v4'
-    version = 'v0.1'
-    init_inputs = [
-        
-        NodeInputBP('img'),
-        NodeInputBP(dtype=dtypes.Integer(default=3), label='ksize'),
-        NodeInputBP(dtype=dtypes.Boolean(default=False), label='Preview'),      
-    ]
-    init_outputs = [
-        NodeOutputBP(),
-        NodeOutputBP(),
-    ]
-    main_widget_class = widgets.QvBoxDev_MainWidget
-    main_widget_pos = 'below ports'
-
-    def __init__(self, params):
-        super().__init__(params)
-
-        if self.session.gui:
-            from qtpy.QtCore import QObject, Signal
-            class Signals(QObject):
-                new_img = Signal(object)
-        
-        
-            # to send images to main_widget in gui mode
-            self.SIGNALS = Signals()
-
-
-        self.val = 0
-
-    def place_event(self):  #??
-        self.update()
-
-    def view_place_event(self):
-        self.SIGNALS.new_img.connect(self.main_widget().show_image)
-
-        try:
-            self.SIGNALS.new_img.emit(self.get_img())
-        except:  # there might not be an image ready yet
-            pass
-        # when running in gui mode, the value might come from the input widget
-        self.update()
-
-    def update_event(self, inp=-1):
-         #slider
-        if self.input(1)<=10:
-            range1 = self.input(1)*2
-            self.v = 0.1 + (range1 * self.val)
-        else:
-            range1 = 20                                                          #add if statements to ensure positive
-            self.v = (self.input(1)-(range1/2)) + (range1 * self.val)
-        self.v=int(self.v)
-        self.set_output_val(0, self.v)
-
-        #image
-        new_img_wrp = CVImage(self.get_img())
-        if self.input(2):   
-            if self.session.gui:
-                self.SIGNALS.new_img.emit(new_img_wrp.img)
-
-        self.set_output_val(1, new_img_wrp)
-        self.main_widget().text_label.setText((f"current ksize: {self.v}"))
-       
-
-    def get_state(self) -> dict:
-        return {
-            'val': self.val,
-        }
-
-    def set_state(self, data: dict, version):
-        self.val = data['val']
-
-    def get_img(self):
-        # return self.input(0).img
-        k = int(self.v)
-        # print(k)
-        return cv2.blur(
-            src=self.input(0).img,
-            ksize=(k,k),
-                )
-    
-class Slider_Gaus_Tick_v5(NodeBase):        #Nodebase just a different colour
-    title = 'slider_Gaus_Tick_v5'
-    version = 'v0.1'
-    init_inputs = [
-        
-        NodeInputBP('img'),
-        NodeInputBP(dtype=dtypes.Integer(default=3), label='ksize'),
-        NodeInputBP(dtype=dtypes.Boolean(default=False), label='Preview'),      
-    ]
-    init_outputs = [
-        NodeOutputBP(),
-        NodeOutputBP(),
-    ]
-    main_widget_class = widgets.V2QvBoxDev_MainWidget
-    main_widget_pos = 'below ports'
-
-    def __init__(self, params):
-        super().__init__(params)
-
-        if self.session.gui:
-            from qtpy.QtCore import QObject, Signal
-            class Signals(QObject):
-                new_img = Signal(object)
-        
-        
-            # to send images to main_widget in gui mode
-            self.SIGNALS = Signals()
-
-
-        self.val = 0
-
-    def place_event(self):  #??
-        self.update()
-
-    def view_place_event(self):
-        self.SIGNALS.new_img.connect(self.main_widget().show_image)
-
-        try:
-            self.SIGNALS.new_img.emit(self.get_img())
-        except:  # there might not be an image ready yet
-            pass
-        # when running in gui mode, the value might come from the input widget
-        self.update()
-
-    def update_event(self, inp=-1):
-         #slider
-        if self.input(1)<=10:
-            range1 = self.input(1)*2
-            self.v = 0.1 + (range1 * self.val)
-        else:
-            range1 = 20                                                          #add if statements to ensure positive
-            self.v = (self.input(1)-(range1/2)) + (range1 * self.val)
-        self.v=int(self.v)
-        self.set_output_val(0, self.v)
-
-        #image
-        new_img_wrp = CVImage(self.get_img())
-        if self.input(2):   
-            if self.session.gui:
-                self.SIGNALS.new_img.emit(new_img_wrp.img)
-
-        self.set_output_val(1, new_img_wrp)
-        self.main_widget().text_label.setText((f"current ksize: {self.v}"))
-       
-
-    def get_state(self) -> dict:
-        return {
-            'val': self.val,
-        }
-
-    def set_state(self, data: dict, version):
-        self.val = data['val']
-
-    def get_img(self):
-        # return self.input(0).img
-        k = int(self.v)
-        # print(k)
-        return cv2.blur(
-            src=self.input(0).img,
-            ksize=(k,k),
-                )
-    
-#Add preview from prototype
-class Slider_Gaus_Tick_v6(NodeBase):        #Nodebase just a different colour
-    title = 'slider_Gaus_Tick_v6'
-    version = 'v0.1'
-    init_inputs = [
-        
-        NodeInputBP('img'),
-        NodeInputBP(dtype=dtypes.Integer(default=3), label='ksize'),
-        NodeInputBP(dtype=dtypes.Boolean(default=False), label='Preview'),      
-    ]
-    init_outputs = [
-        NodeOutputBP(),
-        NodeOutputBP(),
-    ]
-    main_widget_class = widgets.V3QvBoxDev_MainWidget
-    main_widget_pos = 'below ports'
-
-    def __init__(self, params):
-        super().__init__(params)
-
-        if self.session.gui:
-            from qtpy.QtCore import QObject, Signal
-            class Signals(QObject):
-                new_img = Signal(object)
-                clr_img = Signal(object)
-                # preview_input = Signal(object)
-        
-        
-            # to send images to main_widget in gui mode
-            self.SIGNALS = Signals()
-
-
-        self.val = 0
-        
-
-    def place_event(self):  
-        self.update()
-      #print("place")
-        self.previous_checkbox = self.input(2)
-
-    def view_place_event(self):
-        #Signals
-        self.SIGNALS.new_img.connect(self.main_widget().show_image)
-        self.SIGNALS.clr_img.connect(self.main_widget().clear_img)
-        # self.SIGNALS.preview_input.connect(self.main_widget().preview_input_changed)
-        #Preview
-        
-
-      #print("view_place and connections")
-        try:
-            self.SIGNALS.new_img.emit(self.get_img())
-        except:  # there might not be an image ready yet
-            pass
-        # when running in gui mode, the value might come from the input widget
-        self.update()
-
-    def update_event(self, inp=-1):
-        #debugging
-      #print("update event")
-        
-        # if self.input(2) != self.previous_checkbox:
-        #   #print("Checkbox not checked")
-        
-
-         #slider
-        if self.input(1)<=10:
-            range1 = self.input(1)*2
-            self.v = 0.1 + (range1 * self.val)
-        else:
-            range1 = 20                                                          #add if statements to ensure positive
-            self.v = (self.input(1)-(range1/2)) + (range1 * self.val)
-        self.v=int(self.v)
-        self.set_output_val(0, self.v)
-        
-
-      #print(f"Old:{self.previous_checkbox }")
-        
-        #image
-        new_img_wrp = CVImage(self.get_img())
-        if self.input(2):   
-            # if self.session.gui:
-                self.SIGNALS.new_img.emit(new_img_wrp.img)
-              #print("The input is checked", self.input(2))
-        else:
-            # if self.session.gui:
-            # if self.input(2) != self.previous_checkbox:
-              #print("Clear image now and reshape")
-                self.SIGNALS.clr_img.emit(new_img_wrp.img)
-
-        # Preview
-        # if self.input(2) != self.previous_checkbox:
-          #print("Checkbox just checked")
-            # self.SIGNALS.preview_input.emit(new_img_wrp.img)
-            # self.main_widget().update_shape()
-        
-        self.previous_checkbox = self.input(2)
-      #print(f"New:{self.previous_checkbox }")
-
-        self.set_output_val(1, new_img_wrp)
-        self.main_widget().text_label.setText((f"current ksize: {self.v}"))
-       
-
-    def get_state(self) -> dict:
-        return {
-            'val': self.val,
-        }
-
-    def set_state(self, data: dict, version):
-        self.val = data['val']
-
-    def get_img(self):
-        # return self.input(0).img
-        k = int(self.v)
-        # print(k)
-        return cv2.blur(
-            src=self.input(0).img,
-            ksize=(k,k),
-                )
-    
-
-#Add preview from prototype
-class Slider_Gaus_Tick_v7(NodeBase):        #Nodebase just a different colour
-    title = 'slider_Gaus_Tick_v7'
-    version = 'v0.1'
-    init_inputs = [
-        
-        NodeInputBP('img'),
-        NodeInputBP(dtype=dtypes.Integer(default=3), label='ksize'),
-        NodeInputBP(dtype=dtypes.Integer(default=5), label='SigmaX'),
-        NodeInputBP(dtype=dtypes.Boolean(default=False), label='Preview'),      
-    ]
-    init_outputs = [
-        NodeOutputBP(),
-        NodeOutputBP(),
-        NodeOutputBP(), #sigX
-
-    ]
-    main_widget_class = widgets.V5QvBoxDev_MainWidget
-    main_widget_pos = 'below ports'
-
-    def __init__(self, params):
-        super().__init__(params)
-
-        if self.session.gui:
-            from qtpy.QtCore import QObject, Signal
-            class Signals(QObject):
-                new_img = Signal(object)
-                clr_img = Signal(object)
-                # preview_input = Signal(object)
-        
-        
-            # to send images to main_widget in gui mode
-            self.SIGNALS = Signals()
-
-
-        self.kval = 0
-        self.sigX = 0
-        # self.inputs[1] = 10
-        
-
-    def place_event(self):  
-        self.update()
-      #print("place")
-        self.previous_checkbox = self.input(3)
-
-    def view_place_event(self):
-        #Signals
-        self.SIGNALS.new_img.connect(self.main_widget().show_image)
-        self.SIGNALS.clr_img.connect(self.main_widget().clear_img)
-        # self.SIGNALS.preview_input.connect(self.main_widget().preview_input_changed)
-        #Preview
-        
-
-      #print("view_place and connections")
-        try:
-            self.SIGNALS.new_img.emit(self.get_img())
-        except:  # there might not be an image ready yet
-            pass
-        # when running in gui mode, the value might come from the input widget
-        self.update()
-
-    def update_event(self, inp=-1):
-        # # debugging
-        # print("update event")
-        
-        # # if self.input(2) != self.previous_checkbox:
-        # #     print("Checkbox not checked")
-        
-        # print("val VALUE:", self.val)
-        #  #slider ksize
-        # if self.input(1)<=10:
-        #     range1 = self.input(1)*2
-        #     self.v = 0.1 + (range1 * self.val)
-        # else:
-        #     range1 = 20                                                          #add if statements to ensure positive
-        #     self.v = (self.input(1)-(range1/2)) + (range1 * self.val)
-        # self.v=int(self.v)
-        # #Expression cannot be assignment target
-        # self.set_output_val(0, self.v)
-        # # self.inputs[1].dtype=dtypes.Integer(default=self.v)
-
-        
-        #  #slider sigmaX
-        # if self.input(2)<=10:
-        #     range1 = self.input(2)*2
-        #     self.sX = 0.1 + (range1 * self.sigX)
-        # else:
-        #     range1 = 20                                                          #add if statements to ensure positive
-        #     self.sX = (self.input(2)-(range1/2)) + (range1 * self.sigX)
-        # # self.sX=int(self.sX)
-        # #Expression cannot be assignment target
-        # self.set_output_val(2, self.sX)
-        
-        
-
-        # print(f"Old:{self.previous_checkbox }")
-        
-        #image
-        new_img_wrp = CVImage(self.get_img())
-        if self.input(3):   
-            # if self.session.gui:
-                self.SIGNALS.new_img.emit(new_img_wrp.img)
-               
-                
-        else:
-            # if self.session.gui:
-            # if self.input(2) != self.previous_checkbox:
-              #print("Clear image now and reshape")
-                self.SIGNALS.clr_img.emit(new_img_wrp.img)
-
-        # Preview
-        # if self.input(3) != self.previous_checkbox:
-          #print("Checkbox just checked")
-            # self.SIGNALS.preview_input.emit(new_img_wrp.img)
-            # self.main_widget().update_shape()
-        
-        # self.previous_checkbox = self.input(3)
-      #print(f"New:{self.previous_checkbox }")
-
-        self.set_output_val(1, new_img_wrp)
-        self.main_widget().text_label.setText((f"current ksize: {self.v}"))
-       
-
-    def get_state(self) -> dict:
-        return {
-            'kval': self.kval,
-        }
-
-    def set_state(self, data: dict, version):
-        self.kval = data['kval']
-
-    def get_img(self):
-        # return self.input(0).img
-        k = int(self.kval)
-        # print(k)
-        return cv2.blur(
-            src=self.input(0).img,
-            ksize=(k,k),
-                )
-
-class Slider_Gaus_Tick_v8(NodeBase):        #Nodebase just a different colour
-          #Nodebase just a different colour
-    title = 'slider_Gaus_Tick_v8'
-    version = 'v0.1'
-    init_inputs = [
-        
-        NodeInputBP('img'),
-         
-    ]
-    init_outputs = [
-        NodeOutputBP(), #img
-
-    ]
-    main_widget_class = widgets.V5QvBoxDev_MainWidget
-    main_widget_pos = 'below ports'
-
-    def __init__(self, params):
-        super().__init__(params)
-
-        if self.session.gui:
-            from qtpy.QtCore import QObject, Signal
-            class Signals(QObject):
-                new_img = Signal(object)    #original
-                clr_img = Signal(object)    #added
-                # moved = Signal(object)    #added
-                # preview_input = Signal(object)
-        
-        
-            # to send images to main_widget in gui mode
-            self.SIGNALS = Signals()
-
-            #instance of main widget
-            
-            #slider signals
-            # self.main_widget().ksliderValueChanged.connect(self.onSliderValueChanged)   
-
-        self.kval = 0
-        self.sigX = 0
-        self.prev = True
-        # self.inputs[1] = 10
-
-    def place_event(self):  
-        self.update()
-
-    def view_place_event(self):
-        self.SIGNALS.new_img.connect(self.main_widget().show_image)
-        self.SIGNALS.clr_img.connect(self.main_widget().clear_img)
-        self.main_widget().kValueChanged.connect(self.onSliderValueChanged)
-        self.main_widget().previewState.connect(self.preview)
-        
-        try:
-            # self.SIGNALS.new_img.emit(self.update_event())
-             self.set_output_val(0, self.new_img_wrp)
-        except:  # there might not be an image ready yet
-            pass
-        # when running in gui mode, the value might come from the input widget
-        # check
-        self.update()
-
-    #shows image as soon as connected
-    def update_event(self, inp=-1):  #called when an input is changed
-        self.new_img_wrp = CVImage(self.input(0).img)
-
-        if self.session.gui:
-            self.SIGNALS.new_img.emit(self.new_img_wrp.img)
-
-        self.set_output_val(0, self.new_img_wrp)
-    
-    # def updateNode(self):
-    #     self.new_img_wrp = CVImage(self.get_img())
-
-    #     if self.session.gui:
-    #         self.SIGNALS.new_img.emit(self.new_img_wrp.img)
-
-    #     self.set_output_val(0, self.new_img_wrp)
-    def preview(self, state):
-        if state ==  True:
-            self.prev = True
-            #Bring image back immediately 
-            self.SIGNALS.new_img.emit(self.new_img_wrp.img)
-               
-        else:
-              self.prev = False 
-              self.SIGNALS.clr_img.emit(self.new_img_wrp.img) 
-
-    def onSliderValueChanged(self, value):
-        # This method will be called whenever the widget's signal is emitted
-      #print(value)
-        self.new_img_wrp = CVImage(self.get_img(value))
-        if self.prev == True:
-            if self.session.gui:
-                #update continuously 
-                self.SIGNALS.new_img.emit(self.new_img_wrp.img)
-        else:
-            self.SIGNALS.clr_img.emit(self.new_img_wrp.img)
-      
-        self.set_output_val(0, self.new_img_wrp)
-        
-    
-    def get_state(self) -> dict:
-        return {
-            'val': self.val,
-        }
-
-    def set_state(self, data: dict, version):
-        self.val = data['val']
-        
-
-    def get_img(self,value):
-        # return self.input(0).img
-        # return self.input(0).img
-        # k = int(self.main_widget().kval)
-      #print(f"getimageValue{value}")
-        return cv2.blur(
-            src=self.input(0).img,
-            ksize=(value,value),
-                )
+     
     
 # NODES ------------------------------------------------------------------------------------------------------------------
-# ReadImage Original ///////////////
-
-# class ReadImage(NodeBase0):
-#     """Reads an image from a file"""
-
-#     title = 'Read Image'
-#     input_widget_classes = {
-#         'choose file IW': widgets.ChooseFileInputWidget
-#     }
-#     init_inputs = [
-#         NodeInputBP('f_path', add_data={'widget name': 'choose file IW', 'widget pos': 'besides'})
-#     ]
-#     init_outputs = [
-#         NodeOutputBP('img')
-#     ]
-#     main_widget_class = widgets.ChooseFileInputWidgetBASE3
-#     main_widget_pos = 'below ports'
-
-#     def __init__(self, params):
-#         super().__init__(params)
-
-#         if self.session.gui:
-#             from qtpy.QtCore import QObject, Signal
-#             class Signals(QObject):
-#                 new_img = Signal(object)
-#                 image_shape = Signal(list)
-#                 #reset sliders
-#                 reset_widget = Signal(int)
-#                 #remove widgets
-#                 remove_widget = Signal()
-
-#             # to send images to main_widget in gui mode
-#             self.SIGNALS = Signals()
-
-#         self.image_filepath = ''
-#         self.ttval = 0
-#         self.zzval = 0
-
-#     def view_place_event(self):
-#         self.input_widget(0).path_chosen.connect(self.path_chosen)
-#         self.SIGNALS.new_img.connect(self.main_widget().show_image)
-#         self.SIGNALS.image_shape.connect(self.main_widget().update_widgets)
-#         self.SIGNALS.reset_widget.connect(self.main_widget().reset_widg)
-#         self.SIGNALS.remove_widget.connect(self.main_widget().remove_widgets)
-#         self.main_widget().ValueChanged1.connect(self.onValue1Changed)
-#         self.main_widget().ValueChanged2.connect(self.onValue2Changed) 
-#         # try:
-#         #     self.SIGNALS.new_img.emit(self.get_img())
-#         # except:  # there might not be an image ready yet
-#         #     pass
-#         # self.main_widget_message.connect(self.main_widget().show_path)
-
-#     def update_event(self, inp=-1):   #called when the input is changed
-#         #therefore new image 
-#         self.ttval = 0
-#         self.zzval = 0
-#         self.SIGNALS.reset_widget.emit(1)
-#         # self.SIGNALS.remove_widget.emit()
-
-#         if self.image_filepath == '':
-#             return
-#         # Check if the file has a .tiff extension   --> tif file capability Check tiff 
-#         if self.image_filepath.endswith('.tif'):
-#             try:
-#                 self.image_data = tiff.imread(self.image_filepath)
-#                 #generate dimension list (dimension, slices, frames (time), width, height, channels)
-#                 self.id_tiff_dim(self.image_filepath)
-#                 # print(self.image_data)
-                
-#                 #4D images 
-#                 if self.dimension[0] == 5: #time and space (4D)
-#                     self.image_data = ((self.image_data/self.image_data.max())*65535).astype('uint16')
-#                     new_img_wrp = CVImage(self.get_img())
-#                     # print("shape", new_img_wrp.shape)
-#                     if self.session.gui:
-#                         self.SIGNALS.new_img.emit(new_img_wrp.img)
-
-#                     self.set_output_val(0, new_img_wrp)
-                    
-#                     print("Image loaded successfully")
-#                 #3D images - zstack only
-#                 #2D images
-#                 #dimension[0]==0
-#                 else:
-#                     image2D = CVImage(cv2.imread(self.image_filepath, cv2.IMREAD_UNCHANGED))
-#                     if self.session.gui:
-#                         self.SIGNALS.new_img.emit(image2D.img)
-#                     self.set_output_val(0,image2D)
-            
-#             except Exception as e:
-#                 print(e)
-#                 print("failed")
-
-#         else: 
-#             try:
-#                 self.set_output_val(0, CVImage(cv2.imread(self.image_filepath, cv2.IMREAD_UNCHANGED)))
-#             except Exception as e:
-#                 print(e)
-
-#     def id_tiff_dim(self,f_path):
-#         tif_file = tiff.TiffFile(f_path)
-
-#         # Check for TIFF metadata tags
-#         metadata = tif_file.pages[0].tags
-#         if metadata:
-#             # print("Metadata Tags:")
-#             for tag_name, tag in metadata.items():
-#                 print(f"{tag_name}: {tag.value}")
-
-#             #set dimension to 0 when a new tiff file is processed
-#             dimension = [0,1,1,0,0,0] #dim, slices , time
-            
-#             if 256 in metadata: #width
-#                             # Access the tag value directly
-#                             dimension[3] = metadata[256].value
-            
-                
-#             if 257 in metadata: #height
-#                             # Access the tag value directly
-#                             dimension[4] = metadata[257].value
-            
-#             if 277 in metadata: #channels
-#                             # Access the tag value directly
-#                             dimension[5] = int(metadata[277].value)
-#             if 259 in metadata:  # Tag for slices
-#                 dimension[1] = metadata[259].value
-
-#             if 262 in metadata:  # Tag for frames
-#                 frames = metadata[262].value
-            
-#             if 'ImageDescription' in metadata:
-#                     # Access 'ImageDescription' tag
-#                     image_description = metadata['ImageDescription']
-            
-#                     # Split the 'ImageDescription' string into lines
-#                     description_lines = image_description.value.split('\n')
-#                     # Parse the lines to extract slices and frames information
-#                     for line in description_lines:
-#                         if line.startswith("slices="):
-#                             dimension[1] = int(line.split('=')[1]) #slices
-#                             dimension[0] = 3
-#                         if line.startswith("frames="):
-#                             dimension[2] = int(line.split('=')[1]) #frames
-#                             dimension[0] += 2
-#                         if 256 in metadata: #width
-#                             # Access the tag value directly
-#                             dimension[3] = metadata[256].value
-#                         if 257 in metadata: #H
-#                             # Access the tag value directly
-#                             dimension[4] = metadata[257].value
-#                         if 277 in metadata: #channels
-#                             # Access the tag value directly
-#                             dimension[5] = metadata[277].value
-#         else:
-#                 print("ImageDescription tag not found in metadata.")
-                        
-#         print(f"Slices: {dimension[1]}")
-#         print(f"Frames: {dimension[2]}")
-#         print(f'Dimension: {dimension[0]}')
-#         print(f'Width: {dimension[3]}')
-#         print(f'Height: {dimension[4]}')
-#         print(f'Channels: {dimension[5]}')
-#         self.dimension=dimension
-#         self.SIGNALS.image_shape.emit(dimension)
-
-
-#     def get_state(self):
-#         data = {'image file path': self.image_filepath}
-#         return data
-
-#     def set_state(self, data, version):
-#         self.path_chosen(data['image file path'])
-#         # self.image_filepath = data['image file path']
-
-#     # def get_state(self) -> dict:
-#     #     return {
-#     #         # 'image file path': self.image_filepath,
-#     #         'val1': self.ttval, 
-#     #         'val2': self.zzval,
-#     #     }
-
-#     # def set_state(self, data: dict, version):
-#     #     # self.path_chosen(data['image file path'])
-#     #     self.ttval = data['val1']
-#     #     self.zzval = data['val2']
-
-#     def path_chosen(self, file_path):
-#         self.image_filepath = file_path
-#         self.update()
-    
-#     def onValue1Changed(self, value):
-#         print(f"timevalue{value}")
-#         self.ttval=value-1 #slider: 1-max for biologists
-#         self.new_img_wrp = CVImage(self.get_img())
-        
-#         if self.session.gui:
-#             #update continuously 
-#             self.SIGNALS.new_img.emit(self.new_img_wrp.img)   
-
-#         self.set_output_val(0, self.new_img_wrp)
-    
-#     def onValue2Changed(self, value):
-#         print(f"zvalue{value}")
-#         self.zzval=value-1
-#         self.new_img_wrp = CVImage(self.get_img())
-        
-#         if self.session.gui:
-#                 #update continuously 
-#             self.SIGNALS.new_img.emit(self.new_img_wrp.img)
-      
-#         self.set_output_val(0, self.new_img_wrp)
-
-#     def get_img(self):
-#         return self.image_data[self.ttval,self.zzval,:,:]
-
-# ////////////////////////////////// Orginal above
-
-#tuple implementation 
-#all timesteps
-class ReadImage0(NodeBase0):
-    """Reads an image from a file"""
-
-    title = 'Read Image'
-    input_widget_classes = {
-        'choose file IW': widgets.ChooseFileInputWidget
-    }
-    init_inputs = [
-        NodeInputBP('f_path', add_data={'widget name': 'choose file IW', 'widget pos': 'besides'})
-    ]
-    init_outputs = [
-        NodeOutputBP('img')
-    ]
-    main_widget_class = widgets.ChooseFileInputWidgetBASE3
-    main_widget_pos = 'below ports'
-
-    def __init__(self, params):
-        super().__init__(params)
-
-        if self.session.gui:
-            from qtpy.QtCore import QObject, Signal
-            class Signals(QObject):
-                new_img = Signal(object)
-                image_shape = Signal(list)
-                #reset sliders
-                reset_widget = Signal(int)
-                #remove widgets
-                remove_widget = Signal()
-
-            # to send images to main_widget in gui mode
-            self.SIGNALS = Signals()
-
-        self.image_filepath = ''
-        self.ttval = 0
-        self.zzval = 0
-
-    def view_place_event(self):
-        self.input_widget(0).path_chosen.connect(self.path_chosen)
-        self.SIGNALS.new_img.connect(self.main_widget().show_image)
-        self.SIGNALS.image_shape.connect(self.main_widget().update_widgets)
-        self.SIGNALS.reset_widget.connect(self.main_widget().reset_widg)
-        self.SIGNALS.remove_widget.connect(self.main_widget().remove_widgets)
-        self.main_widget().ValueChanged1.connect(self.onValue1Changed)
-        self.main_widget().ValueChanged2.connect(self.onValue2Changed) 
-        self.main_widget().released1.connect(self.output_data1)  
-        self.main_widget().released2.connect(self.output_data1) 
-        # try:
-        #     self.SIGNALS.new_img.emit(self.get_img())
-        # except:  # there might not be an image ready yet
-        #     pass
-        # self.main_widget_message.connect(self.main_widget().show_path)
-
-    def update_event(self, inp=-1):   #called when the input is changed
-        #therefore new image 
-        self.ttval = 1
-        self.zzval = 1
-        self.SIGNALS.reset_widget.emit(1)
-        # self.SIGNALS.remove_widget.emit()
-
-        if self.image_filepath == '':
-            return
-        # Check if the file has a .tiff extension   --> tif file capability Check tiff 
-        if self.image_filepath.endswith('.tif'): #----------------------------------------------------------------------------------TIFF
-            try:
-                self.image_data = tiff.imread(self.image_filepath)
-                # Normalize - generate dimension list (T,Z,H,W,C)
-                self.dim = self.id_tiff_dim(self.image_filepath)
-                # Reshape - STANDARDIZED 
-                self.reshaped_data = self.image_data.reshape(self.dim)
-                print(f"reshaped: {self.reshaped_data.shape}")
-                # Grayscale
-                if self.reshaped_data.shape[4] == 1: #self.dim[4]==1:
-                    self.reshaped_data = ((self.reshaped_data/self.reshaped_data.max())*255).astype('uint8')
-                    # print("NORMALIZED FOR GRAYSCALE")
-                
-                # Display image
-                # 3D, 3D or 5D
-                if (self.reshaped_data.shape[0] != 1) | (self.reshaped_data.shape[1] != 1): #time and space (4D)
-                    #squeeze standardized down to relevant dimension (remove 1s)
-                    self.squeezed = np.squeeze(self.reshaped_data)
-                    #slice
-                    new_img_wrp = CVImage(self.get_img())  
-                    # print("shape", new_img_wrp.shape)
-                    if self.session.gui:
-                        self.SIGNALS.new_img.emit(new_img_wrp.img)
-                    # if multiple time steps, output 
-                    self.set_output_val(0, (self.reshaped_data, self.ttval, self.zzval))
-
-                #2D images (tiff)
-                else:
-                    image2D = cv2.imread(self.image_filepath, cv2.IMREAD_UNCHANGED)
-                    self.reshaped_data = image2D.reshape(1, 1, *image2D.shape)
-                    if self.session.gui:
-                        new_img_wrp = CVImage(image2D)
-                        self.SIGNALS.new_img.emit(new_img_wrp.img)
-                    self.set_output_val(0,(self.reshaped_data, 1, 1))
-            
-            except Exception as e:
-                print(e)
-                print("failed")
-
-        else: #-------------------------------------------------------------------------------------------------------------------- Not TIFF
-            # 2D not tiff
-            try:
-                image2D = cv2.imread(self.image_filepath, cv2.IMREAD_UNCHANGED)
-                self.reshaped_data = image2D.reshape(1, 1, *image2D.shape)
-                if self.session.gui:
-                    new_img_wrp = CVImage(image2D)
-                    self.SIGNALS.new_img.emit(new_img_wrp.img)
-                self.set_output_val(0,(self.reshaped_data, 1, 1))
-            except Exception as e:
-                print(e)
-
-    def id_tiff_dim(self,f_path):
-        tif_file = tiff.TiffFile(f_path)
-        # Check for TIFF metadata tags
-        metadata = tif_file.pages[0].tags
-        if metadata:
-            # print("Metadata Tags:")
-            for tag_name, tag in metadata.items():
-                print(f"{tag_name}: {tag.value}")
-
-            #set dimension to 0 when a new tiff file is processed
-            dimension = [1,1,1,1,1] #dim, slices , time
-            
-            
-            #  T Z Y X C  (F, Z, H, W, C)
-            #  0 1 2 3 4
-            
-            if 256 in metadata: #width
-                            # Access the tag value directly
-                            dimension[3] = metadata[256].value
-            if 257 in metadata: #H
-                            # Access the tag value directly
-                            dimension[2] = metadata[257].value
-            if 277 in metadata: #channels
-                            # Access the tag value directly
-                            dimension[4] = metadata[277].value
-            if 259 in metadata:  # Tag for slices
-                            print("meta",metadata[259].value)
-                            dimension[1] = metadata[259].value
-                        
-            if 'ImageDescription' in metadata:
-                    # Access 'ImageDescription' tag
-                    image_description = metadata['ImageDescription']
-            
-                    # Split the 'ImageDescription' string into lines
-                    description_lines = image_description.value.split('\n')
-                    # Parse the lines to extract slices and frames information
-                    for line in description_lines:
-                        # if 262 in metadata:  # Tag for frames
-                        #     dimension[4] = metadata[262].value
-                        #     print("dim",dimension[4])
-                        if line.startswith("slices="):
-                            dimension[1] = int(line.split('=')[1]) #slice
-                        if line.startswith("frames="):
-                            dimension[0] = int(line.split('=')[1]) #frames
-                            print("frames", int(line.split('=')[1]))
-                            print("dim",dimension[4])
-                        
-        else:
-                print("ImageDescription tag not found in metadata.")
-                        
-        # print(f'Width: {dimension[3]}')
-        # print(f'Height: {dimension[2]}')
-        # print(f'Channels: {dimension[4]}')
-        # print(f"Slices: {dimension[1]}")
-        # print(f"Frames: {dimension[0]}")
-        # print(f'Dimension: {dimension[0]}')
-        # self.dimension=dimension
-        self.SIGNALS.image_shape.emit(dimension)
-        return dimension
-
-    def get_state(self):
-        data = {'image file path': self.image_filepath}
-        return data
-
-    def set_state(self, data, version):
-        self.path_chosen(data['image file path'])
-        # self.image_filepath = data['image file path']
-
-    # def get_state(self) -> dict:
-    #     return {
-    #         # 'image file path': self.image_filepath,
-    #         'val1': self.ttval, 
-    #         'val2': self.zzval,
-    #     }
-
-    # def set_state(self, data: dict, version):
-    #     # self.path_chosen(data['image file path'])
-    #     self.ttval = data['val1']
-    #     self.zzval = data['val2']
-
-    def path_chosen(self, file_path):
-        self.image_filepath = file_path
-        self.update()
-    
-    def onValue1Changed(self, value):
-        # print(f"timevalue{value}")
-        self.ttval=value-1 #slider: 1-max for biologists
-        self.new_img_wrp = CVImage(self.get_img())
-        
-        if self.session.gui:
-            #update continuously 
-            self.SIGNALS.new_img.emit(self.new_img_wrp.img)   
-    
-    def onValue2Changed(self, value):
-        # print(f"zvalue{value}")
-        self.zzval=value-1
-        self.new_img_wrp = CVImage(self.get_img())
-        
-        if self.session.gui:
-                #update continuously 
-            self.SIGNALS.new_img.emit(self.new_img_wrp.img)
-    
-    def output_data1(self, value):
-        self.set_output_val(0, (self.reshaped_data, self.ttval, self.zzval))
-    
-    def output_data2(self, value):
-        self.set_output_val(0, (self.reshaped_data, self.ttval, self.zzval))
-
-    def get_img(self):
-        # 4D
-        if (self.dim[0] != 1) & (self.dim[1] != 1):
-            return self.squeezed[self.ttval,self.zzval,:,:]
-        # 2D in time
-        elif self.dim[0] != 1:
-            return self.squeezed[self.ttval,1,:,:]  #wont have all these *** (SQUEEZED) 
-        # 3D (Z-stack)
-        elif self.dim[1] != 1:
-            return self.squeezed[1,self.zzval,:,:]
 
 #Single timestep
 # new shape (10, 512, 512, 1)
@@ -3249,78 +1730,6 @@ class BatchProcess(NodeBase0):
     def set_state(self, data, version):
         self.file_path = data['path']
 
-
-class ReadImageTiff(NodeBase0):
-    """Reads an image from a file"""
-
-    title = 'Read Tiff Image'
-    input_widget_classes = {
-        'choose file IW': widgets.ChooseFileInputWidget
-    }
-    init_inputs = [
-        NodeInputBP('f_path', add_data={'widget name': 'choose file IW', 'widget pos': 'besides'})
-    ]
-    init_outputs = [
-        NodeOutputBP('img')
-    ]
-
-    def __init__(self, params):
-        super().__init__(params)
-
-        self.image_filepath = ''
-
-    def view_place_event(self):
-        self.input_widget(0).path_chosen.connect(self.path_chosen)
-        # self.main_widget_message.connect(self.main_widget().show_path)
-
-    def update_event(self, inp=-1):
-        if self.image_filepath == '':
-            return
-        # Check if the file has a .tiff extension
-        if self.image_filepath.endswith('.tif'):
-            try:
-                image_data = tiff.imread(self.image_filepath)
-                slicetz = image_data[23,9,:,:]
-                self.set_output_val(0, slicetz)
-                # print("Image shape:", slicetz.shape)
-                # print("Image loaded successfully")
-            except Exception as e:
-                print(e)
-                print("failed")
-
-
-        # _, file_extension = os.path.splitext(self.image_filepath)
-        # os.
-        # if file_extension.lower() == '.tif':
-        #     image = CVImage(tiff.imread(self.image_filepath))
-        #     self.set_output_val(0, image)
-        #     print(image.shape)
-        #     print("lower")
-
-        # # else: 
-        # try:
-        #         image_data = tiff.imread(self.image_filepath)
-        #         slicetz = image_data[23,9,:,:]
-        #         self.set_output_val(0, slicetz)
-        #         print("Image shape:", slicetz.shape)
-        #         print("Image loaded successfully")
-        # except Exception as e:
-        #         print(e)
-        #         print("failed")
-
-    def get_state(self):
-        data = {'image file path': self.image_filepath}
-        return data
-
-    def set_state(self, data, version):
-        self.path_chosen(data['image file path'])
-        # self.image_filepath = data['image file path']
-
-    def path_chosen(self, file_path):
-        self.image_filepath = file_path  #file_path defined in widget 
-        print(self.image_filepath)
-        self.update()
-
         
 
 class DisplayImg(OpenCVNodeBase):
@@ -3360,7 +1769,7 @@ class Crop(NodeBase0):        #Nodebase just a different colour
                 dimension = Signal(object) 
                 new_img = Signal(object)    #original
                 clr_img = Signal(object)    #added      
-        
+                channels_dict = Signal(dict)
             # to send images to main_widget in gui mode
             self.SIGNALS = Signals()
 
@@ -3377,6 +1786,8 @@ class Crop(NodeBase0):        #Nodebase just a different colour
         self.SIGNALS.dimension.connect(self.main_widget().dimensions)
         self.SIGNALS.new_img.connect(self.main_widget().show_image)
         self.SIGNALS.clr_img.connect(self.main_widget().clear_img)
+        self.SIGNALS.channels_dict.connect(self.main_widget().channels)
+
         self.main_widget().kValueChanged.connect(self.onSliderValueChanged)
         self.main_widget().kValueChanged.connect(self.crop_stack)
         self.main_widget().bValueChanged.connect(self.onBSliderValueChanged)
@@ -3401,6 +1812,7 @@ class Crop(NodeBase0):        #Nodebase just a different colour
     def update_event(self, inp=-1):  #called when an input is changed
         #extract slice
         self.handle_stack()
+        self.SIGNALS.channels_dict.emit(self.stack_dict)
         target_h = self.image_stack.shape[1]
         target_w =self.image_stack.shape[2] 
         self.SIGNALS.dimension.emit((target_h, target_w))
@@ -3478,7 +1890,7 @@ class Crop(NodeBase0):        #Nodebase just a different colour
         # zoomed_image_stack = cv2.resize(self.reshaped_proc_data, (self.target_w, self.target_h), interpolation=cv2.INTER_LINEAR)
         self.cropped_slice = self.reshaped_proc_data[self.z_sclice, :, :, :]
         # self.zoomed_cropped_image = cv2.resize(self.cropped_slice, (self.target_w, self.target_h), interpolation=cv2.INTER_LINEAR)
-        self.set_output_val(0, (self.reshaped_proc_data, self.frame, self.z_sclice))
+        self.set_output_val(0, (self.reshaped_proc_data, self.stack_dict, self.z_sclice))
     
     def get_state(self) -> dict:
         return {
@@ -3493,9 +1905,8 @@ class Crop(NodeBase0):        #Nodebase just a different colour
         self.bot = data['val2']
         self.left = data['val3']
         self.right = data['val4']
-#Split Channels --------------------------------------------------------------------------------------------------------------
-        
 
+#Split Channels --------------------------------------------------------------------------------------------------------------
 class Split_Img(NodeBase0):
     title = 'Split Channels'
     version = 'v0.1'
@@ -3785,7 +2196,7 @@ class Split_Img(NodeBase0):
     #     self.value_2 = data['val2']
 
 class Merge_Img(Node):
-    title = 'Merge Channels (RGB)'
+    title = 'Merge Channels (RGB_CMY)'
     version = 'v0.1'
     init_inputs = [
         
@@ -3808,7 +2219,8 @@ class Merge_Img(Node):
             class Signals(QObject):
                 #Signals used for preview
                 new_img = Signal(object)    #original
-                clr_img = Signal(object)    #added      
+                clr_img = Signal(object)    #added     
+                channels_dict = Signal(dict) 
         
             # to send images to main_widget in gui mode
             self.SIGNALS = Signals()
@@ -3825,6 +2237,7 @@ class Merge_Img(Node):
     def view_place_event(self):
         self.SIGNALS.new_img.connect(self.main_widget().show_image)
         self.SIGNALS.clr_img.connect(self.main_widget().clear_img)
+        self.SIGNALS.channels_dict.connect(self.main_widget().channels)
         self.main_widget().previewState.connect(self.preview)
         # self.main_widget().Value1Changed.connect(self.ValueChanged1)
         # self.main_widget().Value1Changed.connect(self.proc_stack_parallel)
@@ -3844,6 +2257,7 @@ class Merge_Img(Node):
     #called when img connected - send output
     def update_event(self, inp=-1):  #called when an input is changed
         self.handle_stack()
+        self.SIGNALS.channels_dict.emit(self.stack_dict)
         self.proc_technique()
         self.new_img_wrp = CVImage(self.sliced)
         if self.prev == True:
@@ -3864,20 +2278,23 @@ class Merge_Img(Node):
               self.SIGNALS.clr_img.emit(self.new_img_wrp.img) 
 
     def handle_stack(self):
-        self.red_stack = self.input(0)[0]
-        self.gr_stack = self.input(1)[0]
-        self.blue_stack = self.input(2)[0]
+        self.chan_0 = self.input(0)[0]
+        self.chan_1 = self.input(1)[0]
+        self.chan_2 = self.input(2)[0]
         self.stack_dict = self.input(0)[1] #dictioary
         self.z_sclice = self.input(0)[2]
         # self.squeeze = np.squeeze(self.image_stack)
-        self.z_size = self.red_stack.shape[0]
+        self.z_size = self.chan_0.shape[0]
         print(f"z_size {self.z_size}")
         # self.sliced = self.image_stack[self.z_sclice, :, :, :] #Z, H, W, C
               
     def proc_technique(self):
-        self.rgb_image = np.concatenate((self.red_stack, self.gr_stack, self.blue_stack), axis=-1)
+        # if 3 inputs: 
+        self.rgb_image = np.concatenate((self.chan_0, self.chan_1, self.chan_2), axis=-1)
+        # if 4 inputs: 
+        # still to implement ----------
         self.sliced = self.rgb_image[self.z_sclice, :, :, :] #Z, H, W, C
-        self.set_output_val(0, (self.rgb_image, self.frame, self.z_sclice))
+        self.set_output_val(0, (self.rgb_image, self.stack_dict, self.z_sclice))
         
         
         # print(f"shape split: {red_stack.shape}")
@@ -4116,194 +2533,8 @@ class Median_Blur(NodeBase):        #Nodebase just a different colour
     def set_state(self, data: dict, version):
         self.kk = data['val1']
 
-        #ALL time steps
-    # def proc_stack_parallel(self, value):
-    #     # Create an empty array to store the processed data
-    #     proc_data = np.empty_like(self.squeeze)
-
-    #     # Define the kernel size for median blur
-    #     ksize = value
-
-    #     # Define the number of worker threads or processes
-    #     num_workers = 8  # Adjust as needed
-
-    #     with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
-    #         futures = []
-    #         for t in range(self.frame_size):
-    #             for z in range(self.z_size):
-    #                 img = self.squeeze[t, z, :, :]
-    #                 future = executor.submit(self.process_frame,img, ksize)
-    #                 futures.append((t, z, future))
-
-    #         for t, z, future in futures:
-    #             processed_image = future.result()
-    #             proc_data[t, z, :, :] = processed_image
-
-    #     print(f"proc_data shape {proc_data.shape}")
-    #     self.reshaped_proc_data = proc_data[..., np.newaxis]
-    #     print(f"reshaped_proc_data shape {self.reshaped_proc_data.shape}")
-    #     self.set_output_val(0, (self.reshaped_proc_data, self.frame, self.z_sclice))
 
 
-class Guassian_Blur3D1(NodeBase):        #Nodebase just a different colour
-          #Nodebase just a different colour
-    title = 'Guassian_Blur3D'
-    version = 'v0.1'
-    init_inputs = [
-        
-        NodeInputBP('input img'),
-         
-    ]
-    init_outputs = [
-        NodeOutputBP('output img'), #img
-
-    ]
-    main_widget_class = widgets.Gaus_Blur_MainWidget3D
-    main_widget_pos = 'below ports'
-
-    def __init__(self, params):
-        super().__init__(params)
-
-        if self.session.gui:
-            from qtpy.QtCore import QObject, Signal
-            class Signals(QObject):
-                #Signals used for preview
-                new_img = Signal(object)    #original
-                clr_img = Signal(object)    #added      
-        
-            # to send images to main_widget in gui mode
-            self.SIGNALS = Signals()
-
-        self.prev = True
-        self.kk = 5
-        # self.sigma = [5, 5, 5,]
-    def place_event(self):  
-        self.update()
-
-    def view_place_event(self):
-        self.SIGNALS.new_img.connect(self.main_widget().show_image)
-        self.SIGNALS.clr_img.connect(self.main_widget().clear_img)
-        self.main_widget().kValueChanged.connect(self.onSliderValueChanged)
-        self.main_widget().kReleased.connect(self.proc_stack_parallel)
-        self.main_widget().previewState.connect(self.preview)
-        
-        try:
-             self.new_img_wrp = CVImage(self.get_img())
-             self.SIGNALS.new_img.emit(self.new_img_wrp.img)
-            #  self.set_output_val(0, (self.proc_stack(), self.frame, self.z_sclice))
-        except:  # there might not be an image ready yet
-            pass
-        # when running in gui mode, the value might come from the input widget
-        # check
-        self.update()
-
-    #called when img connected - send output
-    def update_event(self, inp=-1):  #called when an input is changed
-        #extract slice
-        self.handle_stack()
-        self.proc_stack_parallel()
-        # print(f"type {self.sliced.dtype}")
-        # print(f"shape {self.sliced.shape}")
-        self.new_img_wrp = CVImage(self.get_img())
-        if self.prev == True:
-            if self.session.gui:
-                self.SIGNALS.new_img.emit(self.new_img_wrp.img)
-    
-    def preview(self, state):
-        if state ==  True:
-            self.prev = True
-            #Bring image back immediately 
-            self.SIGNALS.new_img.emit(self.new_img_wrp.img)
-               
-        else:
-              self.prev = False 
-              self.SIGNALS.clr_img.emit(self.new_img_wrp.img) 
-
-    def onSliderValueChanged(self, value):
-        # This method will be called whenever the widget's signal is emitted
-        # #print(value)
-        self.kk = value
-        self.new_img_wrp = CVImage(self.get_img())
-        if self.prev == True:
-            if self.session.gui:
-                #update continuously 
-                self.SIGNALS.new_img.emit(self.new_img_wrp.img)
-        else:
-            self.SIGNALS.clr_img.emit(self.new_img_wrp.img)
-        #Only out put when slider released 
-        # self.set_output_val(0, (self.reshaped_proc_data, self.frame, self.z_sclice))
-    
-    def get_img(self):
-        #debug
-        # #print(f"getimageValue{value}")
-        # image_uint8 = ((self.sliced/self.sliced.max())*255).astype('uint8')
-        # convert to 8, display as 8, but keep stack as original
-        return self.proc[self.frame, self.z_sclice, :, :]
-    
-    def process_frame(self, img, sigma_z, sigma_x, sigma_y):
-        return gaussian_filter(img, sigma=(sigma_x, sigma_y,sigma_z))
-
-    def proc_stack_parallel(self, value):
-        # Create an empty array to store the processed data
-        proc_data = np.empty_like(self.squeeze)
-
-        # Define the parameters for Gaussian blur
-        sigma_z = value #make global, then call below # Assuming kk now represents sigma_z
-        sigma_x = 2.0 #value[0]
-        sigma_y = 2.0
-
-        # Define the number of worker threads or processes
-        num_workers = 8  # Adjust as needed
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=num_workers) as executor:
-            futures = []
-            for t in range(self.frame_size):
-                img = self.squeeze[t, :, :, :]  # Get the 2D slice
-                future = executor.submit(self.process_frame, img, sigma_z, sigma_x, sigma_y)
-                futures.append((t, future))
-
-            for t, future in futures:
-                processed_image = future.result()
-                proc_data[t, :, :, :] = processed_image
-
-
-        #print(f"proc_data shape {proc_data.shape}")
-        self.proc = proc_data
-        self.reshaped_proc_data = proc_data[..., np.newaxis]
-        #print(f"reshaped_proc_data shape {self.reshaped_proc_data.shape}")
-
-        self.set_output_val(0, (self.reshaped_proc_data, self.frame, self.z_sclice))
-    
-    # def proc_stack(self):
-    #     proc_data = np.empty_like(self.squeeze)
-    #     #4D
-    #     sigma_x = 2.0
-    #     sigma_y = 2.0
-    #     # if (self.image_stack.shape[0] != 1) & (self.image_stack.shape[1] != 1):
-    #     for t in range(self.frame_size):
-    #             blurred_stack = gaussian_filter(self.squeeze[t, :, :, :], sigma=(self.kk, sigma_x, sigma_y))
-                
-    #             proc_data[t, :, :, :] = blurred_stack
-    #             # cv2.imshow(f"proced slice{z}", proc_data[2, z, :, :])
-    #     #print(f"proc_data shape {proc_data.shape}")
-    #     #reshape
-    #     # Reshape 'proc_data' to add an extra dimension of size 1
-    #     self.proc = proc_data
-    #     self.reshaped_proc_data = proc_data[..., np.newaxis]
-    #     #print(f"reshaped_proc_data shape {self.reshaped_proc_data.shape}")
-
-
-     
-        
-	
-    # #use when save and close
-    # def get_state(self) -> dict:
-    #     return {
-    #         'val': self.val,
-    #     }
-
-    # def set_state(self, data: dict, version):
-    #     self.val = data['val']
 
 
 class Dimension_Management(NodeBase):        #Nodebase just a different colour
@@ -6158,50 +4389,21 @@ class Histogram(NodeBase3):
     def get_img(self):
         return None
     
-
-    
-#Original GaussianBlur
-class GaussianBlur(OpenCVNodeBase):
-    title = 'Gaussian Blur New'
-    init_inputs = [
-        NodeInputBP('img'),
-        #square matrix
-        #NodeInputBP('ksize', dtype=dtypes.Tuple[int, int], value=(3, 3)), #default 3x3
-
-        #NodeInputBP('ksize', dtype=dtypes.Int(3)),
-        #original 
-        NodeInputBP('ksize', dtype=dtypes.Data((3, 3))), #default 3x3
-        NodeInputBP('sigmaX', dtype=dtypes.Float(1.0)),
-        NodeInputBP('sigmaY', dtype=dtypes.Float(0.0)),
-    ]
-
-    def get_img(self):
-        return cv2.GaussianBlur(
-            src=self.input(0).img,
-            ksize=self.input(1),
-            sigmaX=self.input(2),
-            sigmaY=self.input(3),
-        )        
-#NOTE -> changed OUTPUT ORDER -- img now first 
-#Creating adapted gaussian with sliders & preview
-#Gaussian blur - k can ONLY BE ODD!
-class GaussianBlurNode(NodeBase):        
-    title = 'GaussianBlurNode'
+# Analysis Nodes -------------------------------------------------------
+class Overlap_analysis(Node):
+    title = 'Overlap analysis'
     version = 'v0.1'
     init_inputs = [
         
-        NodeInputBP('img'),                                                    #0
-        NodeInputBP(dtype=dtypes.Integer(default=3), label='ksize'),           #1
-        NodeInputBP('sigmaX', dtype=dtypes.Float(1.0)),                        #2
-        NodeInputBP('sigmaY', dtype=dtypes.Float(0.0)),                        #3
-        NodeInputBP(dtype=dtypes.Boolean(default=False), label='Preview'),     #4
+        NodeInputBP('binarized channel (1)'),
+        NodeInputBP('binarized channel (2)'),
+        # NodeInputBP(''),
+         
     ]
     init_outputs = [
-        NodeOutputBP(),  #image
-        NodeOutputBP(),   #ksize debugging (only need image later)
-        NodeOutputBP(),   #sigmaX debugging (only need image later)
+        NodeOutputBP('output img'), #img
     ]
-    main_widget_class = widgets.V3QvBoxDev_MainWidget
+    main_widget_class = widgets.Global_MainWidget
     main_widget_pos = 'below ports'
 
     def __init__(self, params):
@@ -6210,563 +4412,42 @@ class GaussianBlurNode(NodeBase):
         if self.session.gui:
             from qtpy.QtCore import QObject, Signal
             class Signals(QObject):
-                new_img = Signal(object)
-                clr_img = Signal(object)
-                # preview_input = Signal(object)
-        
+                #Signals used for preview
+                new_img = Signal(object)    #original
+                clr_img = Signal(object)    #added     
+                channels_dict = Signal(dict) 
         
             # to send images to main_widget in gui mode
             self.SIGNALS = Signals()
 
-        self.val = 0
-      
+        self.prev = True
+        # default1 = 3
+        # default2 = 1
+        # self.value_1 = default1  #threshold
+        # self.value_2 = default2
+
     def place_event(self):  
         self.update()
-        self.previous_checkbox = self.input(2)
 
     def view_place_event(self):
-        #Signals
         self.SIGNALS.new_img.connect(self.main_widget().show_image)
         self.SIGNALS.clr_img.connect(self.main_widget().clear_img)
-        # self.SIGNALS.preview_input.connect(self.main_widget().preview_input_changed)
-        #Preview
-        try:
-            self.SIGNALS.new_img.emit(self.get_img())
-        except:  # there might not be an image ready yet
-            pass
-        # when running in gui mode, the value might come from the input widget
-        self.update()
-
-    def update_event(self, inp=-1):
-        #debugging
-        #print("update event")
-        #print(f"Old:{self.previous_checkbox }")
-        self.previous_checkbox = self.input(2)
-        #print(f"New:{self.previous_checkbox }")
-
-        # if self.input(2) != self.previous_checkbox:
-        #     #print("Checkbox not checked")
-        
-        #sliderK
-        self.v = self.input(1)
-        if self.input(1)<=10:
-            range1 = self.input(1)*2
-            self.v = 0.1 + (range1 * self.val)
-        else:
-            range1 = 20                                                          #add if statements to ensure positive
-            self.v = (self.input(1)-(range1/2)) + (range1 * self.val)
-        self.v=int(self.v)
-        self.set_output_val(1, self.v)
-
-        #sliderX
-        self.x = self.input(1)
-        if self.input(1)<=10:
-            range1 = self.input(1)*2
-            self.x = 0.1 + (range1 * self.val)
-        else:
-            range1 = 20                                                          #add if statements to ensure positive
-            self.x = (self.input(1)-(range1/2)) + (range1 * self.val)
-        # self.x=int(self.v)
-        self.set_output_val(2, self.x)      
-
-        #image
-        new_img_wrp = CVImage(self.get_img())
-        if self.input(2):   
-            # if self.session.gui:
-                self.SIGNALS.new_img.emit(new_img_wrp.img)
-        else:
-            # if self.session.gui:
-            if self.input(2) != self.previous_checkbox:
-                self.SIGNALS.clr_img.emit(new_img_wrp.img)
-                
-
-        # Preview
-        # if self.input(2) != self.previous_checkbox:
-            #print("Checkbox just checked")
-            # self.SIGNALS.preview_input.emit(new_img_wrp.img)
-            # self.main_widget().update_shape()
-
-        self.set_output_val(0, new_img_wrp)
-        self.main_widget().text_label.setText((f"adjust ksize: {self.v}"))
-        self.main_widget().text_label.setText((f"adjust SigmaX: {self.x}")) #change self.v
-
-    def get_state(self) -> dict:
-        return {
-            'val': self.val,
-        }
-
-    def set_state(self, data: dict, version):
-        self.val = data['val']
-
-    def get_img(self):
-        # return self.input(0).img
-        k = int(self.v)
-        # #print(k)
-        return cv2.GaussianBlur(
-            src=self.input(0).img,
-            # ksize=(k,k),
-            ksize=(self.input(1),self.input(1)),
-            sigmaX=self.input(2),
-            sigmaY=self.input(3),
-                )
-
-
-
-    #v6
-    # def __init__(self, params):
-    #     super().__init__(params)
-
-    #     if self.session.gui:
-    #         from qtpy.QtCore import QObject, Signal
-    #         class Signals(QObject):
-    #             new_img = Signal(object)
-        
-        
-    #         # to send images to main_widget in gui mode
-    #         self.SIGNALS = Signals()
-
-    #     self.val = 0
-    #     self.preview_enabled = False 
-
-    # def place_event(self): 
-    #     self.update()
-
-    # def view_place_event(self):
-    #     if self.input(2):  # Assuming the input(2) represents the "Preview" checkbox
-    #         if self.session.gui:
-    #             self.SIGNALS.new_img.connect(self.main_widget().show_image)
-            
-    #     try:
-    #         self.SIGNALS.new_img.emit(self.get_img())
-    #     except:
-    #         pass
-        
-    #     self.update()
-
-    # def update_event(self, inp=-1):
-    #      #slider
-    #     if self.input(1)<=10:
-    #         range1 = self.input(1)*2
-    #         self.v = 0.1 + (range1 * self.val)
-    #     else:
-    #         range1 = 20                                                          #add if statements to ensure positive
-    #         self.v = (self.input(1)-(range1/2)) + (range1 * self.val)
-    #     self.v=int(self.v)
-    #     self.set_output_val(0, self.v)
-
-    #     #image
-    #     new_img_wrp = CVImage(self.get_img())
-    #     if self.input(2):   
-    #         if self.session.gui:
-    #             self.SIGNALS.new_img.emit(new_img_wrp.img)
-
-    #     self.set_output_val(1, new_img_wrp)
-
-       
-
-    # def get_state(self) -> dict:
-    #     return {
-    #         'val': self.val,
-    #         'preview_enabled': self.preview_enabled,
-    #     }
-
-    # def set_state(self, data: dict, version):
-    #     self.val = data['val']
-    #     self.preview_enabled = data['preview_enabled']
-
-    # def get_img(self):
-    #     # return self.input(0).img
-    #     k = int(self.v)
-    #     # #print(k)
-    #     return cv2.blur(
-    #         src=self.input(0).img,
-    #         ksize=(k,k),
-    #             )
-# ADD SLIDER through widget
-class BlurAdapted(NodeBase):
-    """Performs a median blur on an img"""
-    title = 'Blur Adapted & Slider'
-    init_inputs = [
-        NodeInputBP('img'),
-        NodeInputBP(dtype=dtypes.Integer(default=3), label='ksize'),
-        
-        #Slider inputs
-        #NodeInputBP(dtype=dtypes.Integer(default=1), label='scl'),
-        NodeInputBP(dtype=dtypes.Boolean(default=True), label='round'), #2
-                # NodeInputBP( dtype=dtypes.Boolean(default=False), label='Preview'),
-    ]
-
-    init_outputs = [
-        NodeOutputBP('img'),
-        NodeOutputBP()
-    ]
-       
-    main_widget_class = widgets.QvBoxDev_MainWidget
-    main_widget_pos = 'below ports'
-
-    def __init__(self, params):
-        super().__init__(params)
-
-        if self.session.gui:
-            from qtpy.QtCore import QObject, Signal
-            class Signals(QObject):
-                new_img = Signal(object)
-
-            # to send images to main_widget in gui mode
-            self.SIGNALS = Signals()
-        #slider
-        self.val = 0
-    
-    def place_event(self):  #sldier
-        self.update()
-
-    def view_place_event(self):
-        #slider
-         # when running in gui mode, the value might come from the input widget
-        self.update()
-        #OpenCV
-        self.SIGNALS.new_img.connect(self.main_widget().show_image)
-
-        try:
-            self.SIGNALS.new_img.emit(self.get_img())
-        except:  # there might not be an image ready yet
-            pass       
-
-    def update_event(self, inp=-1):                                         #reset
-        new_img_wrp = CVImage(self.get_img())
-
-        if self.session.gui:
-            self.SIGNALS.new_img.emit(new_img_wrp.img)
-
-        self.set_output_val(0, new_img_wrp)
-
-        #slider
-        if self.input(1)<=10:
-            range = self.input(1)*2
-            self.v = 0.1 + (range * self.val)
-        else:
-            range = 20                                                          #add if statements to ensure positive
-            self.v = (self.input(1)-(range/2)) + (range * self.val)
-        
-        if self.input(3):
-            self.v = round(self.v)
-
-        self.set_output_val(1, self.v)
-        
-
-    def get_img(self):
-        #if self.input(2):
-        blurred_img=cv2.blur(
-            src=self.input(0).img,
-            ksize=(self.v,self.v))
-        
-        return blurred_img 
-        #else:
-         #   return None
-    def get_state(self) -> dict:
-        return {
-            'val': self.val,
-        }
-    def set_state(self, data: dict, version):
-        self.val = data['val']
-
-
-
-class GaussianBlur(OpenCVNodeBase):
-    title = 'Gaussian Blur New'
-    init_inputs = [
-        NodeInputBP('img'),
-        #square matrix
-        #NodeInputBP('ksize', dtype=dtypes.Tuple[int, int], value=(3, 3)), #default 3x3
-
-        #NodeInputBP('ksize', dtype=dtypes.Int(3)),
-        #original 
-        NodeInputBP('ksize', dtype=dtypes.Data((3, 3))), #default 3x3
-        NodeInputBP('sigmaX', dtype=dtypes.Float(1.0)),
-        NodeInputBP('sigmaY', dtype=dtypes.Float(0.0)),
-    ]
-
-    def get_img(self):
-        return cv2.GaussianBlur(
-            src=self.input(0).img,
-            ksize=self.input(1),
-            sigmaX=self.input(2),
-            sigmaY=self.input(3),
-        )        
-
-class BlurMedian(OpenCVNodeBase):
-    """Performs a median blur on an img"""
-    title = 'Blur Median'
-    init_inputs = [
-        NodeInputBP('img'),
-        NodeInputBP('ksize', dtype=dtypes.Data(default=3)),
-    ]
-
-    def get_img(self):
-        return cv2.medianBlur(src=self.input(0).img, ksize=self.input(1))
-    
-# ADD SLIDER through widget
-class BlurAdapted(NodeBase):
-    """Performs a median blur on an img"""
-    title = 'Blur Adapted & Slider'
-    init_inputs = [
-        NodeInputBP('img'),
-        NodeInputBP(dtype=dtypes.Integer(default=3), label='ksize'),
-        
-        #Slider inputs
-        #NodeInputBP(dtype=dtypes.Integer(default=1), label='scl'),
-        NodeInputBP(dtype=dtypes.Boolean(default=True), label='round'), #2
-                # NodeInputBP( dtype=dtypes.Boolean(default=False), label='Preview'),
-    ]
-
-    init_outputs = [
-        NodeOutputBP('img'),
-        NodeOutputBP()
-    ]
-       
-    main_widget_class = widgets.QvBoxDev_MainWidget
-    main_widget_pos = 'below ports'
-
-    def __init__(self, params):
-        super().__init__(params)
-
-        if self.session.gui:
-            from qtpy.QtCore import QObject, Signal
-            class Signals(QObject):
-                new_img = Signal(object)
-
-            # to send images to main_widget in gui mode
-            self.SIGNALS = Signals()
-        #slider
-        self.val = 0
-    
-    def place_event(self):  #sldier
-        self.update()
-
-    def view_place_event(self):
-        #slider
-         # when running in gui mode, the value might come from the input widget
-        self.update()
-        #OpenCV
-        self.SIGNALS.new_img.connect(self.main_widget().show_image)
-
-        try:
-            self.SIGNALS.new_img.emit(self.get_img())
-        except:  # there might not be an image ready yet
-            pass       
-
-    def update_event(self, inp=-1):                                         #reset
-        new_img_wrp = CVImage(self.get_img())
-
-        if self.session.gui:
-            self.SIGNALS.new_img.emit(new_img_wrp.img)
-
-        self.set_output_val(0, new_img_wrp)
-
-        #slider
-        if self.input(1)<=10:
-            range = self.input(1)*2
-            self.v = 0.1 + (range * self.val)
-        else:
-            range = 20                                                          #add if statements to ensure positive
-            self.v = (self.input(1)-(range/2)) + (range * self.val)
-        
-        if self.input(3):
-            self.v = round(self.v)
-
-        self.set_output_val(1, self.v)
-        
-
-    def get_img(self):
-        #if self.input(2):
-        blurred_img=cv2.blur(
-            src=self.input(0).img,
-            ksize=(self.v,self.v))
-        
-        return blurred_img 
-        #else:
-         #   return None
-    def get_state(self) -> dict:
-        return {
-            'val': self.val,
-        }
-    def set_state(self, data: dict, version):
-        self.val = data['val']
-# title = 'slider'
-    # version = 'v0.1'
-    # init_inputs = [
-    #     NodeInputBP(dtype=dtypes.Integer(default=1), label='scl'),
-    #     NodeInputBP(dtype=dtypes.Boolean(default=False), label='round'),
-    # ]
-    # init_outputs = [
-    #     NodeOutputBP(),
-    # ]
-    # main_widget_class = widgets.SliderNode_MainWidget
-    # main_widget_pos = 'below ports'
-
-    # def __init__(self, params):
-    #     super().__init__(params)
-
-    #     self.val = 0
-
-    # def place_event(self):  #??
-    #     self.update()
-
-    # def view_place_event(self):
-    #     # when running in gui mode, the value might come from the input widget
-    #     self.update()
-
-    # def update_event(self, inp=-1):
-
-    #     v = self.input(0) * self.val
-    #     if self.input(1):
-    #         v = round(v)
-
-    #     self.set_output_val(0, v)
-
-    # def get_state(self) -> dict:
-    #     return {
-    #         'val': self.val,
-    #     }
-
-    # def set_state(self, data: dict, version):
-    #     self.val = data['val']
-
-
-    
-class BlurAdaptedPreview(NodeBase):             #made base node NodeBase - 
-    """Performs a median blur on an img"""      #adds text if hover over node
-    title = 'Blur Adapted Preview'
-    init_inputs = [
-        NodeInputBP('img'),
-        NodeInputBP(dtype=dtypes.Integer(default=3), label='ksize'),
-        NodeInputBP(dtype=dtypes.Boolean(default=False), label='Preview'),        
-    ]
-
-    init_outputs = [
-        NodeOutputBP('img')
-    ]
-       
-    main_widget_class = widgets.OpenCVNode_MainWidget
-    main_widget_pos = 'below ports'
-
-    def __init__(self, params):
-        super().__init__(params)
-
-        if self.session.gui:
-            from qtpy.QtCore import QObject, Signal
-            class Signals(QObject):
-                new_img = Signal(object)
-
-            # to send images to main_widget in gui mode
-            self.SIGNALS = Signals()
-
-    def view_place_event(self):
-        #self.SIGNALS.new_img.connect(self.main_widget().show_image)
-
-        try:
-                self.SIGNALS.new_img.emit(self.get_img())
-        except:  # there might not be an image ready yet
-            pass
-
-    def update_event(self, inp=-1):                                         #reset
-        new_img_wrp = CVImage(self.get_img())
-        if self.input(2):    
-            self.SIGNALS.new_img.connect(self.main_widget().show_image)
-            if self.session.gui:                                #if this is taken out if the "if input" then the preview continualusy 
-                self.SIGNALS.new_img.emit(new_img_wrp.img)      #updates wether preview is selected or not
-        else:
-            #self.SIGNALS.new_img.connect(self.main_widget().clear_image)
-            self.main_widget().clear_image()
-
-        self.set_output_val(0, new_img_wrp)
-
-    def get_img(self):
-        return cv2.blur(
-            src=self.input(0).img,
-            ksize=(self.input(1),self.input(1)),
-                )
-
-#12/07/23
-#Simplified edit
-class BlurSimplePrev(OpenCVNodeBase):
-    """Performs a median blur on an img"""
-    title = 'Blur Simple Prev'
-    init_inputs = [
-        NodeInputBP('img'),
-        NodeInputBP('ksize', dtype=dtypes.Data(default=3)),
-        NodeInputBP(dtype=dtypes.Boolean(default=False), label='Preview'),
-    ]
-
-    def get_img(self):
-        if self.input(2):
-            return cv2.blur(src=self.input(0).img, ksize=(self.input(1),self.input(1)))
-#Experimented with the return funtionality
-#This did not work well
-#Always need to return the image. Need to deal with the preview boolean 
-#This code just looks shorter because of OpenCVNodeBase
-
-
-#Experimenting new Data transfer
-class TransmitTuple(NodeBase):        #Nodebase just a different colour
-          #Nodebase just a different colour
-    title = 'TransmitTuple'
-    version = 'v0.1'
-    init_inputs = [
-        
-        NodeInputBP('input img'),
-         
-    ]
-    init_outputs = [
-        NodeOutputBP('output img'), #img
-
-    ]
-    main_widget_class = widgets.Tuple
-    main_widget_pos = 'below ports'
-
-    def __init__(self, params):
-        super().__init__(params)
-
-        if self.session.gui:
-            from qtpy.QtCore import QObject, Signal
-            class Signals(QObject):
-                #Signals used for preview
-                new_img = Signal(object)    #original
-                clr_img = Signal(object)    #added      
-        
-            # to send images to main_widget in gui mode
-            self.SIGNALS = Signals()
-
-        self.prev = True
-        self.kk = 5
-
-    def place_event(self):  
-        self.update()
-
-    def view_place_event(self):
-        # self.SIGNALS.new_img.connect(self.main_widget().show_image)
-        # self.SIGNALS.clr_img.connect(self.main_widget().clear_img)
-        self.main_widget().kValueChanged.connect(self.onSliderValueChanged)
-        # self.main_widget().previewState.connect(self.preview)
-        
-        try:
-            #  self.new_img_wrp = CVImage(self.get_img())
-            #  self.SIGNALS.new_img.emit(self.new_img_wrp.img)
-             self.set_output_val(0, (self.kk, 5))
-        except:  # there might not be an image ready yet
-            pass
-        # when running in gui mode, the value might come from the input widget
-        # check
+        self.SIGNALS.channels_dict.connect(self.main_widget().channels)
+        self.main_widget().previewState.connect(self.preview)
         self.update()
 
     #called when img connected - send output
     def update_event(self, inp=-1):  #called when an input is changed
-        # self.new_img_wrp = CVImage(self.get_img())
-        # if self.prev == True:
-        #     if self.session.gui:
-        #         self.SIGNALS.new_img.emit(self.new_img_wrp.img)
-
-        self.set_output_val(0, (self.kk, 5))
+        self.handle_stack()
+        self.SIGNALS.channels_dict.emit(self.stack_dict)
+        self.proc_technique()
+        self.new_img_wrp = CVImage(self.sliced)
+        if self.prev == True:
+            if self.session.gui:
+                self.SIGNALS.new_img.emit(self.new_img_wrp.img)
+        
+        
+        # self.set_output_val(0, (self.reshaped_proc_data, self.frame, self.z_sclice))
     
     def preview(self, state):
         if state ==  True:
@@ -6778,11 +4459,144 @@ class TransmitTuple(NodeBase):        #Nodebase just a different colour
               self.prev = False 
               self.SIGNALS.clr_img.emit(self.new_img_wrp.img) 
 
-    def onSliderValueChanged(self, value):
+    def handle_stack(self):
+        self.chan_0 = self.input(0)[0] # eg autophasgasomes
+        self.chan_1 = self.input(1)[0] # eg lysosomes
+
+        self.stack_dict = self.input(0)[1] #dictioary
+        self.z_sclice = self.input(0)[2]
+        # self.squeeze = np.squeeze(self.image_stack)
+        self.z_size = self.chan_0.shape[0]
+        print(f"z_size {self.z_size}")
+        # self.sliced = self.image_stack[self.z_sclice, :, :, :] #Z, H, W, C
+              
+    def proc_technique(self):
+        normalized_chan_0 = self.chan_0 / 255
+        normalized_chan_1 = self.chan_1 / 255
+        print("Data type of self.chan_0:", self.chan_0.dtype)
+        print("Data type of self.chan_1:", self.chan_1.dtype)
+        overlap = np.multiply(normalized_chan_0, normalized_chan_1)
+        overlap = (overlap * 255).astype(np.uint8)
+        print("Data type of overlap:", overlap.dtype)
+        print("shape overlap", overlap.shape)
+        num_chan0 = np.sum(self.chan_0)
+        num_chan1 = np.sum(self.chan_1)
+        num_overlap_pixels = np.sum(overlap)
+        print(f"number of pixels chan0 {num_chan0} \nchan1 {num_chan1} \noverlap {num_overlap_pixels}")
+        # if 3 inputs: 
+        # self.rgb_image = np.concatenate((self.chan_0, self.chan_1, self.chan_2), axis=-1)
+        # if 4 inputs: 
+        # still to implement ----------
+        self.sliced = overlap[self.z_sclice, :, :, :] #Z, H, W, C
+        print(f"z_slice number of pixels {np.sum(self.sliced)}")
+        uniq = np.unique(self.chan_0)
+        print(f"unique vlaues chan0 {uniq} \noverlap {np.unique(overlap)} ")
+        print("overlap, sliced:", self.sliced)
+        print("channel 0 - slice", self.chan_0[self.z_sclice, :, :, :])
+        self.set_output_val(0, (overlap, self.stack_dict, self.z_sclice))
+        
+        
+        # print(f"shape split: {red_stack.shape}")
+        # self.set_output_val(1, (green_stack, self.frame, self.z_sclice))
+        # self.set_output_val(2, (blue_stack, self.frame, self.z_sclice))
+    
+    # def get_state(self) -> dict:
+    #     return {
+    #         'val1': self.value_1,
+    #         'val2': self.value_2,
+    #     }
+
+    # def set_state(self, data: dict, version):
+    #     self.value_1 = data['val1']
+    #     self.value_2 = data['val2'] 
+
+# APPLY TO WHOLE STACK AT ONCE - dont use pipelin 
+# Use 3d guaus
+class Volume_filter(NodeBase):        #Nodebase just a different colour
+    title = 'Volume Filter'
+    version = 'v0.1'
+    init_inputs = [
+        
+        NodeInputBP('input img'),
+         
+    ]
+    init_outputs = [
+        NodeOutputBP('output img'), #img
+
+    ]
+    main_widget_class = widgets.Volume_Filter
+    main_widget_pos = 'below ports'
+
+    morph_type = None
+
+    def __init__(self, params):
+        super().__init__(params)
+
+        if self.session.gui:
+            from qtpy.QtCore import QObject, Signal
+            class Signals(QObject):
+                #Signals used for preview
+                new_img = Signal(object)    #original
+                clr_img = Signal(object)    #added      
+                channels_dict = Signal(dict) #store colour channels     
+        
+            # to send images to main_widget in gui mode
+            self.SIGNALS = Signals()
+
+        self.prev = True
+        default1 = 10
+        self.value_1 = default1  #threshold
+
+    def place_event(self):  
+        self.update()
+
+    def view_place_event(self):
+        self.SIGNALS.new_img.connect(self.main_widget().show_image)
+        self.SIGNALS.clr_img.connect(self.main_widget().clear_img)
+        self.SIGNALS.channels_dict.connect(self.main_widget().channels)
+        self.main_widget().previewState.connect(self.preview)
+        self.main_widget().Value1Changed.connect(self.ValueChanged)
+        self.main_widget().Value1Changed.connect(self.proc_technique)
+        
+        try:
+             self.new_img_wrp = CVImage(self.get_img(self.sliced))
+             self.SIGNALS.new_img.emit(self.new_img_wrp.img)
+             self.set_output_val(0, self.new_img_wrp)
+        except:  # there might not be an image ready yet
+            pass
+        # when running in gui mode, the value might come from the input widget
+        # check
+        self.update()
+
+    #called when img connected - send output
+    def update_event(self, inp=-1):  #called when an input is changed
+        self.handle_stack()
+        self.SIGNALS.channels_dict.emit(self.stack_dict)
+
+        self.proc_technique()
+
+        # self.new_img_wrp = CVImage(self.get_img(self.sliced))
+        # if self.prev == True:
+        #     if self.session.gui:
+        #         self.SIGNALS.new_img.emit(self.new_img_wrp.img)
+        
+        
+    def preview(self, state):
+        if state ==  True:
+            self.prev = True
+            #Bring image back immediately 
+            self.SIGNALS.new_img.emit(self.new_img_wrp.img)
+               
+        else:
+              self.prev = False 
+              self.SIGNALS.clr_img.emit(self.new_img_wrp.img) 
+
+    def ValueChanged(self, value):
+
         # This method will be called whenever the widget's signal is emitted
         # #print(value)
-        self.kk = value
-        # self.new_img_wrp = CVImage(self.get_img())
+        self.value_1 = value
+        # self.new_img_wrp = CVImage(self.get_img(self.sliced))
         # if self.prev == True:
         #     if self.session.gui:
         #         #update continuously 
@@ -6790,143 +4604,139 @@ class TransmitTuple(NodeBase):        #Nodebase just a different colour
         # else:
         #     self.SIGNALS.clr_img.emit(self.new_img_wrp.img)
       
-        self.set_output_val(0, (self.kk, 5))
-        # #print(self.outputs(0))
+        # self.set_output_val(0, self.new_img_wrp)
+
+    # def proc_technique(self,img):
+        
+    #     labeled, num_features = label(img)
+
+    #     mask = np.zeros_like(labeled, dtype=bool)
+
+    #     # Array to store the region areas (will be compared to threshold)
+    #     region_areas = np.zeros(num_features, dtype=np.int32)
+
+    #     for label_id in range(1, num_features+1):
+    #         region_areas[label_id-1] = np.sum(labeled == label_id)
+
+    #     # Find labels with area greater than or equal to selected_value
+    #     valid_labels = np.where(region_areas >= self.value_1)[0] + 1  # +1 to convert from zero-based index to label ID
+
+    #     # Set pixels belonging to valid labeled regions to True in the mask
+    #     for label_id in valid_labels:
+    #         mask |= (labeled == label_id)
+
+    #     # Apply the mask to the original image
+    #     filtered_image = img * mask.astype(img.dtype)
+
+    #     return filtered_image
     
-    def get_img(self):
-        #debug
-        # #print(f"getimageValue{value}")
-        return cv2.blur(
-            src=self.input(0).img,
-            ksize=(self.kk,self.kk),
-                )
+    def proc_technique(self):
+        # single channel (single colour)
+        # Z Y X C
+        # z y x 1
+        #so technically 3D
+        binarisedImageStack=self.image_stack
+        # #print(f"proc input stack: {stack4D.shape}")
+         #Ensure only on 3D data
+         # CHECK BINARIAZIED, Add warning if not
+        if binarisedImageStack.shape[0] > 1:
+            # Apply the volume filter to the entire 4D array
+            # print(f"Performing volume filter across stack: {self.xx}, y:{self.yy}, z:{self.kk}")
+            print(f"stack4D shape: {binarisedImageStack.shape}")
+
+            labeled, numpatches = label(binarisedImageStack)
+            # since labels start from 1 use this range
+            sizes = sum(binarisedImageStack/np.max(binarisedImageStack), labeled, range(1, numpatches + 1))
+            # print(np.sort(sizes.astype('uint32')))
+
+            # to ensure "black background" is excluded add 1, and labels only start from 1
+            filteredIndexes = np.where(sizes >= self.value_1)[0] + 1
+
+            filteredBinaryIndexes = np.zeros(numpatches + 1, np.uint8)
+            filteredBinaryIndexes[filteredIndexes] = 1
+            filteredBinary = filteredBinaryIndexes[labeled]
+
+            labeledStack, numLabels = label(filteredBinary)
+            print("Initial num labels: {}, num lables after filter: {}".format(numpatches, numLabels))
+            
+            # Convert filteredBinary to 0 and 255 for displaying grayscale volume_filtered stack
+            labeledStack = (labeledStack * 255).astype(np.uint8)
+            print(self.value_1)
+
+
+            # filtered_image = gaussian_filter(stack4D, sigma=(self.kk, self.yy,self.xx, 0))
+            # # #print(self.kk)
+            # # prevent the use of for loops, but no sigma applied to channels
+            # #print(f"filtered_image {filtered_image.shape}")
+            # # update displayed image
+            self.sliced = labeledStack[self.z_sclice, :, :, :]
+            self.reshaped_proc_data= labeledStack
+            
+            self.new_img_wrp = CVImage(self.sliced)
+            if self.prev == True:
+                if self.session.gui:
+                    #update continuously 
+                    self.SIGNALS.new_img.emit(self.new_img_wrp.img)
+            else:
+                self.SIGNALS.clr_img.emit(self.new_img_wrp.img)
+
+            self.set_output_val(0, (self.reshaped_proc_data, self.stack_dict, self.z_sclice))
+                
         
-    # #use when save and close
-    # def get_state(self) -> dict:
-    #     return {
-    #         'val': self.val,
-    #     }
-
-    # def set_state(self, data: dict, version):
-    #     self.val = data['val']
-
-class TransmitTuple2(NodeBase):        #Nodebase just a different colour
-          #Nodebase just a different colour
-    title = 'TransmitTuple2'
-    version = 'v0.1'
-    init_inputs = [
-        
-        NodeInputBP('input img'),
-         
-    ]
-    init_outputs = [
-        NodeOutputBP('output img'), #img
-
-    ]
-    main_widget_class = widgets.Tuple
-    main_widget_pos = 'below ports'
-
-    def __init__(self, params):
-        super().__init__(params)
-
-        if self.session.gui:
-            from qtpy.QtCore import QObject, Signal
-            class Signals(QObject):
-                #Signals used for preview
-                new_img = Signal(object)    #original
-                clr_img = Signal(object)    #added      
-        
-            # to send images to main_widget in gui mode
-            self.SIGNALS = Signals()
-
-        self.prev = True
-        self.kk = 5
-
-    def place_event(self):  
-        self.update()
-
-    def view_place_event(self):
-        # self.SIGNALS.new_img.connect(self.main_widget().show_image)
-        # self.SIGNALS.clr_img.connect(self.main_widget().clear_img)
-        self.main_widget().kValueChanged.connect(self.onSliderValueChanged)
-        # self.main_widget().previewState.connect(self.preview)
-        
-        try:
-            #  self.new_img_wrp = CVImage(self.get_img())
-            #  self.SIGNALS.new_img.emit(self.new_img_wrp.img)
-             self.set_output_val(0, (self.kk, 5))
-        except:  # there might not be an image ready yet
-            pass
-        # when running in gui mode, the value might come from the input widget
-        # check
-        self.update()
-
-    #called when img connected - send output
-    def update_event(self, inp=-1):  #called when an input is changed
-        # self.new_img_wrp = CVImage(self.get_img())
-        # if self.prev == True:
-        #     if self.session.gui:
-        #         self.SIGNALS.new_img.emit(self.new_img_wrp.img)
-        #print("INPUT", self.input(0)[0])
-        self.set_output_val(0, (self.kk, 5))
+            #emit Warning! A 3D Gaussian Blur cannot be performed on 2D data
+            # Preprocessing has not been performed on the data
+            # To use this node please read 3D data into the pipeline 
     
-    def preview(self, state):
-        if state ==  True:
-            self.prev = True
-            #Bring image back immediately 
-            self.SIGNALS.new_img.emit(self.new_img_wrp.img)
-               
-        else:
-              self.prev = False 
-              self.SIGNALS.clr_img.emit(self.new_img_wrp.img) 
+    # should it be volume or area
+    # more efficient way?
+    # otherwise slider 
 
-    def onSliderValueChanged(self, value):
-        # This method will be called whenever the widget's signal is emitted
-        # #print(value)
-        self.kk = value
-        # self.new_img_wrp = CVImage(self.get_img())
-        # if self.prev == True:
-        #     if self.session.gui:
-        #         #update continuously 
-        #         self.SIGNALS.new_img.emit(self.new_img_wrp.img)
-        # else:
-        #     self.SIGNALS.clr_img.emit(self.new_img_wrp.img)
-        new = self.kk*self.input(0)[0]
-        new2 = 5*self.input(0)[1]
-        self.set_output_val(0, (new, new2))
-        #print(f"new{new}, new2{new2}")
-        # #print(self.outputs(0))
-    
-    def get_img(self):
-        #debug
-        # #print(f"getimageValue{value}")
-        return cv2.blur(
-            src=self.input(0).img,
-            ksize=(self.kk,self.kk),
-                )
-        
-    # #use when save and close
-    # def get_state(self) -> dict:
-    #     return {
-    #         'val': self.val,
-    #     }
 
-    # def set_state(self, data: dict, version):
-    #     self.val = data['val']
+
+
+
+        # # Selected value for structure size
+        #   # Number of pixels
+
+        # # Initialize the count of structures
+        # num_structures = 0
+
+        # # Loop through each labeled region
+        # # num_features represents the total number of unique labels in the image.
+        # for label_id in range(1, num_features+1):
+        #     # Calculate the area (number of pixels) of the current labeled region
+        #     print(label_id, labeled)
+        #     region_area = np.sum(labeled == label_id) # This comparison creates a boolean mask where True corresponds 
+        #                                             # to pixels belonging to the current labeled region (with label ID label_id) 
+        #                                             # and False otherwise. Sum these to find the size of the area. 
+
+            
+        #     # Check if the region's area is greater than the selected value
+        #     if region_area >= selected_value:
+        #         # Increment the count of structures
+                # num_structures += 1
+
+        # print("Number of structures:", num_structures)
+        # return cv2.morphologyEx(
+        #     src=img,
+        #     op=self.morph_type,
+        #     kernel=np.ones((self.value_1,self.value_1),np.uint8),
+        # )
+
 
 
 nodes = [
-    # Checkpoint_Node,
+    Checkpoint_Node,
     # Button_Node,
     # Print_Node,
     # Log_Node,
     # Clock_Node,
     # Slider_Node,
-    # Exec_Node,
+    Exec_Node,
     # Eval_Node,
     # Storage_Node,
-    # LinkIN_Node,
-    # LinkOUT_Node,
+    LinkIN_Node,
+    LinkOUT_Node,
     # Interpreter_Node,
     # Slider_Gaus,
     # GaussianBlur,
@@ -6979,10 +4789,7 @@ nodes = [
     Histogram,
     AlphaNode,
     GammaNode,
-
-    
-    
-    # TransmitTuple,
-    # TransmitTuple2,
-    
+    # Analysis 
+    Overlap_analysis,
+    Volume_filter,    
 ]

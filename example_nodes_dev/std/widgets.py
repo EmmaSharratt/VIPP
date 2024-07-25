@@ -926,6 +926,7 @@ class Widget_Base8(QWidget):
         try:
             # Grayscale image
             if orignial_img.shape[-1] == 1:
+                print("grayscale image displaying overlap")
                 qt_image = QImage(orignial_img.data, orignial_img.shape[1], orignial_img.shape[0], orignial_img.shape[1], QImage.Format_Grayscale8)
 
             # 3 colour channels (default RGB, may need to assign the custom channels)
@@ -2230,74 +2231,169 @@ class Crop_MainWidget(MWB, QWidget):
         self.right_input.setMaximum(self.target_h-1)
         self.right_slider_label.setRange(1,self.target_h-1)  
     
-    def show_image(self, img):
+    # the node emits the channel dictionary to the widget which will be used in the show_img / assign method
+    def channels(self, channels_dict):
+        self.stack_dict = channels_dict
+        print("came to channels", self.stack_dict)
+
+    def assign_channels_RGB(self, img):
+        single_chan = img[:, :, 0]
+        # Initialize RGB channels with zeros
+        red_channel = np.zeros_like(single_chan)
+        green_channel = np.zeros_like(single_chan)
+        blue_channel = np.zeros_like(single_chan)
+
+        for color, channel_value in self.stack_dict["colour"].items():
+            # Check if the channel is part of the image
+            if channel_value != 100:
+                # Assign channels based on the color
+                if color == "red":
+                    red_channel += img[:, :, channel_value]
+                elif color == "green":
+                    green_channel += img[:, :, channel_value]
+                elif color == "blue":
+                    blue_channel += img[:, :, channel_value]
+                elif color == "cyan":
+                    cyan_channel = img[:, :, channel_value]
+                    green_channel += cyan_channel
+                    blue_channel += cyan_channel
+                elif color == "magenta":
+                    magenta_channel = img[:, :, channel_value]
+                    red_channel += magenta_channel
+                    blue_channel += magenta_channel
+                elif color == "yellow":
+                    yellow_channel = img[:, :, channel_value]
+                    red_channel += yellow_channel
+                    green_channel += yellow_channel
+
+        # Clip values to ensure they remain within the valid range [0, 255]
+        red_channel = np.clip(red_channel, 0, 255)
+        green_channel = np.clip(green_channel, 0, 255)
+        blue_channel = np.clip(blue_channel, 0, 255)
+
+        # Combine channels back into image data
+        rgb_image_stack = np.stack([red_channel, green_channel, blue_channel], axis=2)
+
+        return rgb_image_stack
+    
+    # original image. If 3 channels, default RGB, may need to assign the custom channels 
+    def show_image(self, orignial_img):
         # self.resize(800,800)
-        # #print(f"DIMENSION WIDGET {img.shape[-1]}")
+        # print(f"DIMENSION WIDGET {img.shape[-1]}")
+
         try:
-            if img.shape[-1] == 1:
-                # Grayscale image
-                # #print(f"shape[2]/[-1] == 1")
-                qt_image = QImage(img.data, img.shape[1], img.shape[0], img.shape[1], QImage.Format_Grayscale8)
-                # #print("came here for Sliderwidget")
-            elif img.shape[-1] == 3:
-                # #print(f"shape[2]/[-1] == 1")
-                h, w, ch = img.shape
+            # Grayscale image
+            if orignial_img.shape[-1] == 1:
+                print("grayscale image displaying overlap")
+                qt_image = QImage(orignial_img.data, orignial_img.shape[1], orignial_img.shape[0], orignial_img.shape[1], QImage.Format_Grayscale8)
+
+            # 3 colour channels (default RGB, may need to assign the custom channels)
+            elif orignial_img.shape[-1] == 3:
+                # Assign the channels to the image 
+                self.RGB_img = self.assign_channels_RGB(orignial_img)
+                h, w, ch = self.RGB_img.shape
                 bytes_per_line = ch * w
-                qt_image = QImage(img.data, w, h, bytes_per_line, QImage.Format_RGB888) #Format_RGB888
-            elif img.shape[-1] == 4:
-                h, w, ch = img.shape
+                qt_image = QImage(self.RGB_img.data, w, h, bytes_per_line, QImage.Format_RGB888) #Format_RGB888
+
+            # not sure if this is necesssary
+            # note rgb image is now assigned custom channels 
+            # may need to adjust code for 4 channel image (take original_img and apply)   
+            elif self.RGB_img.shape[-1] == 4:
+                h, w, ch = self.RGB_img.shape
                 #print(f"ch: {ch}")
                 bytes_per_line = ch * 4
-                qt_image = QImage(img.data, w, h, QImage.Format_RGBA8888) #Format_RGB888
+                qt_image = QImage(self.RGB_img.data, w, h, QImage.Format_RGBA8888) #Format_RGB888
             if qt_image is not None:
                 # Calculate the target size for scaling
                 scale_factor = 0.7  # Increase the scaling factor for clarity
-                # Check if the image is smaller than (400, 400)
                 if qt_image.width() < 400:
-                    scale_factor = 1.2
+                    scale_factor = 1
                 if qt_image.width() > 900:
                     scale_factor = 0.5
                 target_width = int(qt_image.width() * scale_factor)
+                # Use scaledToWidth to reduce the size while maintaining aspect ratio
                 scaled_pixmap = QPixmap.fromImage(qt_image).scaledToWidth(target_width)
-                # #print(f'target height{self.target_h}')
-                # #print(f'qt_image.height{qt_image.height()}')
-                # if qt_image.width() < self.target_w: #and qt_image.height() < 400:
-                #     scale_factor = 0.7  # Change the scaling factor to 1.5 for small images
-                #     # #print(f'scale factor.height{scale_factor}')
-                #     # target_width = int(qt_image.width() * scale_factor)
-                #     target_hieght = int(self.target_h * scale_factor)
-                #     scaled_pixmap = QPixmap.fromImage(qt_image).scaledToHeight(target_hieght)
-                #     # target_width = int(self.target_w * scale_factor)
-                #     # scaled_pixmap = QPixmap.fromImage(qt_image).scaledToWidth(target_width)
-                # else: 
-                #     target_width = int(qt_image.width() * scale_factor)
-                #     scaled_pixmap = QPixmap.fromImage(qt_image).scaledToWidth(target_width)
-
-                # if qt_image.height() < self.target_h: #and qt_image.height() < 400:
-                #     scale_factor = 0.7
-                #     # target_hieght = int(self.target_h * scale_factor)
-                #     # scaled_pixmap = QPixmap.fromImage(qt_image).scaledToHeight(target_hieght)
-                #     target_width = int(self.target_w * scale_factor)
-                #     scaled_pixmap = QPixmap.fromImage(qt_image).scaledToWidth(target_width)                
-                # else: 
-                #     target_width = int(qt_image.width() * scale_factor)
-                #     scaled_pixmap = QPixmap.fromImage(qt_image).scaledToWidth(target_width)
-                # #print(f'target_width{qt_image.width()}')
-                # # Use scaledToWidth to reduce the size while maintaining aspect ratio
-                
                 
                 # Set the scaled pixmap
                 self.image_label.setPixmap(scaled_pixmap)
                 
                 # Resize the widget to match the pixmap size
                 self.resize(scaled_pixmap.width(), scaled_pixmap.height())
-                # self.scaledToWidth(self.target_w)
-            
-            # Ensure that any necessary updates are performed
-            self.node.update_shape()
+                
+                # Ensure that any necessary updates are performed
+                self.node.update_shape()
             
         except Exception as e:
             print("Error:", e)
+
+    # def show_image(self, img):
+    #     # self.resize(800,800)
+    #     # #print(f"DIMENSION WIDGET {img.shape[-1]}")
+    #     try:
+    #         if img.shape[-1] == 1:
+    #             # Grayscale image
+    #             # #print(f"shape[2]/[-1] == 1")
+    #             qt_image = QImage(img.data, img.shape[1], img.shape[0], img.shape[1], QImage.Format_Grayscale8)
+    #             # #print("came here for Sliderwidget")
+    #         elif img.shape[-1] == 3:
+    #             # #print(f"shape[2]/[-1] == 1")
+    #             h, w, ch = img.shape
+    #             bytes_per_line = ch * w
+    #             qt_image = QImage(img.data, w, h, bytes_per_line, QImage.Format_RGB888) #Format_RGB888
+    #         elif img.shape[-1] == 4:
+    #             h, w, ch = img.shape
+    #             #print(f"ch: {ch}")
+    #             bytes_per_line = ch * 4
+    #             qt_image = QImage(img.data, w, h, QImage.Format_RGBA8888) #Format_RGB888
+    #         if qt_image is not None:
+    #             # Calculate the target size for scaling
+    #             scale_factor = 0.7  # Increase the scaling factor for clarity
+    #             # Check if the image is smaller than (400, 400)
+    #             if qt_image.width() < 400:
+    #                 scale_factor = 1.2
+    #             if qt_image.width() > 900:
+    #                 scale_factor = 0.5
+    #             target_width = int(qt_image.width() * scale_factor)
+    #             scaled_pixmap = QPixmap.fromImage(qt_image).scaledToWidth(target_width)
+    #             # #print(f'target height{self.target_h}')
+    #             # #print(f'qt_image.height{qt_image.height()}')
+    #             # if qt_image.width() < self.target_w: #and qt_image.height() < 400:
+    #             #     scale_factor = 0.7  # Change the scaling factor to 1.5 for small images
+    #             #     # #print(f'scale factor.height{scale_factor}')
+    #             #     # target_width = int(qt_image.width() * scale_factor)
+    #             #     target_hieght = int(self.target_h * scale_factor)
+    #             #     scaled_pixmap = QPixmap.fromImage(qt_image).scaledToHeight(target_hieght)
+    #             #     # target_width = int(self.target_w * scale_factor)
+    #             #     # scaled_pixmap = QPixmap.fromImage(qt_image).scaledToWidth(target_width)
+    #             # else: 
+    #             #     target_width = int(qt_image.width() * scale_factor)
+    #             #     scaled_pixmap = QPixmap.fromImage(qt_image).scaledToWidth(target_width)
+
+    #             # if qt_image.height() < self.target_h: #and qt_image.height() < 400:
+    #             #     scale_factor = 0.7
+    #             #     # target_hieght = int(self.target_h * scale_factor)
+    #             #     # scaled_pixmap = QPixmap.fromImage(qt_image).scaledToHeight(target_hieght)
+    #             #     target_width = int(self.target_w * scale_factor)
+    #             #     scaled_pixmap = QPixmap.fromImage(qt_image).scaledToWidth(target_width)                
+    #             # else: 
+    #             #     target_width = int(qt_image.width() * scale_factor)
+    #             #     scaled_pixmap = QPixmap.fromImage(qt_image).scaledToWidth(target_width)
+    #             # #print(f'target_width{qt_image.width()}')
+    #             # # Use scaledToWidth to reduce the size while maintaining aspect ratio
+                
+                
+    #             # Set the scaled pixmap
+    #             self.image_label.setPixmap(scaled_pixmap)
+                
+    #             # Resize the widget to match the pixmap size
+    #             self.resize(scaled_pixmap.width(), scaled_pixmap.height())
+    #             # self.scaledToWidth(self.target_w)
+            
+    #         # Ensure that any necessary updates are performed
+    #         self.node.update_shape()
+            
+    #     except Exception as e:
+    #         print("Error:", e)
         
         
     def clear_img(self):
@@ -5509,7 +5605,110 @@ class HisogramWidg(MWB, QWidget):
         # Update the canvas to display the new plot
         self.canvas.draw()
 
+class Volume_Filter(MWB, Widget_Base8):
+    #define Signal
+    previewState = Signal(bool)
+    Value1Changed = Signal(int)  #kernel
+
+    def __init__(self, params):
+        MWB.__init__(self, params)
+        QWidget.__init__(self)
+
+        self.resize(300, 300)
+        default1 = 10
+        # default_range1 = default1*2
+                
+        #Added Widget -----------------------------------------------
+        #kernel size------------
+        self.label_1 = QLabel('volume (pixel size):')
+        self.label_1.setStyleSheet('font-size: 14px;')
+        self.input_1 = QSpinBox()
+        self.input_1.setMaximum(2000)
+        self.input_1.setValue(default1)
+        self.input_1.setKeyboardTracking(False)
+        self.input_1.setButtonSymbols(QAbstractSpinBox.NoButtons)
+
+        #kernal slider
+        self.slider_label_1 = QSlider(Qt.Horizontal)
+        # self.slider_label_1.setRange(1, 255)    
+        self.slider_label_1.setValue(default1)
+        
+        #preview
+        self.preview_label = QLabel('Preview:')
+        self.preview_label.setStyleSheet('font-size: 14px;')
+        self.preview_checkbox = QCheckBox()
+        self.preview_checkbox.setText('Preview')
+        self.preview_checkbox.setCheckState(Qt.Checked)
+        #image
+        self.image_label = QLabel()
+               #self.image_label.resize(800, 800)
+        # Layout ----------------------------------------------------
+        self.layout1 = QVBoxLayout()
+        # kernel
+        self.layout1.addWidget(self.label_1)
+        self.layout1.addWidget(self.input_1)
+        self.layout1.addWidget(self.slider_label_1)
+        # Preview
+        self.layout1.addWidget(self.preview_checkbox)
+        self.layout1.addWidget(self.image_label)
+        #self.layout1.setSpacing(0) 
+        self.setLayout(self.layout1)
+
+        #Signals -------------------------------------------------
+        # Spinbox triggers
+        self.input_1.editingFinished.connect(self.spinbox_1_changed)  #USER ONLY
+        # Slider triggers
+        self.slider_label_1.sliderMoved.connect(self.slider_1_changed)
+        self.slider_label_1.sliderReleased.connect(self.slider_1_released)
+        # Check box
+        self.preview_checkbox.stateChanged.connect(self.prev_checkbox_changed)
+
+    # Slot Functions -------------------------------------------
+    # checkbox -------------------------------------------------
+    def prev_checkbox_changed(self, state):
+        self.previewState.emit(state)
+          
+    # thresh ----------------------------------------------------
+    def spinbox_1_changed(self):    
+        self.slider_label_1.setRange(1, (self.input_1.value()*2))  
+        self.t = self.input_1.value()
+        self.slider_label_1.setValue(self.t)
+        self.input_1.setValue(self.t)
+        self.Value1Changed.emit(self.t)
     
+    def slider_1_changed(self, v):    # v: value emitted by a slider signal
+        self.t = v
+            #  #print('odd')
+        self.input_1.setValue(self.t)
+        
+    
+    def slider_1_released(self):    # v: value emitted by a slider signal 
+        
+        self.Value1Changed.emit(self.t)
+        print(f"self.k emmitted when slider released {self.t}")
+        
+    # hide image ---------------------------------------------   
+    def clear_img(self):
+         # Create a black image of size 1x1
+        clr_img = QImage(1, 1, QImage.Format_RGB888)
+        clr_img.setPixelColor(0, 0, QColor(Qt.black))
+
+        self.image_label.setPixmap(QPixmap(clr_img))
+        #print(self.width(), self.height())
+        self.resize(200,50)
+        self.node.update_shape() #works the best. But doesnt minimize shape immediately
+    
+    # def get_state(self) -> dict:
+    #     return {
+    #         'val1': self.t
+    #     }
+
+    # def set_state(self, data: dict):
+    #     #ksize
+    #     self.input_1.setValue(data['val1'])
+    #     self.slider_label_1.setValue(data['val1'])
+    #     self.slider_label_1.setRange(1, data['val1']*2)
+    #     self.t = data['val1']   
    
 
 class ButtonNode_MainWidget(QPushButton, MWB):
@@ -5872,4 +6071,5 @@ export_widgets(
     ChooseFileInputWidgetBASE3,
     HisogramWidg,
     Tuple, 
+    Volume_Filter,
 )
