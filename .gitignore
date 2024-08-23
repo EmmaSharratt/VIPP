@@ -1,0 +1,31 @@
+# Ignore all .tif files
+*.tif
+
+# Ignore specific directories
+outputs/
+venvs/
+
+# Ignore all files in a directory but not the directory itself
+outputs/*/
+!outputs/keep_this_directory/
+
+# Ignore specific file types
+*.log
+*.tmp
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore IDE configuration files
+.vscode/
+.idea/
+
+# Ignore virtual environment directories
+venv/
+env/

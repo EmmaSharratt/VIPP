@@ -1,0 +1,102 @@
+{
+    "general info": {
+        "type": "Ryven project file",
+        "ryven version": "v3.1"
+    },
+    "required packages": [
+        {
+            "name": "std",
+            "dir": "C:/Users/dell/OneDrive/Documents/Em/2023/Skripsie/Development/venvs/sk_env2/Lib/site-packages/ryven/VIPP_nodes/std"
+        }
+    ],
+    "scripts": [
+        {
+            "title": "hello world",
+            "variables": {},
+            "flow": {
+                "algorithm mode": "data",
+                "nodes": [
+                    {
+                        "identifier": "std.ReadImage",
+                        "version": "v0.1",
+                        "state data": "gASVRgAAAAAAAAB9lCiMD2ltYWdlIGZpbGUgcGF0aJSMGmJhdGNoX2NvblxDb24gMiAoMjAuMykudGlmlIwEdmFsMZRLAYwEdmFsMpRLBnUu",
+                        "additional data": {
+                            "special actions": {},
+                            "display title": "Read Image"
+                        },
+                        "inputs": [
+                            {
+                                "type": "data",
+                                "label": "batch process",
+                                "GID": 8,
+                                "val": "gAROLg==",
+                                "has widget": false
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "type": "data",
+                                "label": "img",
+                                "GID": 9
+                            }
+                        ],
+                        "GID": 7,
+                        "pos x": 320.7454547015135,
+                        "pos y": 501.0,
+                        "main widget data": "gASVMwAAAAAAAAB9lCiMCWRpbWVuc2lvbpRdlChLCksMTQACTQACSwFljAR2YWwxlEsFjAR2YWwylEsDdS4=",
+                        "unconnected ports hidden": false,
+                        "collapsed": false
+                    },
+                    {
+                        "identifier": "std.Gaussian_Blur",
+                        "version": "v0.1",
+                        "state data": "gASVMwAAAAAAAAB9lCiMBWtzaXpllEsHjAZzaWdtYViUR0AIZmZmZmZmjAZzaWdtYVmUR0AcR64UeuFIdS4=",
+                        "additional data": {
+                            "special actions": {},
+                            "display title": "Gaussian Blur2D"
+                        },
+                        "inputs": [
+                            {
+                                "type": "data",
+                                "label": "input img",
+                                "GID": 11,
+                                "has widget": false
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "type": "data",
+                                "label": "output img",
+                                "GID": 12
+                            }
+                        ],
+                        "GID": 10,
+                        "pos x": 779.0,
+                        "pos y": 446.0,
+                        "main widget data": "gASVPQAAAAAAAAB9lCiMBWtzaXpllEsHjAZzaWdtYViUR0AIZmZmZmZmjAZzaWdtYVmUR0AcR64UeuFIjAZsaW5rZWSUiXUu",
+                        "unconnected ports hidden": false,
+                        "collapsed": false
+                    }
+                ],
+                "connections": [
+                    {
+                        "GID": 13,
+                        "parent node index": 0,
+                        "output port index": 0,
+                        "connected node": 1,
+                        "connected input port index": 0
+                    }
+                ],
+                "GID": 6,
+                "flow view": {
+                    "drawings": [],
+                    "view size": [
+                        6400.0,
+                        4800.0
+                    ]
+                }
+            },
+            "GID": 1
+        }
+    ]
+}

@@ -1,0 +1,367 @@
+{
+    "general info": {
+        "type": "Ryven project file",
+        "ryven version": "v3.1"
+    },
+    "required packages": [
+        {
+            "name": "std",
+            "dir": "C:/Users/dell/OneDrive/Documents/Em/2023/Skripsie/Development/venvs/sk_env2/Lib/site-packages/ryven/VIPP_nodes/std"
+        }
+    ],
+    "scripts": [
+        {
+            "title": "hello world",
+            "variables": {},
+            "flow": {
+                "algorithm mode": "data",
+                "nodes": [
+                    {
+                        "identifier": "std.ReadImage",
+                        "version": "v0.1",
+                        "state data": "gASVOQAAAAAAAAB9lCiMD2ltYWdlIGZpbGUgcGF0aJSMDUNvbnRyb2xfMi50aWaUjAR2YWwxlEsAjAR2YWwylEsAdS4=",
+                        "additional data": {
+                            "special actions": {},
+                            "display title": "Read Image"
+                        },
+                        "inputs": [
+                            {
+                                "type": "data",
+                                "label": "batch process",
+                                "GID": 8,
+                                "has widget": false
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "type": "data",
+                                "label": "img",
+                                "GID": 9
+                            }
+                        ],
+                        "GID": 7,
+                        "pos x": 376.0491496617233,
+                        "pos y": 605.6038766725912,
+                        "main widget data": "gASVqwAAAAAAAAB9lCiMCWRpbWVuc2lvbpRdlChLAUsPTQAETQAESwNljAR2YWwxlEsFjAR2YWwylEsKjAljaGFubmVsXzCUjANyZWSUjAljaGFubmVsXzGUjAVncmVlbpSMCWNoYW5uZWxfMpSMBGJsdWWUjAljaGFubmVsXzOUjAZTZWxlY3SUjAljaGFubmVsXzSUjAZTZWxlY3SUjAljaGFubmVsXzWUjAZTZWxlY3SUdS4=",
+                        "unconnected ports hidden": false,
+                        "collapsed": false
+                    },
+                    {
+                        "identifier": "std.Gaussian_Blur3D",
+                        "version": "v0.1",
+                        "state data": "gASVOwAAAAAAAAB9lCiMBnNpZ21hWpRHP5R64UeuFHuMBnNpZ21hWJRHAAAAAAAAAACMBnNpZ21hWZRHAAAAAAAAAAB1Lg==",
+                        "additional data": {
+                            "special actions": {},
+                            "display title": "Gaussian Blur3D"
+                        },
+                        "inputs": [
+                            {
+                                "type": "data",
+                                "label": "input img",
+                                "GID": 11,
+                                "has widget": false
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "type": "data",
+                                "label": "output img",
+                                "GID": 12
+                            }
+                        ],
+                        "GID": 10,
+                        "pos x": 1554.528970926356,
+                        "pos y": 693.2142578899196,
+                        "main widget data": "gASVRQAAAAAAAAB9lCiMBnNpZ21hWpRHAAAAAAAAAACMBnNpZ21hWJRHAAAAAAAAAACMBnNpZ21hWZRHAAAAAAAAAACMBmxpbmtlZJSIdS4=",
+                        "unconnected ports hidden": false,
+                        "collapsed": false
+                    },
+                    {
+                        "identifier": "std.BatchProcess",
+                        "version": "v0.1",
+                        "state data": "gAR9lC4=",
+                        "additional data": {
+                            "special actions": {},
+                            "display title": "Batch Process"
+                        },
+                        "inputs": [
+                            {
+                                "type": "data",
+                                "label": "connet to end",
+                                "GID": 14,
+                                "has widget": false
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "type": "data",
+                                "label": "connect to start",
+                                "GID": 15
+                            }
+                        ],
+                        "GID": 13,
+                        "pos x": 2041.2041058220434,
+                        "pos y": 427.1171600740483,
+                        "main widget data": "gAR9lC4=",
+                        "unconnected ports hidden": false,
+                        "collapsed": false
+                    },
+                    {
+                        "identifier": "std.Checkpoint_Node",
+                        "version": "v0.1",
+                        "state data": "gAR9lC4=",
+                        "additional data": {
+                            "special actions": {
+                                "add output": {
+                                    "method": "add_output"
+                                },
+                                "remove output": {
+                                    "0": {
+                                        "method": "remove_output",
+                                        "data": 0
+                                    }
+                                },
+                                "make active": {
+                                    "method": "make_active"
+                                }
+                            },
+                            "display title": ""
+                        },
+                        "inputs": [
+                            {
+                                "type": "data",
+                                "label": "",
+                                "GID": 17,
+                                "has widget": false
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "type": "data",
+                                "label": "",
+                                "GID": 18
+                            }
+                        ],
+                        "GID": 16,
+                        "pos x": 1174.6882962501863,
+                        "pos y": 9.838260437606252,
+                        "unconnected ports hidden": false,
+                        "collapsed": false
+                    },
+                    {
+                        "identifier": "std.Split_Img",
+                        "version": "v0.1",
+                        "state data": "gAR9lC4=",
+                        "additional data": {
+                            "special actions": {},
+                            "display title": "Split Channels"
+                        },
+                        "inputs": [
+                            {
+                                "type": "data",
+                                "label": "input img",
+                                "GID": 20,
+                                "has widget": false
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "type": "data",
+                                "label": "channel 0",
+                                "GID": 21
+                            },
+                            {
+                                "type": "data",
+                                "label": "channel 1",
+                                "GID": 22
+                            },
+                            {
+                                "type": "data",
+                                "label": "channel 2",
+                                "GID": 23
+                            },
+                            {
+                                "type": "data",
+                                "label": "channel 3",
+                                "GID": 24
+                            },
+                            {
+                                "type": "data",
+                                "label": "channel 4",
+                                "GID": 25
+                            },
+                            {
+                                "type": "data",
+                                "label": "channel 5",
+                                "GID": 26
+                            }
+                        ],
+                        "GID": 19,
+                        "pos x": 958.0672962352552,
+                        "pos y": 583.6481619970232,
+                        "main widget data": "gAR9lC4=",
+                        "unconnected ports hidden": false,
+                        "collapsed": false
+                    },
+                    {
+                        "identifier": "std.Erosion",
+                        "version": "v0.1",
+                        "state data": "gASVFwAAAAAAAAB9lCiMBHZhbDGUSw2MBHZhbDKUSwJ1Lg==",
+                        "additional data": {
+                            "special actions": {},
+                            "display title": "Erosion"
+                        },
+                        "inputs": [
+                            {
+                                "type": "data",
+                                "label": "input img",
+                                "GID": 45,
+                                "has widget": false
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "type": "data",
+                                "label": "output img",
+                                "GID": 46
+                            }
+                        ],
+                        "GID": 44,
+                        "pos x": 2105.449386589316,
+                        "pos y": 1198.6164801647305,
+                        "main widget data": "gASVFwAAAAAAAAB9lCiMBHZhbDGUSw2MBHZhbDKUSwJ1Lg==",
+                        "unconnected ports hidden": false,
+                        "collapsed": false
+                    },
+                    {
+                        "identifier": "std.Opening",
+                        "version": "v0.1",
+                        "state data": "gAR9lC4=",
+                        "additional data": {
+                            "special actions": {},
+                            "display title": "Opening (Morph)"
+                        },
+                        "inputs": [
+                            {
+                                "type": "data",
+                                "label": "input img",
+                                "GID": 49,
+                                "has widget": false
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "type": "data",
+                                "label": "output img",
+                                "GID": 50
+                            }
+                        ],
+                        "GID": 48,
+                        "pos x": 1480.8462269005495,
+                        "pos y": 1257.1268273659325,
+                        "main widget data": "gAR9lC4=",
+                        "unconnected ports hidden": false,
+                        "collapsed": false
+                    },
+                    {
+                        "identifier": "std.Closing",
+                        "version": "v0.1",
+                        "state data": "gAR9lC4=",
+                        "additional data": {
+                            "special actions": {},
+                            "display title": "Closing (Morph)"
+                        },
+                        "inputs": [
+                            {
+                                "type": "data",
+                                "label": "input img",
+                                "GID": 53,
+                                "has widget": false
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "type": "data",
+                                "label": "output img",
+                                "GID": 54
+                            }
+                        ],
+                        "GID": 52,
+                        "pos x": 1823.5141118912525,
+                        "pos y": 1345.7183469966694,
+                        "main widget data": "gAR9lC4=",
+                        "unconnected ports hidden": false,
+                        "collapsed": false
+                    }
+                ],
+                "connections": [
+                    {
+                        "GID": 36,
+                        "parent node index": 0,
+                        "output port index": 0,
+                        "connected node": 4,
+                        "connected input port index": 0
+                    },
+                    {
+                        "GID": 37,
+                        "parent node index": 1,
+                        "output port index": 0,
+                        "connected node": 2,
+                        "connected input port index": 0
+                    },
+                    {
+                        "GID": 38,
+                        "parent node index": 2,
+                        "output port index": 0,
+                        "connected node": 3,
+                        "connected input port index": 0
+                    },
+                    {
+                        "GID": 39,
+                        "parent node index": 3,
+                        "output port index": 0,
+                        "connected node": 0,
+                        "connected input port index": 0
+                    },
+                    {
+                        "GID": 47,
+                        "parent node index": 4,
+                        "output port index": 0,
+                        "connected node": 5,
+                        "connected input port index": 0
+                    },
+                    {
+                        "GID": 40,
+                        "parent node index": 4,
+                        "output port index": 1,
+                        "connected node": 1,
+                        "connected input port index": 0
+                    },
+                    {
+                        "GID": 51,
+                        "parent node index": 4,
+                        "output port index": 2,
+                        "connected node": 6,
+                        "connected input port index": 0
+                    },
+                    {
+                        "GID": 55,
+                        "parent node index": 4,
+                        "output port index": 2,
+                        "connected node": 7,
+                        "connected input port index": 0
+                    }
+                ],
+                "GID": 6,
+                "flow view": {
+                    "drawings": [],
+                    "view size": [
+                        6400.0,
+                        4800.0
+                    ]
+                }
+            },
+            "GID": 1
+        }
+    ]
+}

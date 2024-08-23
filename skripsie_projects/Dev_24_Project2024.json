@@ -6,7 +6,7 @@
     "required packages": [
         {
             "name": "std",
-            "dir": "C:/Users/dell/OneDrive/Documents/Em/2023/Skripsie/Development/venvs/sk_env2/Lib/site-packages/ryven/example_nodes_dev/std"
+            "dir": "C:/Users/dell/OneDrive/Documents/Em/2023/Skripsie/Development/venvs/sk_env2/Lib/site-packages/ryven/VIPP_nodes/std"
         }
     ],
     "scripts": [
@@ -19,7 +19,7 @@
                     {
                         "identifier": "std.ReadImage",
                         "version": "v0.1",
-                        "state data": "gASVOQAAAAAAAAB9lCiMD2ltYWdlIGZpbGUgcGF0aJSMDUNvbnRyb2xfMi50aWaUjAR2YWwxlEsAjAR2YWwylEsAdS4=",
+                        "state data": "gASVOQAAAAAAAAB9lCiMD2ltYWdlIGZpbGUgcGF0aJSMDUNvbnRyb2xfMi50aWaUjAR2YWwxlEsAjAR2YWwylEsEdS4=",
                         "additional data": {
                             "special actions": {},
                             "display title": "Read Image"
@@ -44,9 +44,9 @@
                             }
                         ],
                         "GID": 7,
-                        "pos x": 263.0,
-                        "pos y": 321.0,
-                        "main widget data": "gASVMwAAAAAAAAB9lCiMCWRpbWVuc2lvbpRdlChLAUsPTQAETQAESwNljAR2YWwxlEsFjAR2YWwylEsDdS4=",
+                        "pos x": 354.0,
+                        "pos y": 325.0,
+                        "main widget data": "gASVMwAAAAAAAAB9lCiMCWRpbWVuc2lvbpRdlChLAUsPTQAETQAESwNljAR2YWwxlEsFjAR2YWwylEsFdS4=",
                         "unconnected ports hidden": false,
                         "collapsed": false
                     }
