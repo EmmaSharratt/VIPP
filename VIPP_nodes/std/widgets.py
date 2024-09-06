@@ -1648,29 +1648,29 @@ class BatchPaths(MWB, QWidget):
 
         # setup UI
         l = QVBoxLayout()
-        self.path_label0 = QLabel('1. Connect node to pipeline\n2. Select a folder\n3. Press button to start batch processing') ##print(f"Image saved to {file_path}")
-        self.path_label0.setStyleSheet('font-size: 14px;')
+        self.path_label0 = QLabel('0. Connect node to pipeline\n1. Select a folder to process\n2. Select directory for BatchProcessed Images\n3. Select directory for BatchProcessed CSVs\n\nNote: steps 2 & 3 can be done in any order\nPlease allow the batch processing to complete before using the pipeline\n(See chosen folders for progress)\n') ##print(f"Image saved to {file_path}")
+        self.path_label0.setStyleSheet('font-size: 16px;')
         l.addWidget(self.path_label0)
-        button = QPushButton('Select Input Folder')
+        button = QPushButton('1. Select Input Folder')
         button.clicked.connect(self.choose_button_clicked)
         l.addWidget(button)
-        self.path_label = QLabel('(select a folder to batch process)') ##print(f"Image saved to {file_path}")
+        self.path_label = QLabel('(Select a folder to batch process)\n') ##print(f"Image saved to {file_path}")
         self.path_label.setStyleSheet('font-size: 14px;')
         l.addWidget(self.path_label)
 
 
-        button2 = QPushButton('Select Output Folder and Save Output ')
+        button2 = QPushButton('2.Generate and Save Batch Processed Images')
         button2.clicked.connect(self.bacthp_button_clicked)
         l.addWidget(button2)
-        self.path_label2 = QLabel('(Press the button to perform batch processing)') ##print(f"Image saved to {file_path}")
+        self.path_label2 = QLabel('(Press the button to generate Batch Processed Images)\n') ##print(f"Image saved to {file_path}")
         self.path_label2.setStyleSheet('font-size: 14px;')
         l.addWidget(self.path_label2)
 
         # Morphological properties
-        button3 = QPushButton('Generate Morphological Properties CSV')
+        button3 = QPushButton('3. Generate and Save Morphological Properties CSVs')
         button3.clicked.connect(self.morph_button_clicked)
         l.addWidget(button3)
-        self.path_label3 = QLabel('(Press the button to generate Morphalogical Properties)') ##print(f"Image saved to {file_path}")
+        self.path_label3 = QLabel('(Press the button to generate Morphalogical Properties)\n') ##print(f"Image saved to {file_path}")
         self.path_label3.setStyleSheet('font-size: 14px;')
         l.addWidget(self.path_label3)
 
@@ -1687,7 +1687,7 @@ class BatchPaths(MWB, QWidget):
         # os.makedirs(self.new_folder_path)
 
         # Update the label text to show the selected folder 
-        self.path_label.setText(f"Input folder selected:\n{self.abs_f_path}")
+        self.path_label.setText(f"Input folder selected:\n{self.abs_f_path}\n")
         #print(f"setText {self.path}")
         #print(f"abs_f_path {self.abs_f_path}")
         self.adjustSize()  # important! otherwise the widget won't shrink
@@ -1698,15 +1698,13 @@ class BatchPaths(MWB, QWidget):
     def bacthp_button_clicked(self):
         self.output_path_abs = QFileDialog.getExistingDirectory(self, 'Select folder to save ouput') #filter='TIFF Files (*.tif *.tiff)
         self.output_path = os.path.relpath(self.output_path_abs)
-
-        # self.path_label.setText(f"output saved to\n {self.abs_f_path}")
-         # Create a new folder in the selected location
-        self.new_folder_name = "BatchProcessed"  # You can change this to your desired folder name
+        # Create a new folder in the selected location
+        self.new_folder_name = "BatchProcessed_Imgs"  # You can change this to your desired folder name
         self.output_path_new_folder= os.path.join(self.output_path, self.new_folder_name)
         os.makedirs(self.output_path_new_folder)
 
         # Update the label text to show the selected folder 
-        self.path_label2.setText(f"Output directory:\n{self.output_path_new_folder}")
+        self.path_label2.setText(f"Output directory:\n{self.output_path_new_folder}\n")
         # emit tuple
         self.path_chosen.emit((self.path, self.output_path_new_folder))
         #print(f"setText {self.path}")
@@ -1718,9 +1716,14 @@ class BatchPaths(MWB, QWidget):
     def morph_button_clicked(self):
         self.morph_props_path_abs = QFileDialog.getExistingDirectory(self, 'Select folder to save csv files') #filter='TIFF Files (*.tif *.tiff)
         self.morph_props_path = os.path.relpath(self.morph_props_path_abs)
-        self.morphproperties.emit((self.path,self.morph_props_path))
-         # Update the label text to show the selected folder 
-        # self.path_label2.setText(f"Output directory:\n{self.output_path_new_folder}")
+        
+         # Create a new folder in the selected location
+        self.csv_folder_name = "BatchProcessed_CSVs"  # You can change this to your desired folder name
+        self.folder_csv_output_path= os.path.join(self.morph_props_path, self.csv_folder_name)
+        os.makedirs(self.folder_csv_output_path)
+        # Update the label text to show the selected folder 
+        self.path_label3.setText(f"Output directory:\n{self.folder_csv_output_path}\n")
+        self.morphproperties.emit((self.path,self.folder_csv_output_path))
         #print(f"setText {self.path}")
         #print(f"abs_f_path {self.abs_f_path}")
         self.adjustSize()  # important! otherwise the widget won't shrink
@@ -1730,8 +1733,9 @@ class BatchPaths(MWB, QWidget):
 
     def reset_w(self, int):
         # #print("reset received")
-        self.path_label.setText('(Select folder to batch process)')
-        self.path_label2.setText('Press the button to perform batch processing')
+        self.path_label.setText('(select a folder to batch process)\n')
+        self.path_label2.setText('(Press the button to perform batch processing)\n')
+        self.path_label3.setText('(Press the button to generate Morphalogical Properties)\n')
 
     # def get_state(self):
     #     return {'path': self.path,
@@ -4781,6 +4785,69 @@ class Volume_Filter(MWB, Widget_Base8):
         self.slider_label_1.setValue(data['val1'])
         self.slider_label_1.setRange(1, data['val1']*2)
         self.t = data['val1']   
+
+class Fill_Holes_MainWidget(MWB, Widget_Base8):
+    #define Signal
+    previewState = Signal(bool)
+    fill_holes = Signal(bool)
+
+    def __init__(self, params):
+        MWB.__init__(self, params)
+        QWidget.__init__(self)
+
+        self.resize(300, 300)
+              
+        #Added Widget -----------------------------------------------
+        #preview
+        self.preview_checkbox = QCheckBox()
+        self.preview_checkbox.setText('Preview')
+        self.preview_checkbox.setCheckState(Qt.Checked)
+
+        #fill holes
+        self.fill_checkbox = QCheckBox()
+        self.fill_checkbox.setText('Fill holes')
+        self.fill_checkbox.setCheckState(Qt.Unchecked)
+
+        #image
+        self.image_label = QLabel()
+               #self.image_label.resize(800, 800)
+        # Layout ----------------------------------------------------
+        self.layout1 = QVBoxLayout()
+        # Preview
+        self.layout1.addWidget(self.fill_checkbox)
+        self.layout1.addWidget(self.preview_checkbox)
+        self.layout1.addWidget(self.image_label)
+        #self.layout1.setSpacing(0) 
+        self.setLayout(self.layout1)
+
+        #Signals -------------------------------------------------
+        # Check box
+        self.preview_checkbox.stateChanged.connect(self.the_checkbox_was_changed)
+        self.fill_checkbox.stateChanged.connect(self.the_fill_holes_checkbox_was_changed)
+
+    # Slot Functions -------------------------------------------
+    # checkbox -------------------------------------------------
+    def the_checkbox_was_changed(self, state):
+        self.previewState.emit(state)
+    
+    def the_fill_holes_checkbox_was_changed(self, state):
+        self.fill_holes.emit(state)
+    
+    def clear_fill(self, state):
+        if state == False:
+            self.fill_checkbox.setChecked(False)
+        
+    # hide image ---------------------------------------------   
+    def clear_img(self):
+         # Create a black image of size 1x1
+        clr_img = QImage(1, 1, QImage.Format_RGB888)
+        clr_img.setPixelColor(0, 0, QColor(Qt.black))
+
+        self.image_label.setPixmap(QPixmap(clr_img))
+        # #print(self.width(), self.height())
+        self.resize(200,50)
+        self.node.update_shape() #works the best. But doesnt minimize shape immediately
+    
    
 
 class ButtonNode_MainWidget(QPushButton, MWB):
@@ -4984,122 +5051,7 @@ class ConsoleOutDisplay(QPlainTextEdit):
         self.setReadOnly(True)
         self.setFont(QFont('Source Code Pro', 9))
 
-#Tuple 
-class Tuple(MWB, QWidget):
-           #define Signal
-    kValueChanged = Signal(int)
-    previewState = Signal(bool)
 
-    def __init__(self, params):
-        MWB.__init__(self, params)
-        QWidget.__init__(self)
-
-        self.resize(300, 300)
-        default = 5
-        default_range = default*2
-                
-        #Added Widget -----------------------------------------------
-        #ksize------------
-        self.ksize_label = QLabel('ksize:')
-        self.k_size_input = QSpinBox()
-        self.k_size_input.setValue(default)
-        self.k_size_input.setKeyboardTracking(False)
-        self.k_size_input.setButtonSymbols(QAbstractSpinBox.NoButtons)
-
-        #ksize slider
-        self.slider_label = QSlider(Qt.Horizontal)
-        self.slider_label.setRange(1, default_range)    
-        self.slider_label.setValue(default)
-        #sigmaX ------------
-        self.sigmaX_label = QLabel('sigmaX:')
-        self.sigmaX_size_input = QDoubleSpinBox()
-        #Xslider
-        self.sliderX_label = QSlider(Qt.Horizontal)
-        # self.sliderX_label.setRange(0, 1000)
-        #preview
-        self.preview_label = QLabel('Preview:')
-        self.preview_checkbox = QCheckBox()
-        self.preview_checkbox.setText('Preview')
-        self.preview_checkbox.setCheckState(Qt.Checked)
-        #image
-        self.image_label = QLabel()
-               #self.image_label.resize(800, 800)
-        
-        self.layout1 = QVBoxLayout()
-        self.layout1.addWidget(self.ksize_label)
-        self.layout1.addWidget(self.k_size_input)
-        self.layout1.addWidget(self.slider_label)
-        # self.layout1.addWidget(self.preview_checkbox)
-        # self.layout1.addWidget(self.image_label)
-        #self.layout1.setSpacing(0) 
-        self.setLayout(self.layout1)
-        
-        #Signals 
-        # Spinbox triggers
-        self.k_size_input.editingFinished.connect(self.the_spinbox_was_changed)  #USER ONLY
-        # Slider triggers
-        self.slider_label.sliderMoved.connect(self.the_slider_was_changed)
-        # Check box
-        # self.preview_checkbox.stateChanged.connect(self.the_checkbox_was_changed)
-
-    def the_checkbox_was_changed(self, state):
-        self.previewState.emit(state)
-          
-    #slot functions
-    def the_spinbox_was_changed(self):    # v: value emitted by a signal.
-        self.slider_label.setRange(1, self.k_size_input.value()*2)  
-        self.slider_label.setValue(self.k_size_input.value())  
-        self.k = self.k_size_input.value()
-        self.kValueChanged.emit(self.k)
-        #debug
-        # #print(f'slider:{self.slider_label.value()}')
-
-    def the_slider_was_changed(self, v):    # v: value emitted by a signal -> slider value (0-1000)
-        self.k_size_input.setValue(v)
-        self.k = int(v)
-        self.kValueChanged.emit(self.k)
-        
-    # def show_image(self, img):
-    #     # self.resize(800,800)
-
-    #     try:
-    #         #img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    #     except cv2.error:
-    #         return
-        
-    #     # qt_image = QImage(img.data, img.shape[1], img.shape[0], QImage.Format_RGB888)
-    #     h, w, ch = img.shape
-    #     bytes_per_line = ch * w
-    #     qt_image = QImage(img.data, w, h, bytes_per_line, QImage.Format_RGB888)
-    #     # Calculate the target size for scaling
-    #     scale_factor = 0.4  # Adjust the scaling factor as needed
-    #     target_width = int(w * scale_factor)
-    #     target_height = int(h * scale_factor)
-    #     qt_image = qt_image.scaled(target_width, target_height, Qt.KeepAspectRatio)
-    #     # #print("H:", target_height, "W:", target_width)
-    #     self.image_label.setPixmap(QPixmap(qt_image))
-    #     self.resize(100, 100)
-    #     self.node.update_shape()
-    #     # #print('Update Shape:',  #print(self.width(), self.height()))
-        
-        
-    def clear_img(self):
-         # Create a black image of size 1x1
-        clr_img = QImage(1, 1, QImage.Format_RGB888)
-        clr_img.setPixelColor(0, 0, QColor(Qt.black))
-        self.image_label.setPixmap(QPixmap(clr_img))
-        #print(self.width(), self.height())
-        self.resize(200,50)
-        self.node.update_shape() #works the best. But doesnt minimize shape immediately
-        #print(self.k_size_input.value())
-    
-    # def get_state(self) -> dict:
-    #     return {
-    #         'val': self.value(),
-    #     }
-
-    # def set_state(self, data: dict):
-    #     self.setValue(data['val'])
 
 export_widgets(
     ButtonNode_MainWidget,
@@ -5140,6 +5092,6 @@ export_widgets(
     Gamma_Corr_MainWidget,
     Read_Image_MainWidget,
     HisogramWidg,
-    Tuple, 
     Volume_Filter,
+    Fill_Holes_MainWidget,
 )

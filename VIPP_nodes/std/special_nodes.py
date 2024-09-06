@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 import os
 import tifffile as tiff 
-from scipy.ndimage import gaussian_filter, label, sum
+from scipy.ndimage import gaussian_filter, label, sum, binary_fill_holes
 import concurrent.futures
 import json
 import pandas as pd
@@ -1446,23 +1446,23 @@ class Morphological_Props(NodeBase0):
 
         summary_metadata = (
             f"Total Number of Structures: {total_structures}\n"
-            f"Average Area: {area_avg}\n"
-            f"Average Centroid: {centroid_avg}\n"
-            f"Average Equivalent Diameter: {Equivalent_Diameter_avg}\n"
-            f"Average Euler Number: {Euler_avg}\n"
-            f"Average Extent: {Extent_avg}\n"
-            f"Average Space Filled: {Filled_Area}\n"
-            f"Average Inertia Tensor Eigvals:\n{Inertia_avg}\n"
-            f"Average Volume: {volume_avg}\n"
-            f"Average Surface Area: {Surface_area_avg}\n"
-            f"Average Sphericity: {Sphericity_avg}\n"
-            f"Average Aspect Ratio: {Aspect_ratio}\n"
+            f"Volume Avg (Physical Space): {volume_avg}\n"
+            f"Surface Area Avg (Physical Space): {Surface_area_avg}\n"
+            f"Area Avg: {area_avg}\n"
+            f"Centroid Avg: {centroid_avg}\n"
+            f"Equivalent Diameter Avg: {Equivalent_Diameter_avg}\n"
+            f"Euler Number Avg: {Euler_avg}\n"
+            f"Extent Avg: {Extent_avg}\n"
+            f"Filled Area Avg: {Filled_Area}\n"
+            f"Inertia Tensor Eigenvalues Avg':\n{Inertia_avg}\n"
+            f"Sphericity Avg (Physical Space): {Sphericity_avg}\n"
+            f"Aspect Ratio Avg (Major/Minor): {Aspect_ratio}\n"
         )
-
-        # Formatting the 'Centroid' and 'Inertia Tensor Eigvals' columns
-        df['Centroid'] = df['Centroid'].apply(lambda x: f"{x[0]}, {x[1]}, {x[2]}")
-        df['Inertia Tensor Eigvals'] = df['Inertia Tensor Eigvals'].apply(lambda x: f"{x[0]}, {x[1]}, {x[2]}")
-        print(df)
+        if self.image_stack.shape[0] > 1:
+            # Formatting the 'Centroid' and 'Inertia Tensor Eigvals' columns
+            df['Centroid'] = df['Centroid'].apply(lambda x: f"{x[0]}, {x[1]}, {x[2]}")
+            df['Inertia Tensor Eigvals'] = df['Inertia Tensor Eigvals'].apply(lambda x: f"{x[0]}, {x[1]}, {x[2]}")
+            # print(df)
 
         self.SIGNALS.propertiesDf.emit(df, summary_metadata)
         
@@ -1922,6 +1922,8 @@ class BatchProcess(NodeBase0):
             'Filename': self.base_filename,
             'Timestep': self.stack_dict["time_step"],
             'Total Structures': total_structures,
+            'Volume Avg (Physical Space)': volume_avg,
+            'Surface Area Avg (Physical Space)': surface_area_avg,
             'Area Avg': area_avg,
             'Centroid Avg': tuple(centroid_avg),
             'Equivalent Diameter Avg': equivalent_diameter_avg,
@@ -1929,8 +1931,6 @@ class BatchProcess(NodeBase0):
             'Extent Avg': extent_avg,
             'Filled Area Avg': filled_area_avg,
             'Inertia Tensor Eigenvalues Avg': tuple(inertia_avg),
-            'Volume Avg (Physical Space)': volume_avg,
-            'Surface Area Avg (Physical Space)': surface_area_avg,
             'Sphericity Avg (Physical Space)': sphericity_avg,
             'Aspect Ratio Avg (Major/Minor)': aspect_ratio_avg
         }
@@ -1938,11 +1938,14 @@ class BatchProcess(NodeBase0):
         self.summary_metadata.append(summary_metadata_dict)
         
         # print(self.summary_metadata)
-
+        
         # Export csv per timestep
-        df['Centroid'] = df['Centroid'].apply(lambda x: f"{x[0]}, {x[1]}, {x[2]}")
-        df['Inertia Tensor Eigvals'] = df['Inertia Tensor Eigvals'].apply(lambda x: f"{x[0]}, {x[1]}, {x[2]}")
-
+        if self.image_stack.shape[0] > 1:
+            df['Centroid'] = df['Centroid'].apply(lambda x: f"{x[0]}, {x[1]}, {x[2]}")
+            df['Inertia Tensor Eigvals'] = df['Inertia Tensor Eigvals'].apply(lambda x: f"{x[0]}, {x[1]}, {x[2]}")
+        
+        print("path", self.new_morph_path_csv)
+        print(df)
         df.to_csv(self.new_morph_path_csv, index =False)
         
     
@@ -1951,8 +1954,9 @@ class BatchProcess(NodeBase0):
         # make summary
         print("SUMMARY function")
         summary_metadata_df = pd.DataFrame(self.summary_metadata)
-        summary_metadata_df['Centroid Avg'] = summary_metadata_df['Centroid Avg'].apply(lambda x: f"{x[0]}, {x[1]}, {x[2]}")
-        summary_metadata_df['Inertia Tensor Eigenvalues Avg'] = summary_metadata_df['Inertia Tensor Eigenvalues Avg'].apply(lambda x: f"{x[0]}, {x[1]}, {x[2]}")
+        if self.image_stack.shape[0] > 1:
+            summary_metadata_df['Centroid Avg'] = summary_metadata_df['Centroid Avg'].apply(lambda x: f"{x[0]}, {x[1]}, {x[2]}")
+            summary_metadata_df['Inertia Tensor Eigenvalues Avg'] = summary_metadata_df['Inertia Tensor Eigenvalues Avg'].apply(lambda x: f"{x[0]}, {x[1]}, {x[2]}")
         summary_path = self.morph_output_path + r"\time_series_summary.csv"
         print("path", summary_path)
         summary_metadata_df.to_csv(summary_path, index =False)
@@ -4586,8 +4590,6 @@ class Volume_filter(NodeBase):        #Nodebase just a different colour
     main_widget_class = widgets.Volume_Filter
     main_widget_pos = 'below ports'
 
-    morph_type = None
-
     def __init__(self, params):
         super().__init__(params)
 
@@ -4717,7 +4719,132 @@ class Volume_filter(NodeBase):        #Nodebase just a different colour
     def set_state(self, data: dict, version):
         self.value_1 = data['val1']
            
+class Fill_holes(NodeBase):        #Nodebase just a different colour
+    title = 'Fill Holes'
+    version = 'v0.1'
+    init_inputs = [
+        
+        NodeInputBP('input img'),
+         
+    ]
+    init_outputs = [
+        NodeOutputBP('output img'), #img
 
+    ]
+    main_widget_class = widgets.Fill_Holes_MainWidget
+    main_widget_pos = 'below ports'
+
+
+    def __init__(self, params):
+        super().__init__(params)
+
+        if self.session.gui:
+            from qtpy.QtCore import QObject, Signal
+            class Signals(QObject):
+                #Signals used for preview
+                new_img = Signal(object)    #original
+                clr_img = Signal(object)    #added      
+                channels_dict = Signal(dict) #store colour channels   
+                clr_fill_holes = Signal(bool) #clear fill holes checkbox  
+        
+            # to send images to main_widget in gui mode
+            self.SIGNALS = Signals()
+
+        self.prev = True
+        default1 = 10
+        self.value_1 = default1  #threshold
+
+    def place_event(self):  
+        self.update()
+
+    def view_place_event(self):
+        self.SIGNALS.new_img.connect(self.main_widget().show_image)
+        self.SIGNALS.clr_img.connect(self.main_widget().clear_img)
+        self.SIGNALS.channels_dict.connect(self.main_widget().channels)
+        self.SIGNALS.clr_fill_holes.connect(self.main_widget().clear_fill)
+        self.main_widget().previewState.connect(self.preview)
+        self.main_widget().fill_holes.connect(self.fill_holes_activate)
+        
+        try:
+             self.new_img_wrp = CVImage(self.get_img(self.sliced))
+             self.SIGNALS.new_img.emit(self.new_img_wrp.img)
+             self.set_output_val(0, self.new_img_wrp)
+        except:  # there might not be an image ready yet
+            pass
+        # when running in gui mode, the value might come from the input widget
+        # check
+        self.update()
+
+    #called when img connected - send output
+    def update_event(self, inp=-1):  #called when an input is changed
+        self.handle_stack()
+        self.SIGNALS.channels_dict.emit(self.stack_dict)
+        self.SIGNALS.clr_fill_holes.emit(False)
+        unique_values = np.unique(self.image_stack)
+        print(f"unique values: {unique_values}")
+        
+    def preview(self, state):
+        if state ==  True:
+            self.prev = True
+            #Bring image back immediately 
+            self.SIGNALS.new_img.emit(self.new_img_wrp.img)
+               
+        else:
+              self.prev = False 
+              self.SIGNALS.clr_img.emit(self.new_img_wrp.img) 
+
+    def fill_holes_activate(self, state):
+        if state == True:
+            self.proc_technique()
+
+    
+    def proc_technique(self):
+        
+        # single channel (single colour)
+        # Z Y X C
+        # z y x 1
+        #so technically 3D
+        unique_values = np.unique(self.image_stack)
+        print(f"FILL HOLES unique values: {unique_values}")
+        binarisedImageStack=self.image_stack
+        # CHECK BINARIAZIED, Add warning if not
+
+        # Will work for Z == 1 or Z > 1 (3D or 2D)
+        print(f"stack4D shape: {binarisedImageStack.shape}")
+        print("fill holes")
+        # Need to send a #3D array through, therefore remove the redundant channel 
+        # dimension and add back later to satisfy system standardization (ZYX -> ZYX -> ZYXC)
+        # Same idea as "squeeze", performed else where
+        filled_holes_stack = binary_fill_holes(binarisedImageStack[:,:,:,0]).astype(int)
+        unique_values = np.unique(filled_holes_stack)
+        print(f"binary_fill_holes unique values: {unique_values}")
+        filled_holes_stack = (filled_holes_stack* 255).astype(np.uint8)
+        unique_values = np.unique(filled_holes_stack)
+        print(f"after *255 unique values: {unique_values}")
+        filled_holes_stack = filled_holes_stack[:,:,:,np.newaxis]
+    
+        self.sliced = filled_holes_stack[self.z_sclice, :, :, :]
+        self.reshaped_proc_data= filled_holes_stack
+        
+        self.new_img_wrp = CVImage(self.sliced)
+        if self.prev == True:
+            if self.session.gui:
+                #update continuously 
+                self.SIGNALS.new_img.emit(self.new_img_wrp.img)
+        else:
+            self.SIGNALS.clr_img.emit(self.new_img_wrp.img)
+
+        self.set_output_val(0, (self.reshaped_proc_data, self.stack_dict, self.z_sclice))
+            
+    
+    def get_state(self) -> dict:
+        return {
+            'val1': self.value_1
+
+        }
+
+    def set_state(self, data: dict, version):
+        self.value_1 = data['val1']
 
 
 nodes = [
@@ -4754,10 +4881,12 @@ nodes = [
     SaveImg,
     Morphological_Props,
     BatchProcess,
-    # ReadImageTiff,
     DisplayImg,
     Crop,
-    # Dimension_Management,
+    # Contrast Enhancemnet 
+    Histogram,
+    AlphaNode,
+    GammaNode,
     # Filtering 
     Split_Img,
     Merge_Img,
@@ -4780,11 +4909,7 @@ nodes = [
     TopHat,
     Morph_Gradient,
     BlackHat,
-    # Contrast Enhancemnet 
-    Histogram,
-    AlphaNode,
-    GammaNode,
-    # Analysis 
     Overlap_analysis,
     Volume_filter,    
+    Fill_holes,
 ]
