@@ -1723,7 +1723,8 @@ class BatchPaths(MWB, QWidget):
         os.makedirs(self.folder_csv_output_path)
         # Update the label text to show the selected folder 
         self.path_label3.setText(f"Output directory:\n{self.folder_csv_output_path}\n")
-        self.morphproperties.emit((self.path,self.folder_csv_output_path))
+        print(f'emit{self.folder_csv_output_path}')
+        self.morphproperties.emit((self.path, self.folder_csv_output_path))
         #print(f"setText {self.path}")
         #print(f"abs_f_path {self.abs_f_path}")
         self.adjustSize()  # important! otherwise the widget won't shrink

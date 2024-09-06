@@ -1446,16 +1446,16 @@ class Morphological_Props(NodeBase0):
 
         summary_metadata = (
             f"Total Number of Structures: {total_structures}\n"
-            f"Volume Avg (Physical Space): {volume_avg}\n"
-            f"Surface Area Avg (Physical Space): {Surface_area_avg}\n"
-            f"Area Avg: {area_avg}\n"
-            f"Centroid Avg: {centroid_avg}\n"
-            f"Equivalent Diameter Avg: {Equivalent_Diameter_avg}\n"
-            f"Euler Number Avg: {Euler_avg}\n"
-            f"Extent Avg: {Extent_avg}\n"
-            f"Filled Area Avg: {Filled_Area}\n"
-            f"Inertia Tensor Eigenvalues Avg':\n{Inertia_avg}\n"
-            f"Sphericity Avg (Physical Space): {Sphericity_avg}\n"
+            f"Volume Avg: {volume_avg:.4f}\n"
+            f"Surface Area Avg: {Surface_area_avg:.4f}\n"
+            f"Area Avg: {area_avg:.4f}\n"
+            f"Centroid Avg: {tuple(f'{x:.4f}' for x in centroid_avg)}\n"
+            f"Equivalent Diameter Avg: {Equivalent_Diameter_avg:.4f}\n"
+            f"Euler Number Avg: {Euler_avg:.4f}\n"
+            f"Extent Avg: {Extent_avg:.4f}\n"
+            f"Filled Area Avg: {Filled_Area:.4f}\n"
+            f"Inertia Tensor Eigenvalues Avg:\n{tuple(f'{x:.4f}' for x in Inertia_avg)}\n"
+            f"Sphericity Avg: {Sphericity_avg:.4f}\n"
             f"Aspect Ratio Avg (Major/Minor): {Aspect_ratio}\n"
         )
         if self.image_stack.shape[0] > 1:
@@ -1877,7 +1877,7 @@ class BatchProcess(NodeBase0):
 
         # Create an empty list to store dictionaries of property values
         property_dicts = []
-
+        print("test batch process 1")
         #loop through regions
         for pr in properties:
             property_dict = {
@@ -1895,7 +1895,7 @@ class BatchProcess(NodeBase0):
                 'Aspect Ratio (Major/Minor)': np.sqrt(pr.inertia_tensor_eigvals[0] / pr.inertia_tensor_eigvals[-1])
             }
             property_dicts.append(property_dict)
-
+        print("test batch process 2")
         # Create a pandas DataFrame from the list of property dictionaries
         df = pd.DataFrame(property_dicts)
         # Calculate the statistics
@@ -1937,12 +1937,12 @@ class BatchProcess(NodeBase0):
     
         self.summary_metadata.append(summary_metadata_dict)
         
-        # print(self.summary_metadata)
+        print("summary:", self.summary_metadata)
         
         # Export csv per timestep
-        if self.image_stack.shape[0] > 1:
-            df['Centroid'] = df['Centroid'].apply(lambda x: f"{x[0]}, {x[1]}, {x[2]}")
-            df['Inertia Tensor Eigvals'] = df['Inertia Tensor Eigvals'].apply(lambda x: f"{x[0]}, {x[1]}, {x[2]}")
+        # independent of the tuple length (therefore will work for 2D and 3D ++)
+        df['Centroid'] = df['Centroid'].apply(lambda x: ', '.join(map(str, x)))
+        df['Inertia Tensor Eigvals'] = df['Inertia Tensor Eigvals'].apply(lambda x: ', '.join(map(str, x)))
         
         print("path", self.new_morph_path_csv)
         print(df)
@@ -1954,19 +1954,13 @@ class BatchProcess(NodeBase0):
         # make summary
         print("SUMMARY function")
         summary_metadata_df = pd.DataFrame(self.summary_metadata)
-        if self.image_stack.shape[0] > 1:
-            summary_metadata_df['Centroid Avg'] = summary_metadata_df['Centroid Avg'].apply(lambda x: f"{x[0]}, {x[1]}, {x[2]}")
-            summary_metadata_df['Inertia Tensor Eigenvalues Avg'] = summary_metadata_df['Inertia Tensor Eigenvalues Avg'].apply(lambda x: f"{x[0]}, {x[1]}, {x[2]}")
+        # independent of the tuple length (therefore will work for 2D and 3D ++)
+        summary_metadata_df['Centroid Avg'] = summary_metadata_df['Centroid Avg'].apply(lambda x: ', '.join(map(str, x)))
+        summary_metadata_df['Inertia Tensor Eigenvalues Avg'] = summary_metadata_df['Inertia Tensor Eigenvalues Avg'].apply(lambda x: ', '.join(map(str, x)))
         summary_path = self.morph_output_path + r"\time_series_summary.csv"
         print("path", summary_path)
         summary_metadata_df.to_csv(summary_path, index =False)
 
-
-    # def get_state(self):
-    #     return {'path': self.file_path}
-
-    # def set_state(self, data, version):
-    #     self.file_path = data['path']
 
         
 
@@ -4554,24 +4548,9 @@ class Overlap_analysis(Node):
         print(f"z_slice number of pixels {np.sum(self.sliced)}")
         uniq = np.unique(self.chan_0)
         print(f"unique vlaues chan0 {uniq} \noverlap {np.unique(overlap)} ")
-        print("overlap, sliced:", self.sliced)
         print("channel 0 - slice", self.chan_0[self.z_sclice, :, :, :])
         self.set_output_val(0, (overlap, self.stack_dict, self.z_sclice))
         
-        
-        # print(f"shape split: {red_stack.shape}")
-        # self.set_output_val(1, (green_stack, self.frame, self.z_sclice))
-        # self.set_output_val(2, (blue_stack, self.frame, self.z_sclice))
-    
-    # def get_state(self) -> dict:
-    #     return {
-    #         'val1': self.value_1,
-    #         'val2': self.value_2,
-    #     }
-
-    # def set_state(self, data: dict, version):
-    #     self.value_1 = data['val1']
-    #     self.value_2 = data['val2'] 
 
 # APPLY TO WHOLE STACK AT ONCE - dont use pipelin 
 # Use 3d guaus
