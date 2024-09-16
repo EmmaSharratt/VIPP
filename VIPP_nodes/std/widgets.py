@@ -1029,6 +1029,7 @@ class Read_Image_MainWidget(MWB, QWidget):
         self.dropdowns = []
         self.stack_dict = {
             "time_step": 0,
+            "total_time_frames": 1,
             "colour": {
                 "red": 100,
                 "green": 100,
@@ -1040,6 +1041,7 @@ class Read_Image_MainWidget(MWB, QWidget):
         }
         self.temp_dict = {
             "time_step": 0,
+            "total_time_frames": 1,
             "colour": {
                 "red": 100,
                 "green": 100,
@@ -1237,6 +1239,10 @@ class Read_Image_MainWidget(MWB, QWidget):
             # self.show_image(CVImage(self.RGB_img))
             # self.ValueChanged1.emit(self.val1)
             # print(f"self.val1 {self.val1}")
+    
+    def update_time_frame_stack_dict(self, dict_):
+        self.stack_dict['total_time_frames'] = dict_["total_time_frames"]
+        self.temp_dict['total_time_frames'] = dict_["total_time_frames"]
 
         
     def clear_choices(self, dict, dicttemp):

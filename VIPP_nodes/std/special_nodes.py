@@ -884,6 +884,7 @@ class ReadImage(NodeBase0):
                 #remove widgets
                 remove_widget = Signal()
                 channels_dict = Signal(dict)
+                stack_dictionery = Signal(dict)
 
             # to send images to main_widget in gui mode
             self.SIGNALS = Signals()
@@ -893,6 +894,7 @@ class ReadImage(NodeBase0):
         self.zzval = 4
         self.stack_dict = {
             "time_step": self.ttval, #Note, +1 if want to display in biologists notation
+            "total_time_frames": 1,
             "colour": {
                 "red": 100,
                 "green": 100,
@@ -910,10 +912,12 @@ class ReadImage(NodeBase0):
         self.SIGNALS.reset_widget.connect(self.main_widget().reset_widg)
         self.SIGNALS.remove_widget.connect(self.main_widget().remove_widgets)
         self.SIGNALS.channels_dict.connect(self.main_widget().channels)
+        self.SIGNALS.stack_dictionery.connect(self.main_widget().update_time_frame_stack_dict)
         self.main_widget().ValueChanged1.connect(self.onValue1Changed)
         self.main_widget().ValueChanged2.connect(self.onValue2Changed) 
         self.main_widget().released1.connect(self.output_data)  
-        self.main_widget().dict_widg.connect(self.dict_col)   
+        self.main_widget().dict_widg.connect(self.dict_col)
+         
 
         # self.main_widget().ValueChanged2.connect(self.output_data) 
         # try:
@@ -934,7 +938,7 @@ class ReadImage(NodeBase0):
         self.SIGNALS.new_img.emit(new_img_wrp.img)
 
         # output dictionary to update next nodes
-        self.output_data(self.stack_dict)
+        self.output_data()
     
     
     def path_chosen(self, file_path):
@@ -952,6 +956,9 @@ class ReadImage(NodeBase0):
 
                 # Normalize - generate dimension list (T,Z,H,W,C)
                 self.dim = self.id_tiff_dim(self.image_filepath)
+                self.stack_dict['total_time_frames'] = self.dim[0]
+                self.SIGNALS.stack_dictionery.emit(self.stack_dict)
+                print(f"total frames:{self.stack_dict['total_time_frames']}")
                 # Reshape - STANDARDIZED 
                 self.image_data = ((self.image_data / np.max(self.image_data)) * 255).astype(np.uint8)
                 
@@ -1023,7 +1030,7 @@ class ReadImage(NodeBase0):
                     # mulitple time steps
                 # if self.reshaped_data.shape[0] != 1:
                 self.set_output_val(0, (self.reshaped_data[self.stack_dict["time_step"], :, :, :, :], self.stack_dict, self.zzval))
-                # else:
+                print(f"output: total frames: {self.stack_dict['total_time_frames']}, time step: {self.stack_dict['time_step']}")
                 #     self.set_output_val(0, (self.reshaped_data[0, :, :, :, :], self.ttval, self.zzval))
 
                 #2D images (tiff)
@@ -1161,13 +1168,12 @@ class ReadImage(NodeBase0):
         set_widg[1] = dimension[1] #z
         self.SIGNALS.reset_widget.emit(set_widg)
         self.SIGNALS.image_shape.emit(dimension)
-        self.stack_dict["time_step"]= 1
         self.zzval= round(set_widg[1]/2)
-        if (dimension[0])==1 or (dimension[1])==1:
-            set_widg = [1,1]
-            self.SIGNALS.reset_widget.emit(set_widg)
-            self.stack_dict["time_step"]=0
-            self.zzval=0
+        # if (dimension[0])==1 or (dimension[1])==1:
+        #     set_widg = [1,1]
+        #     self.SIGNALS.reset_widget.emit(set_widg)
+        #     self.stack_dict["time_step"]=0
+        #     self.zzval=0
         print(f'Image dim: {dimension}')
         return dimension
            
@@ -1177,7 +1183,7 @@ class ReadImage(NodeBase0):
         self.ttval=value-1 # slider: 1-max for biologists
         self.stack_dict["time_step"] = value-1
         print(f'stack {self.stack_dict["time_step"]}')
-        self.output_data(value)
+        self.output_data()
         self.new_img_wrp = CVImage(self.get_img())
         
         if self.session.gui:
@@ -1188,13 +1194,13 @@ class ReadImage(NodeBase0):
         # print(f"zvalue{value}")
         self.zzval=value-1
         self.new_img_wrp = CVImage(self.get_img())
-        self.output_data(value)
+        self.output_data()
         
         if self.session.gui:
                 #update continuously 
             self.SIGNALS.new_img.emit(self.new_img_wrp.img)
     
-    def output_data(self, value):
+    def output_data(self):
         if self.reshaped_data.shape[0] != 1:
             self.set_output_val(0, (self.reshaped_data[self.stack_dict["time_step"], :, :, :, :], self.stack_dict, self.zzval))
         else:
@@ -1602,6 +1608,7 @@ class BatchProcess(NodeBase0):
         if self.proceed_batchp == 0 and self.morph == 0:
             self.stack_dict = self.input(0)[1] #dictioary
             self.z_sclice = self.input(0)[2]
+            print(f"Batch Processing update event (tot frames): {self.stack_dict}")
 
         #New batch process May need to include somewhere ***
         # self.SIGNALS.reset_widget.emit(1)
