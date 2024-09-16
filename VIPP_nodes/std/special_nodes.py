@@ -889,10 +889,10 @@ class ReadImage(NodeBase0):
             self.SIGNALS = Signals()
 
         self.image_filepath = ''
-        self.ttval = 6
+        self.ttval = 0
         self.zzval = 4
         self.stack_dict = {
-            "time_step": self.ttval,
+            "time_step": self.ttval, #Note, +1 if want to display in biologists notation
             "colour": {
                 "red": 100,
                 "green": 100,
@@ -1174,9 +1174,10 @@ class ReadImage(NodeBase0):
         
     def onValue1Changed(self, value):
         # print(f"timevalue{value}")
-        # self.ttval=value-1 # slider: 1-max for biologists
+        self.ttval=value-1 # slider: 1-max for biologists
         self.stack_dict["time_step"] = value-1
         print(f'stack {self.stack_dict["time_step"]}')
+        self.output_data(value)
         self.new_img_wrp = CVImage(self.get_img())
         
         if self.session.gui:
@@ -1279,8 +1280,7 @@ class SaveImg(NodeBase0):
             # to send images to main_widget in gui mode
             self.SIGNALS = Signals()
         
-        self.file_path = ''
-        
+        self.file_path = '' 
         # self.actions['make executable'] = {'method': self.action_make_executable}
 
     def view_place_event(self):
@@ -1334,11 +1334,11 @@ class SaveImg(NodeBase0):
         self.SIGNALS.reset_widget.emit(1)
 
 
-    def get_state(self):
-        return {'path': self.file_path}
+    # def get_state(self):
+    #     return {'path': self.file_path}
 
-    def set_state(self, data, version):
-        self.file_path = data['path']
+    # def set_state(self, data, version):
+    #     self.file_path = data['path']
     
 class Morphological_Props(NodeBase0):
     title = 'Morphological Properties'
@@ -2592,7 +2592,7 @@ class Blur_Averaging(NodeBase):        #Nodebase just a different colour
         try:
              self.new_img_wrp = CVImage(self.get_img(self.sliced))
              self.SIGNALS.new_img.emit(self.new_img_wrp.img)
-             self.set_output_val(0, self.new_img_wrp)
+            #  self.set_output_val(0, self.new_img_wrp)
         except:  # there might not be an image ready yet
             pass
         # when running in gui mode, the value might come from the input widget
@@ -2765,128 +2765,6 @@ class Median_Blur(NodeBase):        #Nodebase just a different colour
     def set_state(self, data: dict, version):
         self.kk = data['val1']
 
-
-
-
-
-class Dimension_Management(NodeBase):        #Nodebase just a different colour
-          #Nodebase just a different colour
-    title = 'Dimension Management'
-    version = 'v0.1'
-    init_inputs = [
-        
-        NodeInputBP('input img'),
-         
-    ]
-    init_outputs = [
-        NodeOutputBP('output img'), #img
-
-    ]
-    main_widget_class = widgets.Slider_widget
-    main_widget_pos = 'below ports'
-
-    def __init__(self, params):
-        super().__init__(params)
-
-        if self.session.gui:
-            from qtpy.QtCore import QObject, Signal
-            class Signals(QObject):
-                #Signals used for preview
-                new_img = Signal(object)    #original
-                clr_img = Signal(object)    #added      
-        
-            # to send images to main_widget in gui mode
-            self.SIGNALS = Signals()
-
-        self.prev = True
-        default = 5
-        self.vval1 = default
-        self.vval2 = default
-
-    def place_event(self):  
-        self.update()
-
-    def view_place_event(self):
-        self.SIGNALS.new_img.connect(self.main_widget().show_image)
-        self.SIGNALS.clr_img.connect(self.main_widget().clear_img)
-        self.main_widget().previewState.connect(self.preview)
-        self.main_widget().ValueChanged1.connect(self.onValue1Changed)
-        self.main_widget().ValueChanged2.connect(self.onvalue2Changed)   
-        
-        try:
-             self.new_img_wrp = CVImage(self.get_img())
-             self.SIGNALS.new_img.emit(self.new_img_wrp)
-             self.set_output_val(0, self.new_img_wrp)
-        except:  # there might not be an image ready yet
-            pass
-        # when running in gui mode, the value might come from the input widget
-        # check
-        self.update()
-
-    #called when img connected - send output
-    def update_event(self, inp=-1):  #called when an input is changed
-        self.dimensions = self.input(0).shape #[time, z, width, height]
-        #print(self.dimensions)
-
-        self.new_img_wrp = CVImage(self.get_img())
-        if self.prev == True:
-            if self.session.gui:
-                self.SIGNALS.new_img.emit(self.new_img_wrp.img)
-
-        self.set_output_val(0, self.new_img_wrp)
-    
-    def preview(self, state):
-        if state ==  True:
-            self.prev = True
-            #Bring image back immediately 
-            self.SIGNALS.new_img.emit(self.new_img_wrp)
-               
-        else:
-              self.prev = False 
-              self.SIGNALS.clr_img.emit(self.new_img_wrp) 
-
-    def onValue1Changed(self, value):
-        # This method will be called whenever the widget's signal is emitted
-        #print(value)
-        self.vval1 = value
-        self.update_new_img_wrp
-
-    def onvalue2Changed(self, value):
-        # This method will be called whenever the widget's signal is emitted
-        self.xx = value
-        self.update_new_img_wrp
-
-    def update_new_img_wrp(self):
-        self.new_img_wrp = CVImage(self.get_img())
-        if self.prev == True:
-            if self.session.gui:
-                #update continuously 
-                self.SIGNALS.new_img.emit(self.new_img_wrp)
-        else:
-            self.SIGNALS.clr_img.emit(self.new_img_wrp)
-      
-        self.set_output_val(0, self.new_img_wrp)
-    
-    def get_img(self):
-        # debug
-        # #print(self.vval1)
-        # #print(self.vval2)
-        #print("sliceShapeComing")
-        image = self.input(0)
-        #print("sliceShape", image.shape)
-        return self.input(0)
-            
-    
-      # #use when save and close
-    def get_state(self) -> dict:
-        return {
-            'val1': self.vval1,
-            'val2': self.vval2,
-        }
-
-    def set_state(self, data: dict, version):
-        self.vval1 = data['val1']
-        self.vval2 = data['val2']
 
 class Gaussian_Blur(NodeBase):        #Nodebase just a different colour
           #Nodebase just a different colour
@@ -3908,7 +3786,8 @@ class Threshold_Local_Base(NodeBase2):        #Nodebase just a different colour
                 #Signals used for preview
                 new_img = Signal(object)    #original
                 clr_img = Signal(object)    #added      
-        
+                channels_dict = Signal(dict) 
+
             # to send images to main_widget in gui mode
             self.SIGNALS = Signals()
 
@@ -3924,6 +3803,7 @@ class Threshold_Local_Base(NodeBase2):        #Nodebase just a different colour
     def view_place_event(self):
         self.SIGNALS.new_img.connect(self.main_widget().show_image)
         self.SIGNALS.clr_img.connect(self.main_widget().clear_img)
+        self.SIGNALS.channels_dict.connect(self.main_widget().channels)
         self.main_widget().previewState.connect(self.preview)
         self.main_widget().threshValueChanged.connect(self.ontValueChanged)
         self.main_widget().threshValueChanged.connect(self.proc_stack_parallel)
@@ -3943,6 +3823,8 @@ class Threshold_Local_Base(NodeBase2):        #Nodebase just a different colour
     #called when img connected - send output
     def update_event(self, inp=-1):  #called when an input is changed
         self.handle_stack()
+        self.SIGNALS.channels_dict.emit(self.stack_dict)
+        
         self.new_img_wrp = CVImage(self.get_img(self.sliced))
         if self.prev == True:
             if self.session.gui:
@@ -3950,7 +3832,7 @@ class Threshold_Local_Base(NodeBase2):        #Nodebase just a different colour
 
         self.proc_stack_parallel()
         print("current threshold value local", self.thr)
-        self.set_output_val(0, (self.reshaped_proc_data, self.frame, self.z_sclice))
+        self.set_output_val(0, (self.reshaped_proc_data, self.stack_dict, self.z_sclice))
     
     def preview(self, state):
         if state ==  True:
@@ -4081,7 +3963,7 @@ class Global_Thresholding(NodeBase2):
                 #Signals used for preview
                 new_img = Signal(object)    #original
                 clr_img = Signal(object)    #added      
-        
+                channels_dict = Signal(dict)
             # to send images to main_widget in gui mode
             self.SIGNALS = Signals()
 
@@ -4093,6 +3975,7 @@ class Global_Thresholding(NodeBase2):
     def view_place_event(self):
         self.SIGNALS.new_img.connect(self.main_widget().show_image)
         self.SIGNALS.clr_img.connect(self.main_widget().clear_img)
+        self.SIGNALS.channels_dict.connect(self.main_widget().channels)
         self.main_widget().previewState.connect(self.preview)
         
         try:
@@ -4108,13 +3991,14 @@ class Global_Thresholding(NodeBase2):
     #called when img connected - send output
     def update_event(self, inp=-1):  #called when an input is changed
         self.handle_stack()
+        self.SIGNALS.channels_dict.emit(self.stack_dict)
         self.new_img_wrp = CVImage(self.get_img(self.sliced))
         if self.prev == True:
             if self.session.gui:
                 self.SIGNALS.new_img.emit(self.new_img_wrp.img)
 
         self.proc_stack_parallel()
-        self.set_output_val(0, (self.reshaped_proc_data, self.frame, self.z_sclice))
+        self.set_output_val(0, (self.reshaped_proc_data, self.stack_dict, self.z_sclice))
     
     def preview(self, state):
         if state ==  True:
@@ -4177,7 +4061,8 @@ class AlphaNode(NodeBase3):        #Nodebase just a different colour
             class Signals(QObject):
                 #Signals used for preview
                 new_img = Signal(object)    #original
-                clr_img = Signal(object)    #added      
+                clr_img = Signal(object)    #added  
+                channels_dict = Signal(dict)    
         
             # to send images to main_widget in gui mode
             self.SIGNALS = Signals()
@@ -4194,6 +4079,7 @@ class AlphaNode(NodeBase3):        #Nodebase just a different colour
     def view_place_event(self):
         self.SIGNALS.new_img.connect(self.main_widget().show_image)
         self.SIGNALS.clr_img.connect(self.main_widget().clear_img)
+        self.SIGNALS.channels_dict.connect(self.main_widget().channels)
         self.main_widget().previewState.connect(self.preview)
         self.main_widget().Value1Changed.connect(self.ValueChanged1)
         self.main_widget().Value1Changed.connect(self.proc_stack_parallel)
@@ -4203,7 +4089,7 @@ class AlphaNode(NodeBase3):        #Nodebase just a different colour
         try:
              self.new_img_wrp = CVImage(self.get_img(self.sliced))
              self.SIGNALS.new_img.emit(self.new_img_wrp.img)
-             self.set_output_val(0, self.new_img_wrp)
+            #  self.set_output_val(0, self.new_img_wrp)
         except:  # there might not be an image ready yet
             pass
         # when running in gui mode, the value might come from the input widget
@@ -4213,12 +4099,13 @@ class AlphaNode(NodeBase3):        #Nodebase just a different colour
     #called when img connected - send output
     def update_event(self, inp=-1):  #called when an input is changed
         self.handle_stack()
+        self.SIGNALS.channels_dict.emit(self.stack_dict)
         self.new_img_wrp = CVImage(self.get_img(self.sliced))
         if self.prev == True:
             if self.session.gui:
                 self.SIGNALS.new_img.emit(self.new_img_wrp.img)
         self.proc_stack_parallel()
-        self.set_output_val(0, (self.reshaped_proc_data, self.frame, self.z_sclice))
+        self.set_output_val(0, (self.reshaped_proc_data, self.stack_dict, self.z_sclice))
     
     def preview(self, state):
         if state ==  True:
@@ -4296,7 +4183,8 @@ class GammaNode(NodeBase3):
             class Signals(QObject):
                 #Signals used for preview
                 new_img = Signal(object)    #original
-                clr_img = Signal(object)    #added      
+                clr_img = Signal(object)    #added
+                channels_dict = Signal(dict)      
         
             # to send images to main_widget in gui mode
             self.SIGNALS = Signals()
@@ -4313,6 +4201,7 @@ class GammaNode(NodeBase3):
     def view_place_event(self):
         self.SIGNALS.new_img.connect(self.main_widget().show_image)
         self.SIGNALS.clr_img.connect(self.main_widget().clear_img)
+        self.SIGNALS.channels_dict.connect(self.main_widget().channels)
         self.main_widget().previewState.connect(self.preview)
         self.main_widget().Value1Changed.connect(self.ValueChanged1)
         self.main_widget().Value1Changed.connect(self.gamma_correction)
@@ -4320,7 +4209,7 @@ class GammaNode(NodeBase3):
         try:
              self.new_img_wrp = CVImage(self.get_img(self.sliced))
              self.SIGNALS.new_img.emit(self.new_img_wrp.img)
-             self.set_output_val(0, self.new_img_wrp)
+            #  self.set_output_val(0, self.new_img_wrp)
         except:  # there might not be an image ready yet
             pass
         # when running in gui mode, the value might come from the input widget
@@ -4330,6 +4219,7 @@ class GammaNode(NodeBase3):
     #called when img connected - send output
     def update_event(self, inp=-1):  #called when an input is changed
         self.handle_stack()
+        self.SIGNALS.channels_dict.emit(self.stack_dict)
         self.gamma_correction()
         self.new_img_wrp = CVImage(self.sliced)
         if self.prev == True:
@@ -4365,8 +4255,8 @@ class GammaNode(NodeBase3):
         gamma_corrected = np.power(self.image_stack/ 255.0, gamma) * 255.0
         self.reshaped_proc_data = np.uint8(gamma_corrected)
         self.sliced = self.reshaped_proc_data[self.z_sclice,:,:]
-        self.set_output_val(0, (self.reshaped_proc_data, self.frame, self.z_sclice))
-
+        self.set_output_val(0, (self.reshaped_proc_data, self.stack_dict, self.z_sclice))
+    
   
     def get_state(self) -> dict:
         return {
@@ -4399,6 +4289,8 @@ class Histogram(NodeBase3):
                 logScale = Signal(object)
                 clear_graph = Signal(bool)
                 channels_dict = Signal(dict)
+                channels_dict = Signal(dict)
+
 
             # to send images to main_widget in gui mode
             self.SIGNALS = Signals()
@@ -4407,7 +4299,7 @@ class Histogram(NodeBase3):
     def view_place_event(self):
         self.SIGNALS.new_img.connect(self.main_widget().show_histogram)
         self.SIGNALS.logScale.connect(self.main_widget().log_hist)
-        # self.SIGNALS.show_img.connect(self.main_widget().show_image)
+        self.SIGNALS.channels_dict.connect(self.main_widget().channels)
         self.SIGNALS.clear_graph.connect(self.main_widget().clear_hist)
         self.main_widget().displayHist.connect(self.emitImage)
         self.main_widget().LogHist.connect(self.logScale)
@@ -4423,12 +4315,13 @@ class Histogram(NodeBase3):
         self.handle_stack()
         self.SIGNALS.channels_dict.emit(self.stack_dict)
         # histo_s
+        self.SIGNALS.channels_dict.connect(self.main_widget().channels)
         self.new_img_wrp = CVImage(self.sliced)
         if self.session.gui:
             self.SIGNALS.clear_graph.emit(True)
 
-        self.set_output_val(0, (self.image_stack,self.stack_dict, self.z_sclice))
-    
+        self.set_output_val(0, (self.reshaped_proc_data, self.stack_dict, self.z_sclice))
+        
     def emitImage(self):
         if self.session.gui:
             self.SIGNALS.new_img.emit(self.new_img_wrp.img)
@@ -4443,8 +4336,8 @@ class Histogram(NodeBase3):
         
 
     
-    def get_img(self):
-        return None
+    # def get_img(self):
+    #     return None
     
 # Analysis Nodes -------------------------------------------------------
 class Overlap_analysis(Node):
@@ -4601,7 +4494,7 @@ class Volume_filter(NodeBase):        #Nodebase just a different colour
         try:
              self.new_img_wrp = CVImage(self.get_img(self.sliced))
              self.SIGNALS.new_img.emit(self.new_img_wrp.img)
-             self.set_output_val(0, self.new_img_wrp)
+            #  self.set_output_val(0, self.new_img_wrp)
         except:  # there might not be an image ready yet
             pass
         # when running in gui mode, the value might come from the input widget
@@ -4747,7 +4640,7 @@ class Fill_holes(NodeBase):        #Nodebase just a different colour
         try:
              self.new_img_wrp = CVImage(self.get_img(self.sliced))
              self.SIGNALS.new_img.emit(self.new_img_wrp.img)
-             self.set_output_val(0, self.new_img_wrp)
+            #  self.set_output_val(0, self.new_img_wrp)
         except:  # there might not be an image ready yet
             pass
         # when running in gui mode, the value might come from the input widget
@@ -4839,21 +4732,6 @@ nodes = [
     # LinkIN_Node,
     # LinkOUT_Node,
     # Interpreter_Node,
-    # Slider_Gaus,
-    # GaussianBlur,
-    # BlurMedian,
-    # Slider_Gaus_Old,
-    # Slider_Gaus_Tick_v2,
-    # Slider_Gaus_Tick_v3,
-    # Slider_Gaus_Tick_v4,
-    # Slider_Gaus_Tick_v5,
-    # Slider_Gaus_Tick_v6,
-    # Slider_Gaus_Tick_v7,
-    # Slider_Gaus_Tick_v8,
-    # GaussianBlurNode,
-    # BlurAdapted,
-    # BlurAdaptedPreview,
-    # BlurSimplePrev,
 
     # Pipeline Nodes
     ReadImage,

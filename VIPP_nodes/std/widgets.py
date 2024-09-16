@@ -1625,15 +1625,15 @@ class PathInput(MWB, QWidget):
         # #print("reset received")
         self.path_label.setText('  (save output: select file path)')
 
-    def get_state(self):
-        return {'path': self.path,
-                'abs': self.abs_f_path}
+    # def get_state(self):
+    #     return {'path': self.path,
+    #             'abs': self.abs_f_path}
     
-    def set_state(self, data):
-        self.path = data['path']
-        self.abs_f_path = data['abs']
-        self.path_label.setText(self.abs_f_path)
-        self.node.update_shape()
+    # def set_state(self, data):
+    #     self.path = data['path']
+    #     self.abs_f_path = data['abs']
+    #     self.path_label.setText(self.abs_f_path)
+    #     self.node.update_shape()
 
 class BatchPaths(MWB, QWidget):
     path_chosen = Signal(tuple)
@@ -4680,6 +4680,10 @@ class HisogramWidg(MWB, QWidget):
 
         # Update the canvas to display the new plot
         self.canvas.draw()
+
+    def channels(self, channels_dict):
+        self.stack_dict = channels_dict
+        print("came to channels", self.stack_dict)
 
 class Volume_Filter(MWB, Widget_Base8):
     #define Signal
