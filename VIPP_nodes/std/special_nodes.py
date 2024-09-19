@@ -1060,10 +1060,9 @@ class ReadImage(NodeBase0):
 
     def update_event(self, inp=-1):   #called when the input is changed
         
-        print("CAME TO BATCH PROCESS, update_event()")
         self.handle_stack()
+        print("ReadImage update_event()")
         self.SIGNALS.channels_dict.emit(self.stack_dict)
-        print(f"shape of batchprocess image{self.image_stack.shape}")
         print(f"dictionary{self.stack_dict}")
         print(f"zslice {self.z_sclice}")
         single_slice = self.image_stack[self.z_sclice, :,:,:]
@@ -1516,17 +1515,20 @@ class BatchProcess(NodeBase0):
         
         self.file_path = ''
         self.ttval = 0
+        self.TIME_SERIES = False
+        self.time_series_z_stacks = []
         # self.zzval = 4
-        # self.stack_dict = {
-        #     "time_step": self.ttval,
-        #     "colour": {
-        #         "red": 100,
-        #         "green": 100,
-        #         "blue": 100,
-        #         "magenta": 100,
-        #         "cyan": 100
-        #     }
-        # }
+        self.stack_dict = {
+            "time_step": self.ttval,
+            "total_time_frames": 0,
+            "colour": {
+                "red": 100,
+                "green": 100,
+                "blue": 100,
+                "magenta": 100,
+                "cyan": 100
+            }
+        }
         
         # self.actions['make executable'] = {'method': self.action_make_executable}
 
@@ -1604,71 +1606,95 @@ class BatchProcess(NodeBase0):
         
 
     def update_event(self, inp=-1):
-        # from previous settings
+        print('')
+        print(f"first line of update event batchproc {self.proceed_batchp} morph {self.morph}")
+        # from previous settings (before user selects anything)
         if self.proceed_batchp == 0 and self.morph == 0:
             self.stack_dict = self.input(0)[1] #dictioary
             self.z_sclice = self.input(0)[2]
             print(f"Batch Processing update event (tot frames): {self.stack_dict}")
-
-        #New batch process May need to include somewhere ***
-        # self.SIGNALS.reset_widget.emit(1)
-        # Allow batch processing to start if batch processing button pressed
-        print("Batch Process update event")
-        print(f"proceed_batchp {self.proceed_batchp}, i {self.i} morph {self.morph}, m{self.m}")
-        print("num tiff", self.num_tiff)
-        if self.proceed_batchp == 1:
-            print("self.proceed_batchp == 1")
-            print("update event self.i", self.i)
-            # save the previous file
+        
+        # once user selected batch proc imgs or morph, "if statement" above not true,
+        # therefore this is the first file coming in
+        # check if is time_series data
+        else: 
+            if self.stack_dict['total_time_frames'] > 1:
+                self.TIME_SERIES = True
+                print("time series = True")
+        
+        if self.TIME_SERIES ==  True:
             stack = self.input(0)[0]
-            self.save_stack(stack)
-            # Generate the morph csv for this time series
+            dictionery = self.input(0)[1]
+            self.time_series(stack, dictionery)
+            # once finished self.TIME_SERIES == False
+        
+        elif self.TIME_SERIES ==  False:
+            # save the previous file (z-stack) (input)
+            stack = self.input(0)[0]
+            self.reshaped_data = stack[np.newaxis,:,:,:,:]
+        
+        # Only enter if there is one time frame or time series is complete, therefore can save:
+        if self.TIME_SERIES ==  False:
 
-            # once saved last file, won't enter this
-            if self.i < self.num_tiff:
-                print('perform on next file')
-                
-                # Step through files in the folder
-                # From second file to the end
-                filename = self.tiff_files[self.i]
-                # update i for next update event 
-                self.i += 1
+            #New batch process May need to include somewhere ***
+            # self.SIGNALS.reset_widget.emit(1)
+            # Allow batch processing to start if batch processing button pressed
+            print("Time series = False (saving)")
+            print(f"proceed_batchp {self.proceed_batchp}, i {self.i} morph {self.morph}, m{self.m}")
+            print("tot num tiff", self.num_tiff)
 
-                # Extract and output the stack to the pipeline
-                self.extract_imagedata(self.input_path, filename)
+            if self.proceed_batchp == 1:
+                print("self.proceed_batchp == 1")
+                print("update event self.i", self.i)
+
+                # save TZYXC (T could be 1, or greater)
+                self.save_stack(self.reshaped_data)
+                # Generate the morph csv for this time series
+
+                # once saved last file, won't enter this
+                if self.i < self.num_tiff:
+                    print('perform on next file')
+                    
+                    # Step through files in the folder
+                    # From second file to the end
+                    filename = self.tiff_files[self.i]
+                    # update i for next update event 
+                    self.i += 1
+
+                    # Extract and output the stack to the pipeline
+                    self.extract_imagedata(self.input_path, filename)
 
                  
 
-        if self.morph == 1:            
-            print("self.morph == 1")
-            print("update event self.m", self.m)
-            print(f"m {type(self.m)} num_tiff {type(self.num_tiff)}")
-            print(f"m {self.m} num_tiff {self.num_tiff}")
-            # once saved last file, won't enter this
-            stack = self.input(0)[0]
-            self.save_morph_csv(stack)
+            if self.morph == 1:            
+                print("self.morph == 1")
+                print("update event self.m", self.m)
+                print(f"m {type(self.m)} num_tiff {type(self.num_tiff)}")
+                print(f"m {self.m} num_tiff {self.num_tiff}")
+                # once saved last file, won't enter this
+                self.save_morph_csv(self.reshaped_data)
 
-            if self.m < self.num_tiff:
-                print('perform on next file')
-                
-                # Step through files in the folder
-                # From second file to the end
-                filename_morph = self.tiff_files[self.m]
-                print("current morph_file", filename_morph)
-                # update m for next update event 
-                # move to next file - only effects line above
-                # filename_morph is on current file which goes to extract_imagedata
-                self.m += 1
+                if self.m < self.num_tiff:
+                    print('perform on next file')
+                    
+                    # Step through files in the folder
+                    # From second file to the end
+                    filename_morph = self.tiff_files[self.m]
+                    print("current morph_file", filename_morph)
+                    # update m for next update event 
+                    # move to next file - only effects line above
+                    # filename_morph is on current file which goes to extract_imagedata
+                    self.m += 1
 
-                # Extract and output the stack to the pipeline 
-                self.extract_imagedata(self.input_path, filename_morph)
+                    # Extract and output the stack to the pipeline 
+                    self.extract_imagedata(self.input_path, filename_morph)
+                    
                 
-            
-            elif self.m == self.num_tiff:
-                print("m == number of files, save summary")
-                self.save_morph_summary()
-                self.m += 1
-               
+                elif self.m == self.num_tiff:
+                    print("m == number of files, save summary")
+                    self.save_morph_summary()
+                    self.m += 1
+                
     
     def extract_imagedata(self, file_path, filename):
         #create new file path for the stack - where it will be saved
@@ -1698,6 +1724,9 @@ class BatchProcess(NodeBase0):
 
                     # Normalize - generate dimension list (T,Z,H,W,C)
                     self.dim = self.id_tiff_dim(currentfile)
+                    # find how many total frames in stack_n
+                    self.stack_dict['total_time_frames'] = self.dim[0]
+                    self.stack_dict['time_step'] = 0
                     # Reshape - STANDARDIZED 
                     self.image_data = ((self.image_data / np.max(self.image_data)) * 255).astype(np.uint8)
                     
@@ -1743,28 +1772,50 @@ class BatchProcess(NodeBase0):
 
                         self.image_data = image_data_stacked 
                     # ---------------------------------------------------------------------------------           
-                        
+
+                    # Full 5D (potentially) stack: TZYZC  
                     self.reshaped_data = self.image_data.reshape(self.dim)
+                    # create empty stak for time series data
+                    self.time_series_z_stacks = np.empty_like(self.reshaped_data)
 
                     print("set output, i =", self.i)
 
-                    self.set_output_val(0, (self.reshaped_data[self.stack_dict["time_step"], :, :, :, :], self.stack_dict, self.z_sclice))
+                    # emmit first z-stack 0ZYZC  
+                    self.set_output_val(0, (self.reshaped_data[0, :, :, :, :], self.stack_dict, self.z_sclice))
                 
                 except Exception as e:
                     print(e)
                     print("failed")
+
+    def time_series(self, stack, dictionery):
+        if dictionery["time_step"] < (dictionery["total_time_frames"]-1):
+            t_step = dictionery["time_step"]
+            print(f"time series, timestep:{t_step}")
+            self.time_series_z_stacks[int(t_step)] = stack
+            dictionery["time_step"] += 1
+            # output next time_step z-stack
+            self.set_output_val(0, (self.reshaped_data[dictionery["time_step"], :, :, :, :], dictionery, self.z_sclice))
+        
+        elif dictionery["time_step"] == (dictionery["total_time_frames"]-1):
+            final_step = dictionery["time_step"]
+            print(f"FINAL series, timestep: {final_step}")
+            # final stack
+            self.time_series_z_stacks[int(final_step)] = stack
+            self.TIME_SERIES = False
+
 
     def save_stack(self, stack):
         #perform a check to see if folder exists 
         # if it exisists rename + "n"
         # n += 1 (set to zero when create folder)
         if stack.shape[3] == 1:
-            grayscale_stack = stack[:, :, :, 0]
+            # SENDING IN 5D
+            grayscale_stack = stack[:, :, :, :, 0]
             #NEED TO CHANGE 259 / slices=
             metadata = {
                 'Description': 'Stack (RGB) preprocessed with Visual Processing Pipeline. Developed using Ryven at Stellenbosch University by Emma Sharratt and Dr Rensue Theart',
                 'Author': 'Emma Sharratt and Dr Rensu Theart',
-                'axes': 'ZYX'
+                'axes': 'TZYX'
                 # 'Width': grayscale_stack.shape[2],
                 # 'Height': grayscale_stack.shape[1],
                 # 'BitsPerSample': 16,  # Adjust as needed
@@ -1773,7 +1824,7 @@ class BatchProcess(NodeBase0):
                 }
             # print("stack shape {grayscale_stack}")
             tiff.imwrite(self.new_file_path, grayscale_stack, photometric='minisblack', imagej=True, metadata=metadata)  # You can adjust options as needed
-            
+            print(f"Grayscale stack saved with shape {grayscale_stack.shape} to {self.new_file_path}")
         
         if stack.shape[3] == 3:
             # WHY ONLY SAVE FIRST??
@@ -1793,6 +1844,45 @@ class BatchProcess(NodeBase0):
             print(f"RGB save shape: {stack.shape}")
             tiff.imwrite(self.new_file_path, stack, photometric='rgb', imagej=True, metadata=custom_metadata)  # You can adjust options as needed
         # tiff.imwrite(self.new_file_path, stack, photometric='rgb', imagej=True, metadata=custom_metadata)  # You can adjust options as needed
+
+        # Time series data
+        if stack.shape[0]>1 :
+            print("save time series stack img")
+            grayscale_stack = stack[:, :, :, :, 0]
+            # WHY ONLY SAVE FIRST??
+            # RGB_stack = stack[:, :, :, :]
+            # print(f"RGB shape {RGB_stack.shape}")
+            custom_metadata = {
+                "Description": "Stack (RGB) preprocessed with Visual Processing Pipeline. Developed using Ryven by Emma Sharratt and Dr Rensue Theart",
+                "Author": "Emma Sharratt and Dr Rensue Theart",
+                "Date": "Pipeline created in 2023",
+                'axes': 'TZYX'
+                # "256": RGB_stack.shape[2], #W
+                # "257": RGB_stack.shape[1], #H
+                # "slices=": RGB_stack.shape[0],
+                # "frames=": 1,
+                # "channels=": RGB_stack.shape[3],
+            }
+            tiff.imwrite(self.new_file_path, grayscale_stack, photometric='minisblack', imagej=True, metadata=custom_metadata)  # You can adjust options as needed
+            
+        # FOUR CHANNEL
+        # TWO CHANNEL
+        # Assuming stack is in TZCYX format with 2 channels
+        # if stack.shape[3] == 2:  # Check if it's 2-channel data
+        #     custom_metadata = {
+        #         "Description": "Stack (2-channel) preprocessed with Visual Processing Pipeline. Developed using Ryven by Emma Sharratt and Dr Rensue Theart",
+        #         "Author": "Emma Sharratt and Dr Rensue Theart",
+        #         "Date": "Pipeline created in 2023",
+        #         'axes': 'TZCYX'  # Reflects Time, Z-slices, Channels (2), Y, X
+        #     }
+
+        #     print(f"2-channel save shape: {stack.shape}")
+            
+        #     # Saving the 2-channel stack as a TIFF
+        #     tiff.imwrite(self.new_file_path, stack, 
+        #                 photometric='minisblack',  # Use 'minisblack' for grayscale-like data
+        #                 imagej=True,  # ImageJ-compatible metadata
+        #                 metadata=custom_metadata)
 
     def id_tiff_dim(self,f_path):
         tif_file = tiff.TiffFile(f_path)

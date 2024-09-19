@@ -876,7 +876,7 @@ class Widget_Base8(QWidget):
     # the node emits the channel dictionary to the widget which will be used in the show_img / assign method
     def channels(self, channels_dict):
         self.stack_dict = channels_dict
-        print("came to channels", self.stack_dict)
+        # print("came to channels", self.stack_dict)
 
     def assign_channels_RGB(self, img):
         single_chan = img[:, :, 0]
@@ -953,7 +953,7 @@ class Widget_Base8(QWidget):
                 # self.clr_img()
                 print("RGBA image")
                 self.RGB_img = self.assign_channels_RGB(orignial_img)
-                print("rgb shape", self.RGB_img.shape)
+                # print("rgb shape", self.RGB_img.shape)
                 # now treat as 3D image
                 h, w, ch = self.RGB_img.shape
                 bytes_per_line = ch * w
@@ -1448,13 +1448,13 @@ class Read_Image_MainWidget(MWB, QWidget):
     # For batch process
     def channels(self, channels_dict):
         self.stack_dict = channels_dict
-        print("came to channels", self.stack_dict)
+        # print("came to channels", self.stack_dict)
     
     def show_image(self, old_img):
         # self.resize(800,800)
 
         self.RGB_img = self.assign_channels_RGB(old_img)
-        print("rgb shape read_img", self.RGB_img.shape)
+        # print("rgb shape read_img", self.RGB_img.shape)
         # If confirm button has been pressed
         if self.update_img == 1:
             try:
@@ -1467,7 +1467,7 @@ class Read_Image_MainWidget(MWB, QWidget):
                     bytes_per_line = ch * w
                     qt_image = QImage(self.RGB_img.data, w, h, bytes_per_line, QImage.Format_RGB888) #Format_RGB888
                 elif self.RGB_img.shape[-1] == 4:
-                    print("rgb shape read_img", self.RGB_img.shape)
+                    # print("rgb shape read_img", self.RGB_img.shape)
                     h, w, ch = self.RGB_img.shape
                     #print(f"ch: {ch}")
                     bytes_per_line = ch * 4
@@ -1975,7 +1975,7 @@ class Crop_MainWidget(MWB, QWidget):
     # the node emits the channel dictionary to the widget which will be used in the show_img / assign method
     def channels(self, channels_dict):
         self.stack_dict = channels_dict
-        print("came to channels", self.stack_dict)
+        # print("came to channels", self.stack_dict)
 
     def assign_channels_RGB(self, img):
         single_chan = img[:, :, 0]
@@ -2172,7 +2172,7 @@ class OutputMetadataWidg(MWB, QWidget):
         
     def channels(self, channels_dict):
         self.stack_dict = channels_dict
-        print("came to channels", self.stack_dict)
+        # print("came to channels", self.stack_dict)
 
     def button_clicked(self):
         self.pleaseWait.setText('Please wait ...')
@@ -4689,7 +4689,7 @@ class HisogramWidg(MWB, QWidget):
 
     def channels(self, channels_dict):
         self.stack_dict = channels_dict
-        print("came to channels", self.stack_dict)
+        # print("came to channels", self.stack_dict)
 
 class Volume_Filter(MWB, Widget_Base8):
     #define Signal
