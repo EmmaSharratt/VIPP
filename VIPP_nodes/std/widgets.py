@@ -1004,7 +1004,6 @@ class CVImage:
     def __init__(self, img):
         self.img = img
 
-
 class Read_Image_MainWidget(MWB, QWidget):
     path_chosen = Signal(str)
     ValueChanged1 = Signal(int)  #time instance
@@ -1019,8 +1018,10 @@ class Read_Image_MainWidget(MWB, QWidget):
 
         default = 5
         default_range = 6
-        self.val1 = default
-        self.val2 = 3
+        # Time
+        self.val1 = 0
+        # Z-sclice
+        self.val2 = default 
         # update image when confirmed 
         self.update_img = 0
 
@@ -1069,7 +1070,7 @@ class Read_Image_MainWidget(MWB, QWidget):
         self.input_label1 = QLabel('frame (time instance):')
         self.input_label1.setStyleSheet('font-size: 14px;')
         self.input1 = QSpinBox()
-        self.input1.setValue(default)
+        self.input1.setValue(1)
         self.input1.setKeyboardTracking(False)
         self.input1.setButtonSymbols(QAbstractSpinBox.NoButtons)
 
@@ -1077,7 +1078,7 @@ class Read_Image_MainWidget(MWB, QWidget):
         self.slider_label1 = QSlider(Qt.Horizontal)
         self.slider_label1.setRange(1, default_range)    
         self.slider_label1.setSingleStep(1)
-        self.slider_label1.setValue(default)
+        self.slider_label1.setValue(1)
 
         #z-stack------------
         self.input_label2 = QLabel('z-slice:')
@@ -1140,7 +1141,6 @@ class Read_Image_MainWidget(MWB, QWidget):
         # Confrim checkbox
         self.checkbox = QCheckBox("Confirm channel selection")
         self.checkbox.setStyleSheet("color: #FF2C2C;")
-        self.checkbox.stateChanged.connect(lambda state,  diction = self.temp_dict : self.update_dict(state, diction))
         self.button_layout.addWidget(self.checkbox)
 
 
@@ -1168,6 +1168,7 @@ class Read_Image_MainWidget(MWB, QWidget):
         
 
         # Signals -------------------------------------------------
+        self.checkbox.stateChanged.connect(lambda state,  diction = self.temp_dict : self.update_dict(state, diction))
         # Select path
         self.select_path.clicked.connect(self.button_clicked)
         # Spinbox triggers
@@ -1214,8 +1215,8 @@ class Read_Image_MainWidget(MWB, QWidget):
                 
 
             dicttemp["colour"][self.color_name[channel_index]] = channel_index
-            print(f"{self.color_name[channel_index]}: Channel {channel_index}")
-            print(f"self.stack_dict{self.stack_dict}")
+            # print(f"{self.color_name[channel_index]}: Channel {channel_index}")
+            # print(f"self.stack_dict{self.stack_dict}")
             # Uncheck the checkbox when a dropdown is changed
             if self.checkbox.isChecked():
                 self.checkbox.setChecked(False)
@@ -1257,6 +1258,15 @@ class Read_Image_MainWidget(MWB, QWidget):
 
         self.old_choice_array = [None, None, None, None, None, None]
         self.color_name = [None, None, None, None, None, None]
+
+        dict = {
+            "time_step": 0,
+            "total_time_frames": 1,
+        }
+        dicttemp = {
+            "time_step": 0,
+            "total_time_frames": 1,
+        }
         
         self.clear_img()
         
@@ -1283,6 +1293,22 @@ class Read_Image_MainWidget(MWB, QWidget):
             self.slider_label1.setValue(t)
 
             self.slider_label2.setValue(z)
+        
+        # if only one time frame
+        elif val[0]==1:
+            # slider can't be moved if single time series data
+            # set time widget T at a max of 1
+            self.slider_label1.setRange(1, 1)   
+            self.input1.setMaximum(1)
+            self.input1.setMinimum(1)
+
+            z = round((val[1])/2)
+            self.input2.setValue(z)
+            self.input2.setMinimum(1)
+            self.input2.setMaximum(val[1])
+            self.slider_label2.setValue(z)
+            self.slider_label2.setRange(1, val[1])
+
         else:
             t = 1
             z = round((val[1])/2)
@@ -1411,6 +1437,7 @@ class Read_Image_MainWidget(MWB, QWidget):
         # Set the text in self.shape_label
         self.shape_label.setText(message)
 
+
     # value 1: TIME ----------------------------------------------------
     def the_spinbox1_was_changed(self):    
         # self.slider_label1.setRange(1, (self.input1.value()*2))  #Range should not change for time / z sliders
@@ -1448,13 +1475,12 @@ class Read_Image_MainWidget(MWB, QWidget):
     # For batch process
     def channels(self, channels_dict):
         self.stack_dict = channels_dict
-        # print("came to channels", self.stack_dict)
+        print("came to channels", self.stack_dict)
     
     def show_image(self, old_img):
         # self.resize(800,800)
 
         self.RGB_img = self.assign_channels_RGB(old_img)
-        # print("rgb shape read_img", self.RGB_img.shape)
         # If confirm button has been pressed
         if self.update_img == 1:
             try:
@@ -1475,7 +1501,7 @@ class Read_Image_MainWidget(MWB, QWidget):
                 if qt_image is not None:
                     # Calculate the target size for scaling
                     scale_factor = 0.7  # Increase the scaling factor for clarity
-                    if qt_image.width() < 400:
+                    if qt_image.width() < 550:
                         scale_factor = 1
                     if qt_image.width() > 900:
                         scale_factor = 0.5

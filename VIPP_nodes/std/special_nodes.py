@@ -853,6 +853,7 @@ class CVImage:
     
 # NODES ------------------------------------------------------------------------------------------------------------------
 
+
 #Single timestep
 # new shape (10, 512, 512, 1)
 class ReadImage(NodeBase0):
@@ -942,6 +943,20 @@ class ReadImage(NodeBase0):
     
     
     def path_chosen(self, file_path):
+        # when a new file is chosen, reset all
+        self.stack_dict = {
+            "time_step": 0,
+            "total_time_frames": 1,
+            "colour": {
+                "red": 100,
+                "green": 100,
+                "blue": 100,
+                "cyan": 100,
+                "yellow": 100,
+                "magenta": 100
+            }
+        }
+
         self.image_filepath = file_path
 
         if self.image_filepath == '':
@@ -1022,16 +1037,18 @@ class ReadImage(NodeBase0):
                     # self.squeezed = np.squeeze(self.reshaped_data)
                     #slice
                 print("emit from path chosen ReadImage")
-                new_img_wrp = CVImage(self.get_img())  
-                    # print("shape", new_img_wrp.shape)
-                if self.session.gui:
-                        self.SIGNALS.new_img.emit(new_img_wrp.img)
-                        # self.main_widget().update_shape()
-                    # mulitple time steps
-                # if self.reshaped_data.shape[0] != 1:
-                self.set_output_val(0, (self.reshaped_data[self.stack_dict["time_step"], :, :, :, :], self.stack_dict, self.zzval))
-                print(f"output: total frames: {self.stack_dict['total_time_frames']}, time step: {self.stack_dict['time_step']}")
-                #     self.set_output_val(0, (self.reshaped_data[0, :, :, :, :], self.ttval, self.zzval))
+                # moving this to only happen when the colour checkbox is checked -------------------------------
+                # new_img_wrp = CVImage(self.get_img())  
+                #     # print("shape", new_img_wrp.shape)
+                # if self.session.gui:
+                #         self.SIGNALS.new_img.emit(new_img_wrp.img)
+                #         # self.main_widget().update_shape()
+                #     # mulitple time steps
+                # # if self.reshaped_data.shape[0] != 1:
+                # self.set_output_val(0, (self.reshaped_data[self.stack_dict["time_step"], :, :, :, :], self.stack_dict, self.zzval))
+                # print(f"output: total frames: {self.stack_dict['total_time_frames']}, time step: {self.stack_dict['time_step']}")
+                # #     self.set_output_val(0, (self.reshaped_data[0, :, :, :, :], self.ttval, self.zzval))
+                # ---------------------------------------------------------------------------------   
 
                 #2D images (tiff)
                 # else:
@@ -1060,9 +1077,10 @@ class ReadImage(NodeBase0):
 
     def update_event(self, inp=-1):   #called when the input is changed
         
+        print("CAME TO BATCH PROCESS, update_event()")
         self.handle_stack()
-        print("ReadImage update_event()")
         self.SIGNALS.channels_dict.emit(self.stack_dict)
+        print(f"shape of batchprocess image{self.image_stack.shape}")
         print(f"dictionary{self.stack_dict}")
         print(f"zslice {self.z_sclice}")
         single_slice = self.image_stack[self.z_sclice, :,:,:]
@@ -1237,9 +1255,6 @@ class ReadImage(NodeBase0):
         self.path_chosen(data['image file path'])
         self.stack_dict["time_step"] = data['val1']
         self.zzval = data['val2']
-        
-        
-
         # self.update()
         # self.dim = data['dimension']
         # self.id_tiff_dim(self.image_filepath)
@@ -4438,7 +4453,7 @@ class Histogram(NodeBase3):
     
 # Analysis Nodes -------------------------------------------------------
 class Overlap_analysis(Node):
-    title = 'Overlap analysis'
+    title = 'Channel Overlap'
     version = 'v0.1'
     init_inputs = [
         
