@@ -157,6 +157,35 @@ class CVImage: # This is from Ryven original
 # Dimension design:
 # T Z Y X C  (Frames, Z-slices, Height, Width, Channels)
 #  0 1 2 3 4
+
+# class WelcomeNode(NodeBase):
+#     """Welcome instructions"""
+
+#     title = 'VIPP Welcome!'
+#     version = 'v0.1'
+#     # init_inputs = [
+#     #     NodeInputBP(type_='data'),
+#     # ]
+#     # init_outputs = [
+#     #     NodeOutputBP(type_='data'),
+#     # ]
+#     # style = 'small'
+#     init_inputs = [
+#         NodeInputBP('batch process') # connect here if performing batch processing
+#     ]
+#     init_outputs = [
+#         NodeOutputBP('img')
+#     ]
+#     main_widget_class = widgets.Welcome_Widget
+#     main_widget_pos = 'below ports'
+
+#     def __init__(self, params):
+#         super().__init__(params)
+
+#         self.display_title = ''
+
+
+
 class ReadImage(NodeBase0):
     """Reads an image from a file"""
 
@@ -4369,6 +4398,7 @@ nodes = [
     # Interpreter_Node,
 
     # Pipeline Nodes
+    # WelcomeNode,
     ReadImage,
     SaveImg,
     Morphological_Props,

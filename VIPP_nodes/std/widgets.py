@@ -48,6 +48,27 @@ from matplotlib.figure import Figure
 
 # Pipeline Widgets -----------------------------------------
 
+# class Welcome_Widget(QWidget):
+
+#     def __init__(self, params):
+#         MWB.__init__(self, params)
+#         QWidget.__init__(self)
+
+#         # self.resize(300, 300)
+              
+#         #Added Widget -----------------------------------------------
+#         #preview
+#         self.welcome_lable = QLabel('Welcome to VIPP')
+#         self.welcome_lable.setStyleSheet('font-size: 14px;')
+      
+#                #self.image_label.resize(800, 800)
+#         # Layout ----------------------------------------------------
+#         self.layout1 = QVBoxLayout()
+#         # Preview
+#         self.layout1.addWidget(self.welcome_lable)
+#         #self.layout1.setSpacing(0) 
+#         self.setLayout(self.layout1)
+
 class ChooseFileInputWidget(IWB, QPushButton):
 
     path_chosen = Signal(str)
@@ -3853,6 +3874,7 @@ class ConsoleOutDisplay(QPlainTextEdit):
 
 export_widgets(
     # Original Ryven
+    OpenCVNode_MainWidget,
     ButtonNode_MainWidget,
     ClockNode_MainWidget,
     LogNode_MainWidget,
@@ -3863,6 +3885,7 @@ export_widgets(
     #--------------------
 
     # PipelineWidgets
+    # Welcome_Widget,
     ChooseFileInputWidget,
     PathInput,
     BatchPaths,

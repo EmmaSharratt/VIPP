@@ -1,0 +1,164 @@
+{
+    "general info": {
+        "type": "Ryven project file",
+        "ryven version": "v3.1"
+    },
+    "required packages": [
+        {
+            "name": "std",
+            "dir": "C:/Users/dell/OneDrive/Documents/Em/2023/Skripsie/Development/venvs/sk_env2/Lib/site-packages/ryven/VIPP_nodes/std"
+        }
+    ],
+    "scripts": [
+        {
+            "title": "Image Processing Pipeline",
+            "variables": {},
+            "flow": {
+                "algorithm mode": "data",
+                "nodes": [
+                    {
+                        "identifier": "std.ReadImage",
+                        "version": "v0.1",
+                        "state data": "gASVXQAAAAAAAAB9lCiMD2ltYWdlIGZpbGUgcGF0aJSMMS4uXC4uXC4uXC4uXC4uXC4uXERhdGFcTmljb2xhX2RhdGFfMjAyNFxCYWZfMS50aWaUjAR2YWwxlEsAjAR2YWwylEsIdS4=",
+                        "additional data": {
+                            "special actions": {},
+                            "display title": "Read Image"
+                        },
+                        "inputs": [
+                            {
+                                "type": "data",
+                                "label": "batch process",
+                                "GID": 8,
+                                "val": "gAROLg==",
+                                "has widget": false
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "type": "data",
+                                "label": "img",
+                                "GID": 9
+                            }
+                        ],
+                        "GID": 7,
+                        "pos x": 299.5068269623893,
+                        "pos y": 689.0,
+                        "main widget data": "gASVqwAAAAAAAAB9lCiMCWRpbWVuc2lvbpRdlChLAUseTQAETQAESwRljAR2YWwxlEsAjAR2YWwylEsJjAljaGFubmVsXzCUjAVncmVlbpSMCWNoYW5uZWxfMZSMA3JlZJSMCWNoYW5uZWxfMpSMBGN5YW6UjAljaGFubmVsXzOUjAZ5ZWxsb3eUjAljaGFubmVsXzSUjAZTZWxlY3SUjAljaGFubmVsXzWUjAZTZWxlY3SUdS4=",
+                        "unconnected ports hidden": false,
+                        "collapsed": false
+                    },
+                    {
+                        "identifier": "std.Split_Img",
+                        "version": "v0.1",
+                        "state data": "gAR9lC4=",
+                        "additional data": {
+                            "special actions": {},
+                            "display title": "Split Channels"
+                        },
+                        "inputs": [
+                            {
+                                "type": "data",
+                                "label": "input img",
+                                "GID": 11,
+                                "has widget": false
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "type": "data",
+                                "label": "channel 0",
+                                "GID": 12
+                            },
+                            {
+                                "type": "data",
+                                "label": "channel 1",
+                                "GID": 13
+                            },
+                            {
+                                "type": "data",
+                                "label": "channel 2",
+                                "GID": 14
+                            },
+                            {
+                                "type": "data",
+                                "label": "channel 3",
+                                "GID": 15
+                            },
+                            {
+                                "type": "data",
+                                "label": "channel 4",
+                                "GID": 16
+                            },
+                            {
+                                "type": "data",
+                                "label": "channel 5",
+                                "GID": 17
+                            }
+                        ],
+                        "GID": 10,
+                        "pos x": 881.8981927513878,
+                        "pos y": 550.1984604541506,
+                        "main widget data": "gAR9lC4=",
+                        "unconnected ports hidden": false,
+                        "collapsed": false
+                    },
+                    {
+                        "identifier": "std.ThresholdBinary",
+                        "version": "v0.1",
+                        "state data": "gASVFwAAAAAAAAB9lCiMBHZhbDGUSx+MBHZhbDKUS/91Lg==",
+                        "additional data": {
+                            "special actions": {},
+                            "display title": "Binary Threshold"
+                        },
+                        "inputs": [
+                            {
+                                "type": "data",
+                                "label": "input img",
+                                "GID": 20,
+                                "has widget": false
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "type": "data",
+                                "label": "output img",
+                                "GID": 21
+                            }
+                        ],
+                        "GID": 19,
+                        "pos x": 1487.640164798791,
+                        "pos y": 531.716661276687,
+                        "main widget data": "gASVFwAAAAAAAAB9lCiMBHZhbDGUSx+MBHZhbDKUS/91Lg==",
+                        "unconnected ports hidden": false,
+                        "collapsed": false
+                    }
+                ],
+                "connections": [
+                    {
+                        "GID": 18,
+                        "parent node index": 0,
+                        "output port index": 0,
+                        "connected node": 1,
+                        "connected input port index": 0
+                    },
+                    {
+                        "GID": 24,
+                        "parent node index": 1,
+                        "output port index": 2,
+                        "connected node": 2,
+                        "connected input port index": 0
+                    }
+                ],
+                "GID": 6,
+                "flow view": {
+                    "drawings": [],
+                    "view size": [
+                        6400.0,
+                        4800.0
+                    ]
+                }
+            },
+            "GID": 1
+        }
+    ]
+}

@@ -55,15 +55,16 @@ class StartupDialog(QDialog):
         plain_project_push_button = QPushButton('creat new project')
         plain_project_push_button.setFocus()
         plain_project_push_button.clicked.connect(self.plain_project_button_clicked)
-        load_project_push_button = QPushButton('load project')
+        load_project_push_button = QPushButton('load VIPP project')
         load_project_push_button.clicked.connect(self.load_project_button_clicked)
-        load_example_project_push_button = QPushButton('load VIPP project')
+        load_example_project_push_button = QPushButton('load VIPP sample')
         load_example_project_push_button.clicked.connect(self.load_example_project_button_clicked)
 
         buttons_layout = QHBoxLayout()
         buttons_layout.addWidget(plain_project_push_button)
-        buttons_layout.addWidget(load_project_push_button)
         buttons_layout.addWidget(load_example_project_push_button)
+        buttons_layout.addWidget(load_project_push_button)
+        
 
         layout.addLayout(buttons_layout)
 
@@ -102,7 +103,7 @@ class StartupDialog(QDialog):
 
 
     def load_project_button_clicked(self):
-        self.open_project(base_dir=abs_path_from_ryven_dir('saves'))
+        self.open_project(base_dir=abs_path_from_ryven_dir('VIPP_example_projects'))
 
 
     def load_example_project_button_clicked(self):

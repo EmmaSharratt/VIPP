@@ -71,7 +71,7 @@ class MainWindow(QMainWindow):
 
         #   LOAD PROJECT
         if config['action'] == 'create project':
-            self.session.create_script(title='hello world')
+            self.session.create_script(title='Image Processing Pipeline')
         elif config['action'] == 'open project':
             print('importing packages...')
             self.import_packages(config['required packages'])
@@ -258,7 +258,7 @@ CONTROLS
 
     def on_save_project_triggered(self):
         file_name = QFileDialog.getSaveFileName(self, 'select location and give file name',
-                                                abs_path_from_ryven_dir('saves'), '(*.json)')[0]
+                                                abs_path_from_ryven_dir('VIPP_projects'), '(*.json)')[0]
         if file_name != '':
             self.save_project(file_name)
 
