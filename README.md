@@ -160,3 +160,6 @@ Visual Image Procceing Pipeline Project
 
 - Ben Loos
 - Nicola Vahrmeijer
+
+To do 
+- [] Add article citations
