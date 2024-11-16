@@ -56,7 +56,7 @@ Use the `cd` command to navigate to the directory where you want to clone the **
 
 Run the following command to clone the **VIPP** repository:
 
-```python
+```
 git clone https://github.com/EmmaSharratt/VIPP.git
 ```
 
