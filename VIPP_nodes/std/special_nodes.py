@@ -917,7 +917,7 @@ class ReadImage(NodeBase0):
         self.main_widget().ValueChanged1.connect(self.onValue1Changed)
         self.main_widget().ValueChanged2.connect(self.onValue2Changed) 
         self.main_widget().released1.connect(self.output_data)  
-        self.main_widget().dict_widg.connect(self.dict_col)
+        self.main_widget().dict_widg.connect(self.dict_col) 
          
 
         # self.main_widget().ValueChanged2.connect(self.output_data) 
