@@ -88,40 +88,42 @@ Once activated, you’ll see `(my_venv_name)` in your command prompt, indicating
 
 ### 4. **Install Required Packages**
 
-If you are using a virtual environment, ensure that it is activated.
+If you are using a virtual environment, ensure that it is activated.  
+Command Prompt should look like this
+```
+(my_venv_name) C:\path\to\your\project\VIPP> 
+```
 
-```python
-# Command Prompt should look like this
-(my_venv_name) C:\path\to\your\project> 
-
-# Now install packages:
-(my_venv_name) C:\path\to\your\project> pip install -r requirements.txt
+Now install packages:
+```
+pip install -r requirements.txt
 ```
 
 This will install all dependencies listed in the `requirements.txt` file from the **VIPP** repository.
 
 ### 5. Run Ryven
-
-```python
-# Navigate to VIPP_example_projects into the VIPP folder you just cloned
-
-# Command Prompt should look like this
+Navigate to VIPP_example_projects into the VIPP folder you just cloned.  
+Command Prompt should look like this:
+```
 (my_venv_name) C:\Users\...\>
+```
 
-# Enter "cd" (change directory) and your directory in the command prompt. 
-(my_venv_name) C:\Users\...\> cd path\to\...\VIPP\VIPP_example_projects
-
-# Run Ryven:
-(my_venv_name) C:path\to\...\VIPP\skripsie_projects> ryven
+Enter "cd" (change directory) and your directory in the command prompt. 
+```
+cd path\to\...\VIPP\VIPP_example_projects
+```
+Run Ryven:
+```
+ryven
 ```
 
 ### 6. Load Example VIPP Project
-
-1. To load a VIPP sample project select “LOAD PROJECT”
-2. Now select the sample project from the file browser.
+1. Follow `5. Run Ryven` steps
+2. To load a VIPP sample project select “LOAD PROJECT”
+3. Now select the sample project from the file browser.
 May take a minute to load…
-3. Once the pipeline is open, load the sample image *<think about this>*
-4. Check “confirm channel selection”
+4. Once the pipeline is open, load the sample image *<think about this>*
+5. Check “confirm channel selection”
 
 ### 7. Create New Project
 1. This will open a blank pipeline script
@@ -134,18 +136,16 @@ May take a minute to load…
 1. `File> Save Project`  or shortcut `Ctrl + S`
 2. Save file in `VIPP_projects` folder or desired location
 
-9. Load VIPP Project
-```python
-# Navigate to VIPP_projects into the VIPP folder you just cloned
-
-# Command Prompt should look like this
-(my_venv_name) C:\Users\...\>
-
-# Enter "cd" (change directory) and your directory in the command prompt. 
-(my_venv_name) C:\Users\...\> cd path\to\...\VIPP\VIPP_projects
-
+### 9. Load VIPP Project
+Navigate to VIPP_projects into the VIPP folder you just cloned  
+Enter "cd" (change directory) and your directory in the command prompt. 
 ```
-Save project here (`VIPP_projects`)
+cd path\to\...\VIPP\VIPP_projects
+```
+Follow `5. Run Ryven` steps (ie enter `ryven`)  
+Open your own `.json` file from the file browser.   
+
+Save projects here (`VIPP_projects`)
 
 ### 10. Deactivating the Virtual Environment
 
