@@ -150,3 +150,13 @@ Save projects here (`VIPP_projects`)
 ### 10. Deactivating the Virtual Environment
 
 When you're done working, you can deactivate the virtual environment by running: `deactivate`. You will can reactivate at any stage using step 3.4. This keeps all your
+
+## Contributors
+Pipeline Software
+- [Rensu Theart](https://rensu.co.za/)
+- Emma Sharratt
+
+Visual Image Procceing Pipeline Project
+
+- Ben Loos
+- Nicola Vahrmeijer
