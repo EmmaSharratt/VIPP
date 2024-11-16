@@ -36,18 +36,28 @@ class StartupDialog(QDialog):
                     There are always some bugs and issues but as long as you keep behaving
                     as intended, you shouldn\'t get into too much trouble. Have fun!
                 </p>
+                <p>
+                    Adapted: 
+                </p>
+                <p>        
+                    Hello science researchers, biologists and anyone interested in image processing! 
+                    Our research group has leveraged Ryven to create a platform to faciliate building image 
+                    processing pipelines. We have added the "Visual Image Processing Pipeline" (VIPP) 
+                    functionality to Ryven. VIPP can be used for multidimentional image processing and was 
+                    developed in the context of fluorescence microscopy. We hope you find it useful. Enjoy!                         
+                </p>
             </div>
         ''')
         info_text_edit.setReadOnly(True)
         layout.addWidget(info_text_edit)
 
         # buttons
-        plain_project_push_button = QPushButton('create new project')
+        plain_project_push_button = QPushButton('creat new project')
         plain_project_push_button.setFocus()
         plain_project_push_button.clicked.connect(self.plain_project_button_clicked)
         load_project_push_button = QPushButton('load project')
         load_project_push_button.clicked.connect(self.load_project_button_clicked)
-        load_example_project_push_button = QPushButton('load example')
+        load_example_project_push_button = QPushButton('load VIPP project')
         load_example_project_push_button.clicked.connect(self.load_example_project_button_clicked)
 
         buttons_layout = QHBoxLayout()
@@ -74,7 +84,7 @@ class StartupDialog(QDialog):
 
         self.setWindowTitle('Ryven')
         self.setWindowIcon(QIcon(abs_path_from_package_dir('resources/pics/Ryven_icon.png')))
-        self.setFixedSize(500, 280)
+        self.setFixedSize(600, 400)
 
         self.editor_startup_configuration = {}
 
@@ -96,7 +106,7 @@ class StartupDialog(QDialog):
 
 
     def load_example_project_button_clicked(self):
-        self.open_project(base_dir=abs_path_from_package_dir('examples_projects'))
+        self.open_project(base_dir=abs_path_from_package_dir('VIPP_projects'))
 
 
     def open_project(self, base_dir: str):

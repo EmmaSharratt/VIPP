@@ -1,0 +1,64 @@
+{
+    "general info": {
+        "type": "Ryven project file",
+        "ryven version": "v3.1"
+    },
+    "required packages": [
+        {
+            "name": "std",
+            "dir": "C:/Users/dell/OneDrive/Documents/Em/2023/Skripsie/Development/venvs/sk_env2/Lib/site-packages/ryven/VIPP_nodes/std"
+        }
+    ],
+    "scripts": [
+        {
+            "title": "hello world",
+            "variables": {},
+            "flow": {
+                "algorithm mode": "data",
+                "nodes": [
+                    {
+                        "identifier": "std.ReadImage",
+                        "version": "v0.1",
+                        "state data": "gASVXQAAAAAAAAB9lCiMD2ltYWdlIGZpbGUgcGF0aJSMMS4uXC4uXC4uXC4uXC4uXC4uXERhdGFcTmljb2xhX2RhdGFfMjAyNFxCYWZfMS50aWaUjAR2YWwxlEsAjAR2YWwylEsMdS4=",
+                        "additional data": {
+                            "special actions": {},
+                            "display title": "Read Image"
+                        },
+                        "inputs": [
+                            {
+                                "type": "data",
+                                "label": "batch process",
+                                "GID": 8,
+                                "val": "gAROLg==",
+                                "has widget": false
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "type": "data",
+                                "label": "img",
+                                "GID": 9
+                            }
+                        ],
+                        "GID": 7,
+                        "pos x": 345.9561126620001,
+                        "pos y": 578.0946703888004,
+                        "main widget data": "gASVqwAAAAAAAAB9lCiMCWRpbWVuc2lvbpRdlChLAUseTQAETQAESwRljAR2YWwxlEsAjAR2YWwylEsNjAljaGFubmVsXzCUjANyZWSUjAljaGFubmVsXzGUjAVncmVlbpSMCWNoYW5uZWxfMpSMBnllbGxvd5SMCWNoYW5uZWxfM5SMBGJsdWWUjAljaGFubmVsXzSUjAZTZWxlY3SUjAljaGFubmVsXzWUjAZTZWxlY3SUdS4=",
+                        "unconnected ports hidden": false,
+                        "collapsed": false
+                    }
+                ],
+                "connections": [],
+                "GID": 6,
+                "flow view": {
+                    "drawings": [],
+                    "view size": [
+                        6400.0,
+                        4800.0
+                    ]
+                }
+            },
+            "GID": 1
+        }
+    ]
+}
