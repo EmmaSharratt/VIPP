@@ -12,8 +12,12 @@ Install the required dependencies using `pip`:
 pip install -r requirements.txt
 ```
 ## Instructions for Installing Ryven and VIPP (Windows)
+Once you have cloned this repository (instructions below)
+<!-- Note this needs to be cloned to site packages and we need to replace the run command to VIPP  -->
 
-File structure:
+Ryven can be launched from the command line by typing `ryven`. If you installed Ryven into a Python virtual environment, the environment first needs to be activated.
+
+When installed, VIPP will create a directory ~/.VIPP/ in your user home with the following structure:
 (Note, VIPP is "Ryven" with adaptions)
 ```
 VIPP
