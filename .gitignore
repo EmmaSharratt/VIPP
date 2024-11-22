@@ -4,6 +4,7 @@
 # Ignore specific directories
 outputs/
 venvs/
+vipp_win_venv/
 
 # Ignore all files in a directory but not the directory itself
 outputs/*/
