@@ -128,7 +128,7 @@ Once activated, you’ll see `(my_venv_name)` in your command prompt, indicating
 **Alternative**: Using conda activate the environment with:
 
 ```cmd
-conda activate myenv
+conda activate my_venv_name
 ```
 
 ### 4. **Install Required Packages**

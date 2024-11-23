@@ -5,6 +5,7 @@
 outputs/
 venvs/
 vipp_win_venv/
+venv/vipp_macos_venv/
 
 # Ignore all files in a directory but not the directory itself
 outputs/*/
